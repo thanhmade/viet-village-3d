@@ -1,0 +1,15 @@
+const assert=require('assert');
+const {run}=require('./harness.cjs')();
+assert.equal(run('!!renderer && !!player && scene.children.length>5'),true);
+run("$('play').onclick();climate.clock='manual';climate.hour=12;updateClimate(1,true);");
+assert.equal(run('villageLights.length'),7);assert(run('villageLights.every(l=>!l.root.visible&&l.lamp.intensity===0)'));
+run('climate.hour=20;updateClimate(.1);');assert(run('villageLights[0].level>0&&villageLights[0].level<1'));
+run('updateClimate(1,true);');assert(run('villageLights.slice(0,6).every(l=>l.root.visible&&l.lamp.intensity>0&&l.glowMat.emissiveIntensity>0&&l.windowLamps.every(w=>w.intensity>0))'));
+assert(run('villageLights.filter(l=>l.lamp.castShadow).length<=2'));
+run('climate.hour=0;updateClimate(1,true);');assert.equal(run('villageLights[0].level'),1);
+run('climate.hour=5.8;updateClimate(1,true);');assert(run('villageLights[0].level>0&&villageLights[0].level<1'));
+run('climate.hour=7;updateClimate(1,true);');assert.equal(run('villageLights[0].lamp.intensity'),0);
+run("$('houseBtn').onclick();climate.hour=23;updateClimate(1,true);");assert(run('villageLights[6].lamp.intensity>0'));assert(run('villageLights.slice(0,6).every(l=>l.lamp.intensity===0)'));
+assert.equal(run('villageLights[6].root.position.y'),0);
+run('enterHouse(4);updateClimate(1,true);');assert(run('villageLights.every(l=>l.lamp.intensity===0)'));run('leaveHouse();updateClimate(1,true);');assert(run('villageLights[6].lamp.intensity>0'));
+console.log('PASS: six houses + isolated preview; sunset fade; evening/midnight lights; morning fade; daytime off; light/shadow limits; interior transition; preview alignment.');

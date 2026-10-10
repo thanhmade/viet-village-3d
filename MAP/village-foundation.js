@@ -1,0 +1,17 @@
+'use strict';
+// Bản đồ làng Việt dựng bằng mô hình 3D, định hướng theo ảnh chính diện.
+const village={houses:[],batches:new Map(),bridge:{x:15,z:18,half:5.8},pond:{x:15,z:18,rx:6.4,rz:4.5}};
+let overview=false,overviewAngle=0,waypoints=[],gateDoors=[];
+let seed=812;function random(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
+const batchGeo={leaf:new THREE.IcosahedronGeometry(1,1),rock:new THREE.DodecahedronGeometry(1,0),stem:new THREE.CylinderGeometry(.065,.09,1,6),cube:new THREE.BoxGeometry(1,1,1),pad:new THREE.CircleGeometry(1,16),petal:new THREE.SphereGeometry(1,7,5),ring:new THREE.TorusGeometry(1,.1,5,8)};
+function instance(kind,color,x,y,z,sx=1,sy=1,sz=1,rx=0,ry=0,rz=0){const key=kind+'-'+color;if(!village.batches.has(key))village.batches.set(key,{kind,color,items:[]});let o=new THREE.Object3D();o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.rotation.set(rx,ry,rz);o.updateMatrix();village.batches.get(key).items.push(o.matrix.clone());}
+function flushInstances(){for(const b of village.batches.values()){let m=new THREE.InstancedMesh(batchGeo[b.kind],mat(b.color),b.items.length);b.items.forEach((v,i)=>m.setMatrixAt(i,v));m.receiveShadow=true;m.castShadow=b.kind==='leaf'||b.kind==='rock';world.add(m);}}
+function between(a,b,r,color,parent=world){let start=new THREE.Vector3(...a),end=new THREE.Vector3(...b);let v=end.clone().sub(start);let m=mesh(new THREE.CylinderGeometry(r*.72,r,v.length(),7),color,...start.clone().add(end).multiplyScalar(.5).toArray(),parent);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),v.normalize());return m;}
+function roofSurface(w,d,y,parent){const nx=20,nz=20,verts=[],idx=[];const height=z=>y+1.9-.66*Math.abs(z)+.36*Math.pow(Math.abs(z)/(d/2),8);
+for(let i=0;i<=nx;i++)for(let j=0;j<=nz;j++){let x=-w/2+w*i/nx,z=-d/2+d*j/nz;verts.push(x,height(z)+.12*Math.pow(Math.abs(x)/(w/2),10),z);}
+for(let i=0;i<nx;i++)for(let j=0;j<nz;j++){let a=i*(nz+1)+j,b=a+nz+1;idx.push(a,a+1,b,b,a+1,b+1);}let geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setIndex(idx);geo.computeVertexNormals();mesh(geo,0xa44e31,0,0,0,parent,{side:THREE.DoubleSide});
+let countX=Math.floor(w/.23),countZ=Math.floor(d/.30),tiles=new THREE.InstancedMesh(new THREE.BoxGeometry(.205,.085,.285),mat(0xbc603a),countX*countZ),o=new THREE.Object3D(),c=new THREE.Color();let k=0;for(let i=0;i<countX;i++)for(let j=0;j<countZ;j++){let x=-w/2+(i+.5)*w/countX,z=-d/2+(j+.5)*d/countZ;let eps=.02,der=(height(z+eps)-height(z-eps))/(2*eps);o.position.set(x,height(z)+.05+.12*Math.pow(Math.abs(x)/(w/2),10),z);o.rotation.set(-Math.atan(der),0,0);o.updateMatrix();tiles.setMatrixAt(k,o.matrix);c.setHex([0xc36c40,0xad5331,0xd17b49,0xbd6139][(i+j)%4]);tiles.setColorAt(k++,c);}tiles.receiveShadow=true;parent.add(tiles);
+between([-w/2,y+1.98,0],[w/2,y+1.98,0],.10,0xe2c7a0,parent);
+for(let side of [-1,1]){for(let j=0;j<20;j++){let z=-d/2+d*j/20,z2=-d/2+d*(j+1)/20;between([side*w/2,height(z)+.16,z],[side*w/2,height(z2)+.16,z2],.065,0xe9c99b,parent);}for(let end of [-1,1]){let tip=mesh(new THREE.TorusGeometry(.38,.075,6,12,Math.PI*.8),0xe6c99f,side*w/2,height(end*d/2)+.28,end*d/2,parent);tip.rotation.y=Math.PI/2;tip.rotation.z=end<0?0:Math.PI;}}
+}
+function pot(x,z,s=.5){cyl(s*.75,s*.5,s*1.4,9,0xab7950,x,.3+s*.7,z);cyl(s*.78,s*.78,.10,9,0xd1a06b,x,.3+s*1.4,z);for(let i=0;i<5;i++)instance('leaf',[0x568647,0x74a74b][i%2],x+Math.sin(i*1.6)*s*.3,.3+s*1.8+random()*.25,z+Math.cos(i*1.6)*s*.3,s*.45,s*.65,s*.45);}

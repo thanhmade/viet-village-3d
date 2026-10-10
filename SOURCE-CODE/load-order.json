@@ -1,0 +1,19 @@
+[
+  "ASSETS/vendor/three.min.js",
+  "SOURCE-CODE/js/state-and-questions.js",
+  "ASSETS/procedural-primitives.js",
+  "CHARACTERS/player-procedural.js",
+  "MAP/village-foundation.js",
+  "BUILDINGS/houses.js",
+  "BUILDINGS/temple.js",
+  "MAP/landscape.js",
+  "BUILDINGS/gate.js",
+  "MAP/world.js",
+  "SOURCE-CODE/js/legacy-game-controls.js",
+  "MAP/navigation.js",
+  "INTERIORS/house-interior.js",
+  "ENVIRONMENT/climate-state.js",
+  "ENVIRONMENT/house-lighting.js",
+  "ENVIRONMENT/weather-lighting.js",
+  "SOURCE-CODE/js/app.js"
+]

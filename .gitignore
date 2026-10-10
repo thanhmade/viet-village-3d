@@ -1,0 +1,77 @@
+# Local credentials and machine-specific configuration
+.env
+.env.*
+!.env.example
+!.env.template
+.aws/
+.ssh/
+.codex/
+.vercel/
+.wrangler/
+.npmrc
+.pypirc
+credentials.json
+credentials.*.json
+service-account*.json
+secrets.json
+secrets.*.json
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# Dependencies, caches and generated deployment output
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.cache/
+/.parcel-cache/
+/.next/
+/dist/
+/build/
+/web-dist/
+coverage/
+playwright-report/
+test-results/
+
+# Editor, operating system and temporary files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+~$*
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Keep all old backups, including the Git bundle, on disk only.
+# Ignoring a directory does not delete or overwrite its contents.
+/BACKUP/
+
+# Only the two development documents below belong in the repository.
+# Original lessons, chat context, provenance, audit manifests and connection
+# reports stay on this computer and are excluded from Git.
+/DOCUMENTS/*
+!/DOCUMENTS/EXPORT-STATUS.md
+!/DOCUMENTS/VALIDATION.md
+
+# Local reports and audit tools must not be committed if copied here later.
+/audit-*.py
+/verify-stage*.py
+/stage*-audit.json
+/stage*-baseline.json
+/stage*-verification.json
+/stage*-github-confirmation.json
+/README-before-stage*.md
+
+# Deliberately retained: SOURCE-CODE, ASSETS, MAP, BUILDINGS, CHARACTERS,
+# INTERIORS, ENVIRONMENT, exported models and reference images.
+# Git ignores do not define which files a public website is allowed to serve.

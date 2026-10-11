@@ -24,6 +24,8 @@ id_ed25519*
 
 # Dependencies, caches and generated deployment output
 node_modules/
+.firebase/
+.local-tools/
 __pycache__/
 *.py[cod]
 .venv/
@@ -75,3 +77,9 @@ Desktop.ini
 # Deliberately retained: SOURCE-CODE, ASSETS, MAP, BUILDINGS, CHARACTERS,
 # INTERIORS, ENVIRONMENT, exported models and reference images.
 # Git ignores do not define which files a public website is allowed to serve.
+
+# Local delivery archives and pre-patch backup; keep both distinct source versions.
+/ASSETS/WEAPONS/VIET-VILLAGE-3D-WEAPON-VFX.zip
+/ASSETS/WEAPONS/VIET-VILLAGE-3D-WEAPON-VFX-PATCH-V1.1.zip
+/ASSETS/WEAPONS/VIET-VILLAGE-3D-WEAPON-VFX-V1.2-FULL.zip
+/ASSETS/WEAPONS/VFX-DEMO/BACKUP-BEFORE-V1.2/

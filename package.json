@@ -1,0 +1,17 @@
+{
+  "name": "viet-village-3d-cap-nhat",
+  "version": "0.7.2",
+  "private": true,
+  "type": "module",
+  "workspaces": ["firebase/functions"],
+  "scripts": {
+    "test": "node SOURCE-CODE/tests/run-checks.cjs && node --test SOURCE-CODE/tests/online-unit.test.mjs",
+    "test:firebase": "node scripts/firebase-local.mjs test",
+    "emulators": "node scripts/firebase-local.mjs start"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
+    "firebase": "13.0.0",
+    "firebase-tools": "15.33.0"
+  }
+}

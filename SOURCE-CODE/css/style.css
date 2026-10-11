@@ -8,3 +8,37 @@
 .entryMarker{position:fixed;transform:translate(-50%,-50%);pointer-events:auto;padding:7px 10px;border-radius:12px;background:#fff1ca;color:#594124;box-shadow:0 3px 14px #23382330;font-size:12px;font-weight:750;border:1px solid #ab8657;white-space:nowrap}.roomControls{position:fixed;left:22px;bottom:24px;pointer-events:auto;background:#fff5e7ee;border:1px solid #fff8;border-radius:18px;padding:14px;max-width:min(560px,90vw)}.roomControls strong{display:block;font-size:14px;margin-bottom:9px}.roomControls button{padding:9px 12px;border-radius:10px;background:#e6d8bf;color:#513d28;margin:3px;font-size:12px}.roomControls .exitRoom{background:#765330;color:#fff}.roomMove{display:flex;margin-top:6px;gap:3px}.roomMove button{touch-action:none}.roomControls small{display:block;color:#74624c;font-size:11px;margin:5px}.tools button:disabled{opacity:.4}@media(max-width:700px){.roomControls{left:10px;bottom:10px;padding:9px;max-width:calc(100vw - 20px)}.roomControls button{padding:8px;font-size:11px}.entryMarker{font-size:10px;padding:6px}.help{bottom:160px}}
 
 .climateStatus{position:fixed;left:22px;top:86px;color:#204638;background:#f3f6e8eb;border-radius:12px;padding:8px 12px;font-size:12px;pointer-events:none}.climatePanel{position:fixed;z-index:8;top:135px;left:22px;width:310px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 160px);overflow:auto;padding:17px;background:#f8f6ecf5;border:1px solid #fff;border-radius:20px;box-shadow:0 12px 35px #122a3540}.climatePanel label{display:block;font-size:12px;margin:12px 0}.climatePanel select{width:100%;padding:8px;border:1px solid #cad3c4;border-radius:9px;margin-top:5px;background:white}.climatePanel input{width:100%}.timePresets{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.timePresets button{font-size:11px;padding:9px 3px;border-radius:8px;background:#e3eadb;color:#28483b}.climatePanel small{font-size:11px;line-height:1.5;display:block;color:#687666}.climatePanel strong{display:block;margin:8px 0}.climatePanel .closeClimate{float:right;border-radius:7px;background:#e5e9de;padding:5px 9px}@media(max-width:700px){.climateStatus{left:10px;top:67px;font-size:10px;max-width:65%}.climatePanel{left:12px;top:105px;width:280px;max-height:calc(100dvh - 130px)}}
+
+/* Google authentication gate; the game stays inert until Firebase validation. */
+.authGate {
+ position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+ padding:24px;overflow:auto;overscroll-behavior:contain;
+ background:radial-gradient(ellipse at 20% 20%,#346850 0,transparent 65%),
+ radial-gradient(ellipse at 95% 90%,#4a8063 0,transparent 50%),#0f3640;
+}
+.authGate[hidden] {display:none}
+.authCard {
+ width:min(510px,100%);max-height:calc(100dvh - 48px);overflow:auto;padding:34px;
+ border-radius:28px;border:1px solid #ffffff9c;background:#fffcf2;
+ box-shadow:0 24px 75px #061d2c50;
+}
+.authCard h1 {font-size:clamp(32px,5vw,44px);letter-spacing:-1.5px}
+.googleLogin {
+ width:100%;min-height:48px;border:1px solid #b9c4bc;border-radius:12px;
+ background:#fff;color:#203f34;font-size:15px;font-weight:750;padding:12px 18px;
+ transition:background 150ms ease,transform 100ms ease;
+}
+.googleLogin:hover:not(:disabled) {background:#edf4ea}
+.googleLogin:active:not(:disabled) {transform:scale(.98)}
+.googleLogin:disabled {opacity:.55;cursor:wait}
+.authStatus {font-size:13px;line-height:1.6;min-height:42px;color:#345448;margin:15px 0}
+body[data-auth-state="error"] .authStatus {color:#8b442b}
+.authIdentity {display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#35634e}
+.authIdentity button {font-size:12px;padding:8px 12px}
+.auth-locked #hud,.auth-locked #home,.auth-locked #climatePanel,.auth-locked #roomControls,
+.auth-locked #entryLayer,.auth-locked #climateStatus,.auth-locked #portalStatus {visibility:hidden}
+@media(max-width:700px) {
+ .authGate {padding:16px;align-items:safe center}
+ .authCard {padding:25px;max-height:calc(100dvh - 32px);border-radius:22px}
+ .authIdentity {flex-wrap:wrap}
+}

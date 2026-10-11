@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function googleUser(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+    function validProfile(uid) {
+      let p = request.resource.data;
+      return p.keys().hasAll(['uid', 'nickname', 'avatarId', 'createdAt', 'lastLoginAt', 'schemaVersion'])
+        && p.keys().hasOnly(['uid', 'nickname', 'avatarId', 'createdAt', 'lastLoginAt', 'schemaVersion'])
+        && p.uid == uid && p.schemaVersion == 1
+        && p.nickname is string && p.nickname.matches('[^@<>]{1,24}')
+        && p.avatarId in ['villager-default', 'villager-blue', 'villager-rose']
+        && p.createdAt is timestamp && p.lastLoginAt is timestamp;
+    }
+    match /players/{uid} {
+      allow get: if googleUser(uid);
+      allow create: if googleUser(uid) && validProfile(uid)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lastLoginAt == request.time;
+      allow update: if googleUser(uid) && validProfile(uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'avatarId', 'lastLoginAt'])
+        && request.resource.data.lastLoginAt == request.time;
+      allow list, delete: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

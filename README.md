@@ -2,26 +2,33 @@
 
 Bối cảnh làng quê Việt Nam dựng bằng HTML, CSS, JavaScript và Three.js: bản đồ làng, cổng, nhà dân, nội thất, chu kỳ ngày đêm và thời tiết. Dự án hướng tới trò chơi Toán cho học sinh; phiên bản hiện tại chủ yếu phục vụ khám phá bối cảnh 3D. Nhân vật hoàn chỉnh và phần chơi câu hỏi/cấp độ còn cần phát triển.
 
-Nguồn xuất từ ChatGPT Sites ngày 10/10/2026, bản v8 tại commit `d36f5be347d606e23e4f06a42630707fd14435d3`. Thư mục phát triển trên máy: `H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D`. Repository: [thanhmade/viet-village-3d](https://github.com/thanhmade/viet-village-3d), đã xác minh **Private** trong giai đoạn kết nối ngày 10/10/2026. Dự án bắt đầu lịch sử Git mới trên nhánh `main`; bundle cũ giữ riêng trên máy. Tại thời điểm kết nối chưa tạo commit hoặc push đầu tiên.
+Nguồn xuất từ ChatGPT Sites ngày 10/10/2026, bản v8 tại commit `d36f5be347d606e23e4f06a42630707fd14435d3`. Thư mục phát triển trên máy: `H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D`. Repository: [thanhmade/viet-village-3d](https://github.com/thanhmade/viet-village-3d), đã xác minh **Private** trong giai đoạn kết nối ngày 10/10/2026. Dự án bắt đầu lịch sử Git mới trên nhánh `main`; bundle cũ giữ riêng trên máy. Commit đầu tiên là `130c5c1`. Worktree thử nghiệm dùng nhánh `cap-nhat` tại `H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D\VIET-VILLAGE-3D-CAP-NHAT`; phát triển và đồng bộ độc lập với bản chính `main`.
 
 ## Chạy bằng localhost
 
-Máy đã có Python 3, Node.js và Git. Game dùng Three.js r160 được lưu trong dự án; không cần npm, CDN hoặc cài thêm thư viện để chơi bản hiện tại. Trình duyệt cần hỗ trợ WebGL.
+Máy đã có Python 3, Node.js và Git. Game dùng Three.js r160 được lưu trong dự án; Google Login dùng Firebase JavaScript SDK 13.0.0 qua CDN chính thức và cần Internet. Không cần npm hoặc bước build để mở game. Trình duyệt cần hỗ trợ WebGL và JavaScript modules.
 
-1. Chạy `START-SERVER.bat` tại thư mục gốc. Giữ cửa sổ máy chủ mở.
-2. Mở [game tại localhost](http://localhost:8000/SOURCE-CODE/index.html).
-3. Bấm **Xem bối cảnh 3D** để vào làng.
+1. Chạy lệnh PowerShell dưới đây từ worktree CAP-NHAT; dùng cổng 8001 để chạy cùng bản chính ở cổng 8000. Giữ cửa sổ máy chủ mở.
+2. Mở [game tại localhost](http://localhost:8001/SOURCE-CODE/index.html).
+3. Bấm **Đăng nhập bằng Google**, xác thực tài khoản rồi chọn **Khám phá làng 3D**.
 
 Hoặc chạy trong PowerShell:
 
 ```powershell
-Set-Location -LiteralPath 'H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D'
-python -B -m http.server 8000 --bind 127.0.0.1
+Set-Location -LiteralPath 'H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D\VIET-VILLAGE-3D-CAP-NHAT'
+python -B -m http.server 8001 --bind 127.0.0.1
 ```
 
-Nếu dùng bản clone ở nơi khác, chạy lệnh máy chủ từ thư mục gốc của bản clone. Có thể thay `python` bằng `py` khi máy có Python Launcher. Dừng bằng Ctrl+C. Nếu cổng 8000 đang được một máy chủ phục vụ đúng dự án sử dụng, mở địa chỉ hiện có; nếu bị chương trình khác chiếm, đổi cổng và URL sang 8001.
+Nếu dùng bản clone ở nơi khác, chạy lệnh máy chủ từ thư mục gốc của bản clone. Có thể thay `python` bằng `py` khi máy có Python Launcher. Dừng bằng Ctrl+C. Nếu cổng 8001 đã phục vụ đúng worktree, dùng địa chỉ hiện có; nếu bị chương trình khác chiếm, chọn một cổng trống và đổi URL tương ứng. `START-SERVER.bat` gốc vẫn dùng cổng 8000.
 
 Điểm vào gốc `index.html` chuyển tới `SOURCE-CODE/index.html`. Giữ toàn bộ cấu trúc thư mục khi giải nén hoặc clone. `START-GAME.bat` là cách mở HTML trực tiếp có sẵn từ gói xuất; ưu tiên HTTP localhost để kiểm tra và phát triển.
+
+## Phần thử nghiệm trên cap-nhat
+
+- Hồ sơ, phòng tối đa 8 người, backend và Security Rules: xem [hướng dẫn Firebase](firebase/README.md). `onlineConfig.enabled` vẫn là `false`; chưa bật ghi hồ sơ/phòng lên Firebase thật.
+- Bộ vũ khí/VFX mới nằm ở `ASSETS/WEAPONS/VFX-DEMO`, là demo riêng; mở [VFX demo](http://localhost:8001/ASSETS/WEAPONS/VFX-DEMO/index.html). Three.js của demo được tải từ CDN và cần Internet.
+- Gói mã v1.2 trong `ASSETS/WEAPONS/VIET-VILLAGE-3D-WEAPON-VFX-V1.2-FULL/VIET-VILLAGE-3D-WEAPON-VFX` có một số thay đổi khác với `VFX-DEMO` và được giữ riêng. Chưa tự cài bản vá hoặc thay thế demo đang chạy; ZIP phân phối và `BACKUP-BEFORE-V1.2` chỉ giữ trên máy.
+- Không tự nhập nhánh thử nghiệm vào `main`, triển khai website hoặc thay đổi Firebase.
 
 ## Điều khiển và chức năng
 
@@ -83,7 +90,7 @@ Phương án đề xuất: phát triển trên máy → GitHub Private → kiể
 
 Gói web công khai chỉ nên chứa các tệp thực sự dùng để chạy game, giữ nguyên đường dẫn. Không phục vụ toàn bộ thư mục dự án: BACKUP, bundle lịch sử, PowerPoint, tài liệu kiểm kê và tài nguyên không được game dùng cần nằm ngoài thư mục xuất bản. Báo cáo chuẩn bị/kết nối trong `DOCUMENTS` chỉ lưu trên máy; chưa tạo pipeline hoặc triển khai.
 
-Repository Private hạn chế người xem kho mã; HTML/JavaScript và tài nguyên đã phục vụ cho trình duyệt trên website công khai vẫn tải được. Chưa đặt khóa API hay dữ liệu riêng tư vào game.
+Repository Private hạn chế người xem kho mã; HTML/JavaScript và tài nguyên đã phục vụ cho trình duyệt trên website công khai vẫn tải được. Firebase Web config trong mã là cấu hình ứng dụng công khai; không chứa mật khẩu, token đăng nhập hay private key máy chủ.
 
 ## Giấy phép
 

@@ -1,0 +1,66 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$code": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && ((root.child('rooms').child($code).child('members').child(auth.uid).child('connections').hasChildren() && root.child('rooms').child($code).child('members').child(auth.uid).child('leaseExpiresAt').val() > now) || auth.token.role == 'admin' || (auth.token.role == 'teacher' && root.child('rooms').child($code).child('meta').child('ownerUid').val() == auth.uid))",
+        "meta": {
+          ".read": "auth != null && auth.token.firebase.sign_in_provider == 'google.com'"
+        },
+        "members": {
+          "$uid": {
+            "leaseExpiresAt": {
+              ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && auth.uid == $uid && data.exists() && root.child('rooms').child($code).child('meta').child('status').val() == 'open' && root.child('rooms').child($code).child('members').child($uid).child('connections').hasChildren()",
+              ".validate": "newData.isNumber() && newData.val() > now && newData.val() <= now + 60000"
+            },
+            "connections": {
+              "$connectionId": {
+                ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && auth.uid == $uid && !newData.exists()",
+                "leaseExpiresAt": {
+                  ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && auth.uid == $uid && data.exists() && root.child('rooms').child($code).child('meta').child('status').val() == 'open' && root.child('rooms').child($code).child('members').child($uid).child('connections').hasChildren()",
+                  ".validate": "newData.isNumber() && newData.val() > now && newData.val() <= now + 60000"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "presence": {
+      "$code": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && ((root.child('rooms').child($code).child('members').child(auth.uid).child('connections').hasChildren() && root.child('rooms').child($code).child('members').child(auth.uid).child('leaseExpiresAt').val() > now) || auth.token.role == 'admin' || (auth.token.role == 'teacher' && root.child('rooms').child($code).child('meta').child('ownerUid').val() == auth.uid))",
+        "$uid": {
+          "$connectionId": {
+            ".write": "auth != null && auth.token.firebase.sign_in_provider == 'google.com' && auth.uid == $uid && (!newData.exists() || (root.child('rooms').child($code).child('members').child($uid).child('connections').child($connectionId).child('leaseExpiresAt').val() > now && root.child('rooms').child($code).child('meta').child('status').val() == 'open'))",
+            ".validate": "newData.hasChildren(['x','y','z','yaw','mapId','moving','updatedAt'])",
+            "x": {
+              ".validate": "newData.isNumber() && newData.val() >= -100 && newData.val() <= 100"
+            },
+            "y": {
+              ".validate": "newData.isNumber() && newData.val() >= -5 && newData.val() <= 20"
+            },
+            "z": {
+              ".validate": "newData.isNumber() && newData.val() >= -100 && newData.val() <= 100"
+            },
+            "yaw": {
+              ".validate": "newData.isNumber() && newData.val() >= -7 && newData.val() <= 7"
+            },
+            "mapId": {
+              ".validate": "newData.isString() && (newData.val() == 'village' || newData.val().matches(/^house-[1-6]$/))"
+            },
+            "moving": {
+              ".validate": "newData.isBoolean()"
+            },
+            "updatedAt": {
+              ".validate": "newData.isNumber() && newData.val() == now"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

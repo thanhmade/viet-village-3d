@@ -4,6 +4,7 @@
   "ASSETS/procedural-primitives.js",
   "CHARACTERS/player-procedural.js",
   "MAP/village-foundation.js",
+  "MAP/house-portals.js",
   "BUILDINGS/houses.js",
   "BUILDINGS/temple.js",
   "MAP/landscape.js",
@@ -12,8 +13,12 @@
   "SOURCE-CODE/js/legacy-game-controls.js",
   "MAP/navigation.js",
   "INTERIORS/house-interior.js",
+  "INTERIORS/portal-destinations.js",
+  "SOURCE-CODE/js/portals.js",
   "ENVIRONMENT/climate-state.js",
   "ENVIRONMENT/house-lighting.js",
   "ENVIRONMENT/weather-lighting.js",
-  "SOURCE-CODE/js/app.js"
+  "SOURCE-CODE/js/app.js",
+  "SOURCE-CODE/js/toolbar.js",
+  "SOURCE-CODE/js/auth-entry.js"
 ]

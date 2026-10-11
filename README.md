@@ -47,13 +47,13 @@ Nếu dùng bản clone ở nơi khác, chạy lệnh máy chủ từ thư mục
 | `DOCUMENTS/` | Git giữ báo cáo giới hạn nguồn và phạm vi kiểm tra; bài giảng, kiểm kê, ngữ cảnh và báo cáo kết nối chỉ lưu trên máy |
 | `BACKUP/` | Chỉ lưu trên máy: bundle lịch sử Git, bản v8, HTML cũ, upload và helper phát triển; không có trong bản clone GitHub |
 
-Trang chạy tải **Three.js và 16 script của dự án** theo `SOURCE-CODE/load-order.json`. Đây là script thông thường dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
+Trang chạy tải **Three.js và 17 script của dự án** theo `SOURCE-CODE/load-order.json`. Đây là script thông thường dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
 
 ## Tài nguyên 3D và giới hạn hiện tại
 
 Cảnh được dựng từ hình học Three.js, vật liệu màu và instancing. Năm tệp `*.three.json` xuất từ `Object3D.toJSON()` giữ dữ liệu mô hình; có thể đọc bằng `THREE.ObjectLoader`. Trang hiện tại dựng cảnh bằng JavaScript, chưa tải trực tiếp các JSON này.
 
-Chưa có GLB/GLTF/FBX/OBJ/Blender, rig hoặc animation nhân vật hoàn chỉnh, âm thanh và bộ texture PBR. Ảnh tham chiếu/bộ sưu tập ảnh không tự trở thành texture hoặc mô hình 3D. Nhân vật khối hiện có đang ẩn trong chế độ xem bối cảnh. Bộ câu hỏi Toán còn trong mã nhưng luồng khởi động đang vào bối cảnh, chưa chạy thành trò chơi câu hỏi/cấp độ hoàn chỉnh.
+Đã có mô hình GLB nền bản đồ tổng tại `MAP/viet-nam-world-map/`; mô hình này chưa được nạp vào cảnh làng. Chưa có mô hình nhân vật GLB/GLTF/FBX/OBJ/Blender, rig hoặc animation nhân vật hoàn chỉnh, âm thanh và bộ texture PBR. Ảnh tham chiếu/bộ sưu tập ảnh không tự trở thành texture hoặc mô hình 3D. Nhân vật khối hiện có đang ẩn trong chế độ xem bối cảnh. Bộ câu hỏi Toán còn trong mã nhưng luồng khởi động đang vào bối cảnh, chưa chạy thành trò chơi câu hỏi/cấp độ hoàn chỉnh.
 
 Nội thất ban ngày còn tối; ánh đèn/bóng đổ ban đêm cần tinh chỉnh. Đã thử bối cảnh, vào/ra sáu nhà và các chế độ thời gian/thời tiết trên trình duyệt trong Codex ở giai đoạn 2; chưa đo FPS hay kiểm tra đầy đủ Chrome/Edge, điện thoại và máy học sinh. Quỹ đạo mặt trời/trăng và thời tiết là mô phỏng phục vụ hình ảnh.
 
@@ -88,3 +88,10 @@ Repository Private hạn chế người xem kho mã; HTML/JavaScript và tài ng
 ## Giấy phép
 
 Three.js giữ giấy phép MIT tại `ASSETS/vendor/LICENSE-THREE.txt`. Chưa đặt giấy phép chung cho mã game, ảnh và tài liệu người dùng. Cần xác nhận quyền sử dụng các nội dung trước khi xuất bản website cho học sinh.
+
+
+## Bản đồ tổng Việt Nam — nhánh thử nghiệm
+
+Bấm **Bản đồ Việt Nam** trên thanh công cụ hoặc phím **M** sau khi vào bối cảnh. Bản đồ giữ hình học hành chính theo nguồn 2025, không chữ trên ảnh nền; có sáu mốc di tích, kéo/zoom, chụm hai ngón trên điện thoại và nút quay lại game hoặc về làng chính. Các scene di tích và làng tân thủ chưa được dựng trong nhánh này; giao diện thể hiện rõ trạng thái đó.
+
+Tài nguyên và mã giao diện nằm trong [`MAP/viet-nam-world-map/`](MAP/viet-nam-world-map/README.md). Bộ điều khiển nối với mã làng hiện có, không thay phiên bản Three.js. Chạy từ gốc repository bằng `START-SERVER.bat` như trước. Không cần npm hoặc dịch vụ trực tuyến để sử dụng các chức năng bản đồ.

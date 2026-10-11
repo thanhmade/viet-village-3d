@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "viewport": [
+    11.3386,
+    62.362000488281296,
+    586.771,
+    756.8488004882813
+  ],
+  "source": {
+    "url": "https://vnsdi.mae.gov.vn/downloads/hcvn_9tr_2025.pdf",
+    "title": "Bản đồ hành chính Việt Nam 2025",
+    "scale_denominator": 9000000,
+    "download_date": "2026-10-11",
+    "sha256": "8caa80f799a05960f6343f1e93a77e55997d0e3933bbf2e2f66f5a51289d2cf9",
+    "admin_vintage": "2025; 34 đơn vị cấp tỉnh",
+    "authority": "Cục Đo đạc, Bản đồ và Thông tin địa lý Việt Nam",
+    "accuracy_note": "Giữ hình học của bản đồ công bố ở tỷ lệ 1:9.000.000; không phải ranh giới địa chính hoặc dữ liệu khảo sát chi tiết."
+  },
+  "image": "ban-do-nen-khong-chu.png",
+  "maxZoom": 10,
+  "siteDetails": {
+    "thang_long": {
+      "kind": "Hoàng thành",
+      "description": "Điểm xây dựng map kinh thành và cung điện Thăng Long."
+    },
+    "hoa_lu": {
+      "kind": "Cố đô",
+      "description": "Điểm xây dựng map cố đô, đền và cảnh quan Hoa Lư."
+    },
+    "thanh_nha_ho": {
+      "kind": "Thành đá",
+      "description": "Điểm xây dựng map thành trì gắn với Thành Nhà Hồ."
+    },
+    "hue": {
+      "kind": "Kinh thành",
+      "description": "Điểm xây dựng map kinh thành và cung điện Huế."
+    },
+    "hoi_an": {
+      "kind": "Đô thị cổ",
+      "description": "Điểm xây dựng map phố cổ, nhà gỗ và bến thuyền Hội An."
+    },
+    "my_son": {
+      "kind": "Đền tháp Chăm",
+      "description": "Điểm xây dựng map đền tháp gạch Mỹ Sơn."
+    }
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "sites": [
+    {
+      "id": "thang_long",
+      "name": "Thăng Long",
+      "lat": 21.03752,
+      "lon": 105.83862305555554,
+      "kind": "palace",
+      "source": "https://whc.unesco.org/en/list/1328/maps/",
+      "page_xy": [
+        156.4381624066985,
+        176.69469791842891
+      ],
+      "world_xyz": [
+        -142.6166375933015,
+        2.1,
+        -232.9107025698524
+      ],
+      "visual_note": "Biểu tượng minh họa được phóng đại để chọn map; không phải mặt bằng khảo cổ hoặc mô hình phục dựng.",
+      "admin_at_anchor": [
+        "Hà Nội"
+      ]
+    },
+    {
+      "id": "hoa_lu",
+      "name": "Hoa Lư",
+      "lat": 20.28611111111111,
+      "lon": 105.90666666666667,
+      "kind": "temple",
+      "source": "https://en.wikipedia.org/wiki/Hoa_L%C6%B0_Ancient_Capital",
+      "coordinate_quality": "Điểm đại diện xấp xỉ; chưa đối chiếu tọa độ khảo sát di tích.",
+      "page_xy": [
+        158.401678237398,
+        202.90500207381024
+      ],
+      "world_xyz": [
+        -140.653121762602,
+        2.1,
+        -206.70039841447107
+      ],
+      "visual_note": "Biểu tượng minh họa được phóng đại để chọn map; không phải mặt bằng khảo cổ hoặc mô hình phục dựng.",
+      "admin_at_anchor": [
+        "Ninh Bình"
+      ]
+    },
+    {
+      "id": "thanh_nha_ho",
+      "name": "Thành Nhà Hồ",
+      "lat": 20.078055555555554,
+      "lon": 105.60472222222222,
+      "kind": "stone_citadel",
+      "source": "https://whc.unesco.org/en/list/1358/maps/",
+      "page_xy": [
+        148.39455399762363,
+        210.04344647064124
+      ],
+      "world_xyz": [
+        -150.66024600237637,
+        2.1,
+        -199.56195401764006
+      ],
+      "visual_note": "Biểu tượng minh họa được phóng đại để chọn map; không phải mặt bằng khảo cổ hoặc mô hình phục dựng.",
+      "admin_at_anchor": [
+        "Thanh Hóa"
+      ]
+    },
+    {
+      "id": "hue",
+      "name": "Huế",
+      "lat": 16.46944444444444,
+      "lon": 107.57777777777777,
+      "kind": "imperial_city",
+      "source": "https://whc.unesco.org/en/list/678/maps/",
+      "page_xy": [
+        213.05486150587626,
+        335.9253240253768
+      ],
+      "world_xyz": [
+        -85.99993849412374,
+        2.1,
+        -73.68007646290448
+      ],
+      "visual_note": "Biểu tượng minh họa được phóng đại để chọn map; không phải mặt bằng khảo cổ hoặc mô hình phục dựng.",
+      "admin_at_anchor": [
+        "Huế"
+      ]
+    },
+    {
+      "id": "hoi_an",
+      "name": "Hội An",
+      "lat": 15.883333333333335,
+      "lon": 108.33333333333333,
+      "kind": "old_town",
+      "source": "https://whc.unesco.org/en/list/948/maps/",
+      "page_xy": [
+        238.4033761981317,
+        356.28172675868075
+      ],
+      "world_xyz": [
+        -60.651423801868305,
+        2.1,
+        -53.32367372960056
+      ],
+      "visual_note": "Biểu tượng minh họa được phóng đại để chọn map; không phải mặt bằng khảo cổ hoặc mô hình phục dựng.",
+      "admin_at_anchor": [
+        "Đà Nẵng"
+      ]
+    },
+    {
+      "id": "my_son",
+      "name": "Mỹ Sơn",
+      "lat": 15.773843055555556,
+      "lon": 108.10916888888889,
+      "kind": "cham_towers",
+      "source": "https://whc.unesco.org/en/list/949/maps/",
+      "page_xy": [
+        230.87244993323066,
+        360.0913651924668
+      ],
+      "world_xyz": [
+        -68.18235006676935,
+        2.1,
+        -49.514035295814494
+      ],
+      "visual_note": "Biểu tượng minh họa được phóng đại để chọn map; không phải mặt bằng khảo cổ hoặc mô hình phục dựng.",
+      "admin_at_anchor": [
+        "Đà Nẵng"
+      ]
+    }
+  ],
+  "local_maps": [
+    {
+      "id": "lang_chinh",
+      "role": "Làng chính; giữ theo 5 ảnh người dùng cung cấp",
+      "geographic_anchor": null
+    },
+    {
+      "id": "lang_tan_thu",
+      "role": "Làng tân thủ; khu hướng dẫn riêng",
+      "geographic_anchor": null
+    }
+  ],
+  "local_map_note": "Hai làng là địa điểm thiết kế cho game; chưa gán tọa độ thực. Không tự nhận là di tích hay đơn vị hành chính."
+}

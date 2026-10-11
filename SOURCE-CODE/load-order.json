@@ -15,5 +15,6 @@
   "ENVIRONMENT/climate-state.js",
   "ENVIRONMENT/house-lighting.js",
   "ENVIRONMENT/weather-lighting.js",
-  "SOURCE-CODE/js/app.js"
+  "SOURCE-CODE/js/app.js",
+  "MAP/viet-nam-world-map/world-map-ui.js"
 ]

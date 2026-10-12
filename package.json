@@ -7,7 +7,7 @@
     "firebase/functions"
   ],
   "scripts": {
-    "test": "node SOURCE-CODE/tests/run-checks.cjs && node --test SOURCE-CODE/tests/online-unit.test.mjs && node --test SOURCE-CODE/tests/performance.test.cjs SOURCE-CODE/tests/environment-performance.test.cjs && npm run test:vfx && npm run test:portals && npm run test:regions && npm run test:atlas && npm run test:dong-tre && npm run test:access && npm run test:npcs",
+    "test": "node --test SOURCE-CODE/tests/launch-entry.test.cjs && node SOURCE-CODE/tests/run-checks.cjs && node --test SOURCE-CODE/tests/online-unit.test.mjs && node --test SOURCE-CODE/tests/performance.test.cjs SOURCE-CODE/tests/environment-performance.test.cjs && npm run test:vfx && npm run test:portals && npm run test:regions && npm run test:atlas && npm run test:dong-tre && npm run test:access && npm run test:npcs",
     "test:portals": "node --test SOURCE-CODE/tests/house-portals.test.cjs SOURCE-CODE/tests/portal-access.test.cjs SOURCE-CODE/tests/house-travel.test.cjs SOURCE-CODE/tests/toolbar.test.cjs",
     "test:firebase": "node scripts/firebase-local.mjs test",
     "emulators": "node scripts/firebase-local.mjs start",

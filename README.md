@@ -8,29 +8,41 @@ Nguồn xuất từ ChatGPT Sites ngày 10/10/2026, bản v8 tại commit `d36f5
 
 ## Chạy bằng localhost
 
-Máy đã có Python 3, Node.js và Git. Game dùng Three.js r160 được lưu trong dự án; Google Login dùng Firebase JavaScript SDK 13.0.0 qua CDN chính thức và cần Internet. Không cần npm hoặc bước build để mở game. Trình duyệt cần hỗ trợ WebGL và JavaScript modules.
+Trên Windows cần **Python 3.10 trở lên**, Chrome/Edge có WebGL và Internet cho Google Login. Không cần Node.js, npm, Git hoặc bước build để chơi. Three.js r160 và bộ tải GLB có sẵn trong dự án; Firebase SDK 13.0.0 tải từ CDN chính thức.
 
-1. Chạy lệnh PowerShell dưới đây từ worktree CAP-NHAT; dùng cổng 8001 để chạy cùng bản chính ở cổng 8000. Giữ cửa sổ máy chủ mở.
-2. Mở [game tại localhost](http://localhost:8001/SOURCE-CODE/index.html).
-3. Bấm **Đăng nhập bằng Google**, xác thực tài khoản rồi chọn **Khám phá làng 3D**.
+1. Nhấp đúp **START-GAME.bat** ở gốc CAP-NHAT. Launcher kiểm tra entry point, thứ tự tải, tệp MAP/NPC và môi trường Python trước khi mở trình duyệt.
+2. Dùng đúng URL **Game: http://localhost:<cổng>/SOURCE-CODE/index.html** được in trong cửa sổ. Cổng ưu tiên là 8001; cổng thực tế có thể khác. Giữ cửa sổ này mở nếu vừa khởi động server mới.
+3. Bấm **Đăng nhập bằng Google**, rồi **Khám phá làng 3D**. Màn hình đăng nhập ghi “Bản thử nghiệm CAP-NHAT” và hostname/cổng. Tại Làng Việt, mở **Công cụ → Dân làng** để xem 8 NPC; ở MAP khác cần quay về Làng Việt.
 
-Hoặc chạy trong PowerShell:
+**START-SERVER.bat** dùng cùng quy trình. Có thể chạy trong PowerShell (ví dụ chọn cổng ưu tiên 8002, không tự mở trình duyệt):
 
 ```powershell
 Set-Location -LiteralPath 'H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D\VIET-VILLAGE-3D-CAP-NHAT'
-python -B -m http.server 8001 --bind 127.0.0.1
+.\START-SERVER.bat --port 8002 --no-browser
 ```
 
-Nếu dùng bản clone ở nơi khác, chạy lệnh máy chủ từ thư mục gốc của bản clone. Có thể thay `python` bằng `py` khi máy có Python Launcher. Dừng bằng Ctrl+C. Nếu cổng 8001 đã phục vụ đúng worktree, dùng địa chỉ hiện có; nếu bị chương trình khác chiếm, chọn một cổng trống và đổi URL tương ứng. `START-SERVER.bat` gốc vẫn dùng cổng 8000.
+Launcher xác định root từ chính vị trí tệp, nên chạy được khi clone ở ổ đĩa khác hoặc gọi BAT từ thư mục khác. Nếu Python launcher `py -3` không chạy được, thử `python`; thiếu cả hai thì hiện hướng dẫn, giữ thông báo lỗi khi mở bằng nhấp đúp và không tự cài phần mềm. Tham số `--no-browser` cũng bỏ qua chờ phím khi có lỗi để dùng trong terminal/kiểm thử.
 
-Điểm vào gốc `index.html` chuyển tới `SOURCE-CODE/index.html`. Giữ toàn bộ cấu trúc thư mục khi giải nén hoặc clone. `START-GAME.bat` là cách mở HTML trực tiếp có sẵn từ gói xuất; ưu tiên HTTP localhost để kiểm tra và phát triển.
+- **Dùng lại server:** chỉ khi endpoint nhận diện xác nhận đúng đường dẫn checkout và đúng phiên bản launcher. Mở BAT lần nữa sẽ mở lại URL đó, không tạo server mới.
+- **Cổng bận:** giữ nguyên tiến trình đang có, thử các cổng kế tiếp; nếu dải cổng bận thì nhờ Windows chọn cổng trống. Máy chủ Python cũ chạy bằng `http.server` không có nhận diện nên được để nguyên và chọn cổng khác, kể cả khi nó đang phục vụ cùng thư mục. Không mặc định rằng localhost:8001 luôn là bản mới.
+- **Mã mới:** server của launcher gửi `Cache-Control: no-store` và bỏ qua cache validator cũ cho HTML/JS/JSON/GLB. Tải lại trang sau khi sửa code để chạy mã mới. Các máy chủ cũ chưa có hành vi này.
+- **Không mở file HTML trực tiếp:** `index.html` ở gốc chỉ chuyển trang khi dùng HTTP/HTTPS. Nếu mở qua `file://`, nó hướng dẫn chạy START-GAME.bat. SOURCE-CODE/index.html cũng hiện thông báo rõ bằng script thường, vì module Firebase có thể bị chặn trước khi tự báo lỗi.
+- **Đúng cấu trúc:** giữ ASSETS, MAP, CHARACTERS, BUILDINGS, INTERIORS, ENVIRONMENT và SOURCE-CODE cùng gốc. Không dùng riêng SOURCE-CODE làm root server; các đường dẫn `../MAP`, `../CHARACTERS` sẽ sai.
+- **Phiên đăng nhập và tiến độ:** thay đổi cổng tạo origin trình duyệt khác, có thể phải đăng nhập lại và thấy tiến độ cục bộ khác. Dữ liệu ở origin cũ vẫn giữ nguyên; không có thao tác sao chép token hoặc hồ sơ giữa các cổng. Firebase phải cho phép hostname localhost. Launcher không thay đổi Firebase/Rules.
+- Dừng server do mình mở bằng Ctrl+C. Launcher không tự dừng tiến trình nào đang chiếm cổng.
+
+Đối chiếu ngày 12/10/2026: 8000 phục vụ bản main, không có hệ thống 8 NPC mới; 8001 phục vụ đúng CAP-NHAT nhưng là server Python cũ. Đây là hai phiên bản khác nhau, không phải cùng một URL game bị mất dữ liệu. Dùng URL launcher in ra cho lần mở hiện tại.
+
+BAT đã được chạy thật và chọn cổng 8002; mở lần hai dùng lại đúng server. Người dùng đã xác nhận đăng nhập Google thật và thấy đủ 8 NPC tại URL này. Cổng có thể thay đổi ở lần chạy khác.
+
+Kiểm thử launcher: `py -3 -B -m unittest discover -s scripts/tests -v`; kiểm tra entry/file guard: `node --test SOURCE-CODE/tests/launch-entry.test.cjs`. Xem [báo cáo khởi chạy Windows](SOURCE-CODE/docs/windows-launcher.md).
 
 ## Phần thử nghiệm trên cap-nhat
 
 - Hồ sơ, phòng tối đa 8 người, backend và Security Rules: xem [hướng dẫn Firebase](firebase/README.md). `onlineConfig.enabled` vẫn là `false`; chưa bật ghi hồ sơ/phòng lên Firebase thật.
 - **Vũ khí v2 gắn vào nhân vật trong làng:** sau Google Login chọn **Cầm vũ khí trong làng**, hoặc vào game rồi chọn **Vũ khí**. Chọn Côn, Kiếm, Thương, Cung hoặc Rìu; bấm ba nút chiêu tương ứng hoặc dùng phím 1/2/3 khi đang điều khiển nhân vật. Dùng WASD/mũi tên, chạm nền hoặc cần điều khiển trên thiết bị cảm ứng để đi lại.
 - **Đổi vũ khí** mở lại bảng trang bị; **Cất vũ khí** kết thúc chế độ diễn họa. Hiệu ứng sử dụng scene, nhân vật, độ cao địa hình và vòng lặp hiện có. Chuyển vào nhà, đổi chế độ xem, mở hộp thoại hoặc mất phiên đăng nhập sẽ dừng hiệu ứng phù hợp.
-- Nút **Diễn họa vũ khí** mở sân luyện riêng tại [localhost:8001/SOURCE-CODE/weapons-vfx-demo.html](http://localhost:8001/SOURCE-CODE/weapons-vfx-demo.html). Sân luyện có chạy lần lượt 15 chiêu, so sánh ảnh, mức chất lượng và điều khiển camera bằng chuột hoặc hai ngón. Đây là trang diễn họa cục bộ, không đọc/ghi hồ sơ Firebase.
+- Nút **Diễn họa vũ khí** mở sân luyện riêng tại `SOURCE-CODE/weapons-vfx-demo.html` trên cùng hostname/cổng đang chơi. Sân luyện có chạy lần lượt 15 chiêu, so sánh ảnh, mức chất lượng và điều khiển camera bằng chuột hoặc hai ngón. Đây là trang diễn họa cục bộ, không đọc/ghi hồ sơ Firebase.
 - Mã v2 nằm tại `SOURCE-CODE/js/vfx`, ảnh gốc tại `ASSETS/reference`. Dùng chung Three.js r160 đã có, không tải thêm CDN cho phần VFX. Xem [hướng dẫn mã VFX](SOURCE-CODE/docs/weapons-vfx/README.md).
 - VFX hiện chỉ diễn họa cục bộ: chưa có sát thương, HP, kiểm tra trúng địch hoặc đồng bộ trang bị/chiêu qua phòng multiplayer. Bản sao nhân vật từ xa không mang nhầm trang bị cục bộ.
 - Gói ZIP và hai thư mục giải nén gốc được giữ trên máy, không dùng làm đường dẫn chạy. Các thư mục VFX v1 đã bị xóa trước đợt tích hợp v2; không tự khôi phục hoặc xóa thêm dữ liệu cũ.
@@ -60,13 +72,13 @@ Nếu dùng bản clone ở nơi khác, chạy lệnh máy chủ từ thư mục
 | `DOCUMENTS/` | Git giữ báo cáo giới hạn nguồn và phạm vi kiểm tra; bài giảng, kiểm kê, ngữ cảnh và báo cáo kết nối chỉ lưu trên máy |
 | `BACKUP/` | Chỉ lưu trên máy: bundle lịch sử Git, bản v8, HTML cũ, upload và helper phát triển; không có trong bản clone GitHub |
 
-Trang chạy tải **Three.js và 16 script của dự án** theo `SOURCE-CODE/load-order.json`. Đây là script thông thường dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
+Trang CAP-NHAT tải **50 script theo `SOURCE-CODE/load-order.json`**, cùng các script giao diện và module đăng nhập. Các script toàn cục dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
 
 ## Tài nguyên 3D và giới hạn hiện tại
 
 Cảnh được dựng từ hình học Three.js, vật liệu màu và instancing. Năm tệp `*.three.json` xuất từ `Object3D.toJSON()` giữ dữ liệu mô hình; có thể đọc bằng `THREE.ObjectLoader`. Trang hiện tại dựng cảnh bằng JavaScript, chưa tải trực tiếp các JSON này.
 
-Chưa có GLB/GLTF/FBX/OBJ/Blender, rig hoặc animation nhân vật hoàn chỉnh, âm thanh và bộ texture PBR. Ảnh tham chiếu/bộ sưu tập ảnh không tự trở thành texture hoặc mô hình 3D. Nhân vật khối hiện có đang ẩn trong chế độ xem bối cảnh. Bộ câu hỏi Toán còn trong mã nhưng luồng khởi động đang vào bối cảnh, chưa chạy thành trò chơi câu hỏi/cấp độ hoàn chỉnh.
+Bản CAP-NHAT hiện có **8 NPC Làng Việt dạng GLB với animation và texture**, cấu hình tại `MAP/regions/lang-viet/gameplay.json`, mô hình trong `CHARACTERS/NPC/LANG_VIET/`. Các NPC tải sau đăng nhập và hiển thị trong MAP Làng Việt. Ảnh tham chiếu/bộ sưu tập ảnh không tự trở thành texture hoặc mô hình 3D. Các báo cáo xuất gốc bên dưới phản ánh phiên bản trước khi tích hợp NPC.
 
 Nội thất ban ngày còn tối; ánh đèn/bóng đổ ban đêm cần tinh chỉnh. Đã thử bối cảnh, vào/ra sáu nhà và các chế độ thời gian/thời tiết trên trình duyệt trong Codex ở giai đoạn 2; chưa đo FPS hay kiểm tra đầy đủ Chrome/Edge, điện thoại và máy học sinh. Quỹ đạo mặt trời/trăng và thời tiết là mô phỏng phục vụ hình ảnh.
 

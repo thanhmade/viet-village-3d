@@ -1,0 +1,174 @@
+{
+  "audit_version": 1,
+  "created_date": "2026-10-11",
+  "source": {
+    "file": "/workspace/scratch/ae005bf06a3c/viet-nam-world-map/nguon-hanh-chinh-2025.pdf",
+    "url": "https://vnsdi.mae.gov.vn/downloads/hcvn_9tr_2025.pdf",
+    "sha256": "8caa80f799a05960f6343f1e93a77e55997d0e3933bbf2e2f66f5a51289d2cf9",
+    "pdf_page_index": 0,
+    "page_xref": 395,
+    "map_content_vintage": 2025,
+    "publication_scale_denominator": 9000000,
+    "pdf_metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "Esri ArcGISPro 3.6.1.59530",
+      "producer": "",
+      "creationDate": "D:20260524113412",
+      "modDate": "D:20260524113621+07'00'",
+      "trapped": "",
+      "encryption": null
+    }
+  },
+  "crs": {
+    "source": "Embedded PDF /VP /Measure /GCS /WKT",
+    "name": "BD1trieu_VN2000",
+    "wkt_exact": "PROJCS[\"BD1trieu_VN2000\",GEOGCS[\"GCS_VN_2000\",DATUM[\"D_Vietnam_2000\",SPHEROID[\"WGS_1984\",6378137.0,298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Lambert_Conformal_Conic\"],PARAMETER[\"False_Easting\",1000000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",108.0],PARAMETER[\"Standard_Parallel_1\",11.0],PARAMETER[\"Standard_Parallel_2\",21.0],PARAMETER[\"Latitude_Of_Origin\",4.0],UNIT[\"Meter\",1.0]]",
+    "projection": "Lambert Conformal Conic (2 standard parallels)",
+    "datum": "Vietnam 2000",
+    "ellipsoid": "WGS 84",
+    "parameters": {
+      "standard_parallel_1_degrees": 11,
+      "standard_parallel_2_degrees": 21,
+      "latitude_of_origin_degrees": 4,
+      "central_meridian_degrees": 108,
+      "false_easting_meters": 1000000,
+      "false_northing_meters": 0
+    },
+    "datum_transform_applied": false
+  },
+  "method": {
+    "library": "pyproj",
+    "pyproj_version": "3.8.0",
+    "proj_version": "9.8.1",
+    "function": "pyproj.Proj.get_factors(longitude, latitude).areal_scale",
+    "comparison": "Infinitesimal projected area divided by ellipsoid surface area, evaluated within the source geographic CRS; no WGS84-to-VN2000 datum conversion or polygon-area computation performed.",
+    "sample_domain": {
+      "latitude_degrees": [
+        8,
+        24
+      ],
+      "longitude_degrees": [
+        102,
+        110
+      ],
+      "latitude_step_degrees": 0.1,
+      "longitude_step_degrees": 0.5,
+      "sample_count": 2737
+    },
+    "sample_domain_note": "Rectangular diagnostic domain, not a national land boundary."
+  },
+  "results": {
+    "minimum_sample": {
+      "latitude_degrees": 16.0,
+      "longitude_degrees": 108.0,
+      "areal_scale": 0.9924501675962695,
+      "area_distortion_percent": -0.7549832403730528,
+      "meridional_scale": 0.9962179317740874,
+      "parallel_scale": 0.9962179317821471
+    },
+    "maximum_sample": {
+      "latitude_degrees": 24.0,
+      "longitude_degrees": 103.5,
+      "areal_scale": 1.0121030817977665,
+      "area_distortion_percent": 1.2103081797766535,
+      "meridional_scale": 1.00603334032054,
+      "parallel_scale": 1.0060333402820356
+    },
+    "worst_absolute_local_area_distortion_percent": 1.2103081797766535,
+    "max_to_min_area_scale_ratio": 1.0198024191472472,
+    "max_relative_area_scale_difference_percent": 1.980241914724723,
+    "central_meridian_samples": [
+      {
+        "latitude_degrees": 8,
+        "longitude_degrees": 108,
+        "areal_scale": 1.0117715513103216,
+        "area_distortion_percent": 1.1771551310321593
+      },
+      {
+        "latitude_degrees": 9,
+        "longitude_degrees": 108,
+        "areal_scale": 1.0072342001115941,
+        "area_distortion_percent": 0.7234200111594147
+      },
+      {
+        "latitude_degrees": 10,
+        "longitude_degrees": 108,
+        "areal_scale": 1.0033125167615062,
+        "area_distortion_percent": 0.33125167615062345
+      },
+      {
+        "latitude_degrees": 11,
+        "longitude_degrees": 108,
+        "areal_scale": 1.0000000000295457,
+        "area_distortion_percent": 2.9545699220534516e-09
+      },
+      {
+        "latitude_degrees": 12,
+        "longitude_degrees": 108,
+        "areal_scale": 0.9972916249889427,
+        "area_distortion_percent": -0.27083750110572513
+      },
+      {
+        "latitude_degrees": 14,
+        "longitude_degrees": 108,
+        "areal_scale": 0.9936745081025059,
+        "area_distortion_percent": -0.6325491897494095
+      },
+      {
+        "latitude_degrees": 16,
+        "longitude_degrees": 108,
+        "areal_scale": 0.9924501675962695,
+        "area_distortion_percent": -0.7549832403730528
+      },
+      {
+        "latitude_degrees": 18,
+        "longitude_degrees": 108,
+        "areal_scale": 0.9936311530655728,
+        "area_distortion_percent": -0.6368846934427186
+      },
+      {
+        "latitude_degrees": 20,
+        "longitude_degrees": 108,
+        "areal_scale": 0.9972542482893555,
+        "area_distortion_percent": -0.2745751710644506
+      },
+      {
+        "latitude_degrees": 21,
+        "longitude_degrees": 108,
+        "areal_scale": 0.9999999999900648,
+        "area_distortion_percent": -9.9351638027656e-10
+      },
+      {
+        "latitude_degrees": 22,
+        "longitude_degrees": 108,
+        "areal_scale": 1.0033817047428848,
+        "area_distortion_percent": 0.33817047428847946
+      },
+      {
+        "latitude_degrees": 23,
+        "longitude_degrees": 108,
+        "areal_scale": 1.00741142493176,
+        "area_distortion_percent": 0.7411424931760058
+      },
+      {
+        "latitude_degrees": 24,
+        "longitude_degrees": 108,
+        "areal_scale": 1.0121030817885435,
+        "area_distortion_percent": 1.2103081788543468
+      }
+    ]
+  },
+  "interpretation_vi": "Trong lưới kiểm tra vĩ độ 8–24°B, kinh độ 102–110°Đ, riêng phép chiếu LCC làm diện tích cục bộ thay đổi từ -0.755% đến 1.210% so với diện tích trên ellipsoid. Chênh lệch hệ số diện tích lớn nhất giữa hai điểm trong lưới là 1.980%. Đây là sai lệch do phép chiếu, không phải tổng sai số của bản đồ.",
+  "limitations_vi": [
+    "LCC bảo giác, không phải phép chiếu bảo toàn diện tích.",
+    "Thống kê lấy mẫu lưới hữu hạn; không phải chứng minh cực trị liên tục và không tính riêng theo polygon đất liền Việt Nam.",
+    "Chưa đánh giá sai số khái quát hóa ở tỷ lệ 1:9.000.000, độ chính xác đường biên, độ lớn ký hiệu đảo, chuyển datum, hoặc số hóa.",
+    "Không được đồng nhất diện tích polygon trên bản đồ với diện tích hành chính pháp lý.",
+    "Giữ tỷ lệ X/Z đồng nhất không bổ sung biến dạng tương đối do kéo giãn; góc nhìn phối cảnh vẫn thay đổi diện tích cảm nhận trên màn hình.",
+    "Phạm vi vĩ độ dưới 8°B hoặc ngoài lưới này chưa được thống kê trong kết quả trên."
+  ]
+}

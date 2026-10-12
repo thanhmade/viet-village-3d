@@ -1,0 +1,18 @@
+{
+  "version": "r160",
+  "license": "../LICENSE-THREE.txt",
+  "files": [
+    {
+      "file": "GLTFLoader.js",
+      "source": "https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/jsm/loaders/GLTFLoader.js",
+      "originalSha256": "d073b438e6a07e1359741dd5d6c76c953420cc0d4fd84eb1bdde94315540e6a3",
+      "changes": "Only module import paths changed; shared engine is window.THREE r160."
+    },
+    {
+      "file": "BufferGeometryUtils.js",
+      "source": "https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/jsm/utils/BufferGeometryUtils.js",
+      "originalSha256": "9be041e96308775d00e2695cc607645b9a9b64fd7c0e759dd8f7c00a8d92becb",
+      "changes": "Only module import paths changed; shared engine is window.THREE r160."
+    }
+  ]
+}

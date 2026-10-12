@@ -1,8 +1,8 @@
 'use strict';
 // Nội thất là một không gian 3D độc lập, quy ước cửa chính ở +Z.
-let interiorRoot,insideHouse=false,selectedHouse=4,outsideState=null,insideYaw=Math.PI,insidePitch=0,insidePosition=new THREE.Vector3(0,1.55,2.55),roomLight,roomFill;
+let interiorRoot,insideHouse=false,selectedHouse=4,outsideState=null,insideYaw=Math.PI,insidePitch=0,insidePosition=new THREE.Vector3(0,1.55,2.55),roomLight;
 const roomBounds={width:8,depth:6,height:3.65};
-const roomObstacles=[{x:-2.3,z:-.25,w:.23,d:.23},{x:-3.05,z:-.35,w:.62,d:1.08},{x:-3.08,z:1.82,w:.62,d:.55},{x:2.88,z:1.08,w:.80,d:1.40},{x:3.05,z:-1.92,w:.68,d:.65},{x:0,z:-1.98,w:.87,d:.50},{x:-1.4,z:-1.98,w:.34,d:.65},{x:1.4,z:-1.98,w:.34,d:.65}];
+const roomObstacles=[{x:-3.05,z:-.35,w:.62,d:1.08},{x:-3.08,z:1.82,w:.62,d:.55},{x:2.88,z:1.08,w:.80,d:1.40},{x:3.05,z:-1.92,w:.68,d:.65},{x:0,z:-1.98,w:.87,d:.50},{x:-1.4,z:-1.98,w:.34,d:.65},{x:1.4,z:-1.98,w:.34,d:.65}];
 function woodGrain(w,h,x,y,z,parent){for(let i=0;i<7;i++)box(w*.95,.006,.008,i%2?0x745035:0xab7950,x,y-h*.42+i*h*.14,z,parent);}
 function roomWindow(parent,x,z,rot){const g=new THREE.Group();g.position.set(x,2.0,z);g.rotation.y=rot;parent.add(g);for(let xx of [-.57,.57])box(.10,1.64,.18,0x735034,xx,0,0,g);for(let yy of [-.77,.77])box(1.24,.12,.21,0x8b623d,0,yy,0,g);for(let i=0;i<7;i++)box(.037,1.42,.07,0x89673f,-.48+i*.16,0,0,g);for(let j=0;j<9;j++)box(1.04,.035,.07,0x89673f,0,-.65+j*.1625,0,g);}
 function wallWithOpenings(parent,length,openings,x,z,rot){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;parent.add(g);let start=-length/2;for(const o of openings.sort((a,b)=>a.x-b.x)){const left=o.x-o.w/2,right=o.x+o.w/2;if(left>start)box(left-start,3.65,.16,0xdcc6a4,(left+start)/2,1.825,0,g);if(o.bottom>0)box(o.w,o.bottom,.16,0xdcc6a4,o.x,o.bottom/2,0,g);const upper=3.65-o.top;if(upper>0)box(o.w,upper,.16,0xdcc6a4,o.x,o.top+upper/2,0,g);start=right;}if(start<length/2)box(length/2-start,3.65,.16,0xdcc6a4,(length/2+start)/2,1.825,0,g);box(length,.14,.20,0x6d4b30,0,.07,0,g);box(length,.24,.23,0x755032,0,3.53,0,g);}
@@ -34,17 +34,17 @@ let vase=mesh(new THREE.SphereGeometry(.11,10,8),0x97744c,-.48,.85,-.15,tea);vas
 // Sân nhỏ phía ngoài cửa và cây xanh ngoài các ô cửa thật.
 box(5,.11,2,0xb5ab91,0,-.02,4,g);for(let i=0;i<10;i++)for(let j=0;j<4;j++)box(.47,.015,.47,0xcac1a8,-2.25+i*.5,.045,3.15+j*.5,g);for(let side of [-1,1]){box(.20,3.4,.20,0x8e6236,side*1.3,1.7,4.1,g);for(let i=0;i<7;i++){let foliage=ball(.60,[0x6f924d,0x8ba45c,0x50753a][i%3],side*(4.6+Math.sin(i)*.6),1.6+(i%3)*.6,-2.5+i*.7,g);foliage.scale.y=.7;}}for(let xx of [-2.2,2.2])for(let i=0;i<5;i++)ball(.5,0x88a35b,xx+Math.sin(i)*.5,1.7+i*.28,-4.5,g);
 // Bóng cửa sổ lấy từ đèn định hướng và hình học thực.
-bakeStatic(g);roomLight=new THREE.PointLight(0xffd8a0,18,10,2);roomLight.position.set(0,3.1,.3);g.add(roomLight);roomFill=new THREE.HemisphereLight(0xffefda,0x73553b,0);g.add(roomFill);g.visible=false;}
+bakeStatic(g);roomLight=new THREE.PointLight(0xffd8a0,18,10,2);roomLight.position.set(0,3.1,.3);g.add(roomLight);g.visible=false;}
 function enterHouse(index=4){
- if(insideHouse)return;
+ if(insideHouse||window.VietVillageRegions&&window.VietVillageRegions.currentId!=='lang-viet')return;
  const house=housePortalConfigs[index],destination=house&&interiorPortalConfigs.get(house.interiorId);
  if(!destination||!interiorRoot)throw new Error('Nội thất chưa sẵn sàng');
  const spawn=destination.spawn;
  if(!roomCanWalk(spawn.x,spawn.z)||Math.hypot(spawn.x-destination.exit.x,spawn.z-destination.exit.z)<=destination.exit.radius+.25)throw new Error('Điểm xuất hiện trong nhà không an toàn');
  selectedHouse=index;
- outsideState={focus:sceneryFocus.clone(),radius:sceneryRadius,yaw,pitch,gateView,houseView,roaming,
+ outsideState={focus:sceneryFocus.clone(),radius:sceneryRadius,yaw,pitch,gateView,houseView,localWalking,multiplayerWalking,bodyYaw:body.rotation.y,
   worldVisible:world.visible,previewVisible:housePreview.visible,camera:camera.position.clone()};
- clearMotion();insideHouse=true;roaming=false;gateView=-1;
+ clearMotion();villageWeapons?.suspend();insideHouse=true;localWalking=false;multiplayerWalking=false;gateView=-1;
  world.visible=false;housePreview.visible=false;interiorRoot.visible=true;player.visible=false;
  player.position.set(spawn.x,spawn.y,spawn.z);insidePosition.copy(player.position).add(new THREE.Vector3(0,1.52,0));
  insideYaw=spawn.yaw;insidePitch=0;camera.position.copy(insidePosition);camera.fov=68;camera.updateProjectionMatrix();
@@ -53,7 +53,7 @@ function enterHouse(index=4){
  $('walkBtn').disabled=true;$('enterHouseBtn').style.display='none';
  document.body.classList.add('inside');document.body.classList.remove('walking');
  $('helpText').textContent='Kéo để nhìn quanh · WASD / mũi tên / cần điều khiển để đi · Đứng trong vòng RA SÂN 0,8 giây';
- housePortalSystem?.lockUntilExit();if(climateReady)updateClimate(0,true);
+ resetHouseTravel();window.VietVillageRegions?.reset();window.VietVillageRegions?.refreshUI();if(climateReady)updateClimate(0,true);
  updateInterior(0);toast('Đã vào '+house.id);
 }
 function leaveHouse(){
@@ -66,24 +66,24 @@ function leaveHouse(){
  world.visible=outsideState.worldVisible;housePreview.visible=outsideState.previewVisible;
  sceneryFocus.copy(outsideState.focus);sceneryRadius=outsideState.radius;
  yaw=outsideState.yaw;pitch=outsideState.pitch;gateView=outsideState.gateView;houseView=outsideState.houseView;
- roaming=outsideState.roaming;player.visible=roaming;
+ localWalking=outsideState.localWalking;multiplayerWalking=outsideState.multiplayerWalking;player.visible=localWalking||multiplayerWalking;body.rotation.y=outsideState.bodyYaw;
  camera.position.copy(outsideState.camera);camera.fov=48;camera.updateProjectionMatrix();
- if(roaming){
+ if(localWalking||multiplayerWalking){
   sceneryFocus.copy(player.position).add(new THREE.Vector3(0,1,0));
-  camera.position.copy(villageCameraTarget());
+  camera.position.copy(villageWalkingCameraTarget(sceneryFocus));
   camera.lookAt(sceneryFocus);document.body.classList.add('walking');
  }
  document.body.classList.remove('inside');
  $('roomControls').classList.add('hidden');$('entryLayer').style.display='block';
  $('houseBtn').disabled=false;$('gateBtn').disabled=false;$('walkBtn').disabled=false;$('enterHouseBtn').style.display='';
  $('helpText').textContent='WASD / mũi tên / cần điều khiển: đi bộ · Đứng trong vòng xanh 0,8 giây để vào nhà';
- housePortalSystem?.lockUntilExit();if(climateReady)updateClimate(0,true);toast('Đã ra sân '+house.id);
+ resetHouseTravel();window.VietVillageRegions?.reset();window.VietVillageRegions?.refreshUI();if(climateReady)updateClimate(0,true);toast('Đã ra sân '+house.id);
 }
 function roomView(index){
  clearMotion();const positions=[[0,1.55,.55],[0,1.55,-.80],[-2,1.55,.70],[1.65,1.55,-.15]];
  insidePosition.set(...positions[index]);player.position.copy(insidePosition).y-=1.52;
  insideYaw=[Math.PI,0,-Math.PI/2,Math.PI/2][index];insidePitch=0;
- housePortalSystem?.lockUntilExit();
+ resetHouseTravel();
 }
 function roomCanWalk(x,z){return Number.isFinite(x)&&Number.isFinite(z)&&Math.abs(x)<3.70&&Math.abs(z)<2.72&&!roomObstacles.some(o=>Math.abs(x-o.x)<o.w+.13&&Math.abs(z-o.z)<o.d+.13);}
 function updateInterior(dt){
@@ -107,40 +107,6 @@ function updateInterior(dt){
  camera.position.copy(insidePosition);
  camera.lookAt(insidePosition.clone().add(new THREE.Vector3(Math.sin(insideYaw)*Math.cos(insidePitch),Math.sin(insidePitch),Math.cos(insideYaw)*Math.cos(insidePitch))));
 }
-function approachRoomExit(){
- if(!insideHouse)return;clearMotion();waypoints=findRoomPath(insidePosition,{x:0,z:2.0});target=waypoints.shift()||null;
- if(!target){toast('Chưa tìm được lối ra. Hãy dùng cần điều khiển để đi tới vòng RA SÂN.');return;}
- toast('Đi tới vòng RA SÂN · Đứng trong vòng 0,8 giây');
-}
-function updateEntrances(){
- for(let i=0;i<village.houses.length;i++){
-  const button=$('door-'+i);if(!button)continue;
-  const h=village.houses[i],pos=new THREE.Vector3(h.x,1.5,h.z+4.4);
-  let show=!roaming&&!insideHouse&&!overlays()&&(world.visible||housePreview.visible&&i===4)&&gateView<0&&camera.position.z>h.z+1.8;
-  pos.project(camera);show=show&&pos.z>=-1&&pos.z<=1&&Math.abs(pos.x)<.95&&Math.abs(pos.y)<.88;
-  button.style.display=show?'block':'none';
-  if(show){button.style.left=(pos.x*.5+.5)*innerWidth+'px';button.style.top=(-pos.y*.5+.5)*innerHeight+'px';}
- }
-}
-function bindInterior(){
- try{buildInterior();}catch(error){
-  if(interiorRoot)scene.remove(interiorRoot);interiorRoot=null;
-  console.error('Interior preparation:',error);toast('Chưa dựng được nội thất. Hãy thử lại tại vòng vào nhà.');
- }
- const layer=$('entryLayer');
- for(let i=0;i<6;i++){
-  let b=document.createElement('button');b.id='door-'+i;b.className='entryMarker';b.textContent='↳ Đi tới nhà '+(i+1);
-  b.onclick=()=>approachHouse(i);layer.append(b);
- }
- $('enterHouseBtn').onclick=()=>approachHouse(4);$('leaveHouseBtn').onclick=approachRoomExit;
- for(let i=0;i<4;i++)$('roomView'+i).onclick=()=>roomView(i);
- for(const [id,key] of [['roomForward','KeyW'],['roomBack','KeyS'],['roomLeft','KeyA'],['roomRight','KeyD']]){
-  let b=$(id);b.onpointerdown=e=>{if(!insideHouse)return;e.preventDefault();b.setPointerCapture?.(e.pointerId);keys[key]=true;};
-  b.onpointerup=b.onpointercancel=()=>keys[key]=false;
- }
- for(let id of ['overviewBtn','cameraBtn']){
-  const old=$(id).onclick;$(id).onclick=()=>{if(insideHouse)leaveHouse();old();};
- }
- // Escape is an accessible fallback if a device cannot use the movement controls.
- addEventListener('keydown',e=>{if(insideHouse&&e.code==='Escape')leaveHouse();});
-}
+function updateEntrances(){for(let i=0;i<village.houses.length;i++){const button=$('door-'+i);if(!button)continue;const h=village.houses[i],pos=new THREE.Vector3(h.x,1.5,h.z+4.4);let show=(!window.VietVillageRegions||window.VietVillageRegions.currentId==='lang-viet')&&!insideHouse&&!localWalking&&!multiplayerWalking&&!overlays()&&(world.visible||housePreview.visible&&i===4)&&gateView<0&&camera.position.z>h.z+1.8;pos.project(camera);show=show&&pos.z>=-1&&pos.z<=1&&Math.abs(pos.x)<.95&&Math.abs(pos.y)<.88;button.style.display=show?'block':'none';if(show){button.style.left=(pos.x*.5+.5)*innerWidth+'px';button.style.top=(-pos.y*.5+.5)*innerHeight+'px';}}}
+function bindInterior(){buildInterior();const layer=$('entryLayer');for(let i=0;i<6;i++){let b=document.createElement('button');b.id='door-'+i;b.className='entryMarker';b.textContent='↳ Đi tới nhà '+(i+1);b.onclick=()=>approachHouse(i);layer.append(b);} $('enterHouseBtn').onclick=()=>housePreview.visible?enterHouse(4):approachHouse(4);$('leaveHouseBtn').onclick=()=>outsideState?.previewVisible?leaveHouse():approachRoomExit();for(let i=0;i<4;i++)$('roomView'+i).onclick=()=>roomView(i);for(const [id,key] of [['roomForward','KeyW'],['roomBack','KeyS'],['roomLeft','KeyA'],['roomRight','KeyD']]){let b=$(id);b.onpointerdown=e=>{if(!insideHouse)return;e.preventDefault();b.setPointerCapture?.(e.pointerId);keys[key]=true;};b.onpointerup=b.onpointercancel=()=>keys[key]=false;}for(let id of ['overviewBtn','cameraBtn']){const old=$(id).onclick;$(id).onclick=()=>{leaveHouse();old();};}addEventListener('keydown',e=>{if(insideHouse&&e.code==='Escape')leaveHouse();});}
+

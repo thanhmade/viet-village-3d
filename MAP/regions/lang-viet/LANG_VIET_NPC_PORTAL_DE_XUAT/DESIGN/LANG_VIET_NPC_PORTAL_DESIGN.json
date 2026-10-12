@@ -1,0 +1,430 @@
+{
+  "schema_name": "viet-village-map-design",
+  "schema_version": "1.0",
+  "status": "design_proposal",
+  "runtime_ready": false,
+  "created_date_local": "2026-10-11",
+  "language": "vi",
+  "source": {
+    "uploaded_filename": "Lang-Viet(1).zip",
+    "zip_sha256": "066da1aa3c029c6a91c65934a252a4782f3e070c659e522411991f85b1dbcccf",
+    "attachment_only_contains_reference_images": true,
+    "references": [
+      {
+        "reference_id": "REF_01",
+        "original_archive_path": "Lang-Viet/1791683938686_358328111282379811_g838016562893130619_efdb7057f693069b579fb0623b2e26ab.jpg",
+        "packaged_path": "REFERENCES/REF_01_CHINH_DIEN.jpg",
+        "view_description": "Cổng ở tiền cảnh; dùng làm góc chuẩn cho trái/phải.",
+        "bytes": 691909,
+        "sha256": "4fa4dd87edb40b47e92e6fea11624e85dc8ce387e3152bf970d6081bc847b361"
+      },
+      {
+        "reference_id": "REF_02",
+        "original_archive_path": "Lang-Viet/1791683938746_358328111282379811_g838016562893130619_5be600a3ffb9f2cbdef78441f0298152.jpg",
+        "packaged_path": "REFERENCES/REF_02_PHIA_DINH.jpg",
+        "view_description": "Góc nhìn từ phía công trình lớn về cổng.",
+        "bytes": 811724,
+        "sha256": "c98fb05cbb217f497aa9e89c35dc759df84ff66479204166d8ba6e8d711f4a19"
+      },
+      {
+        "reference_id": "REF_03",
+        "original_archive_path": "Lang-Viet/1791683938800_358328111282379811_g838016562893130619_21a11f87c8097995d4d08d2678246854.jpg",
+        "packaged_path": "REFERENCES/REF_03_BEN_VUON_TRE.jpg",
+        "view_description": "Góc bên có vườn rau và bụi tre ở tiền cảnh.",
+        "bytes": 733519,
+        "sha256": "a912818bf4230ecc7023ec4373a224cc37029e8a27f81a323212d34a07255b23"
+      },
+      {
+        "reference_id": "REF_04",
+        "original_archive_path": "Lang-Viet/1791683938885_358328111282379811_g838016562893130619_df44917d2b4ac61ca9802a56d21a9d84.jpg",
+        "packaged_path": "REFERENCES/REF_04_BEN_HO_SEN.jpg",
+        "view_description": "Góc bên có hồ sen và cầu gỗ ở tiền cảnh.",
+        "bytes": 789518,
+        "sha256": "c7ce152b01a83899285f08c9bb0e9195a1e9a5e90b6217df825df91f94dec69a"
+      },
+      {
+        "reference_id": "REF_05",
+        "original_archive_path": "Lang-Viet/1791683938969_358328111282379811_g838016562893130619_60b1f7d3c0bb3522413686cedeac6b11.jpg",
+        "packaged_path": "REFERENCES/REF_05_GOC_CHEO.jpg",
+        "view_description": "Góc chéo để đối chiếu đường đi và công trình.",
+        "bytes": 761024,
+        "sha256": "14dd53782804d1dc68020509cb7f480432bad6f9498d08127ae7673355076c70"
+      }
+    ]
+  },
+  "map": {
+    "suggested_id": "MAP_LANG_VIET_01",
+    "display_name": "Làng Việt",
+    "proposed_role": "safe_village_hub",
+    "canonical_reference": "REF_01",
+    "orientation": "Trái/phải theo góc nhìn từ cổng vào; không xác định hướng địa lý.",
+    "geographic_location": null,
+    "historical_dynasty": null,
+    "physical_scale": null,
+    "world_bounds": null,
+    "global_rules": {
+      "hostile_spawn_inside_village": false,
+      "npc_combat_enabled": false,
+      "clear_main_path": true
+    }
+  },
+  "observed_landmarks": [
+    {
+      "id": "LANDMARK_GATE",
+      "label": "Cổng làng",
+      "basis": "visible_in_references"
+    },
+    {
+      "id": "LANDMARK_BANYAN",
+      "label": "Cây đa và sân vòng giữa làng",
+      "basis": "visible_in_references"
+    },
+    {
+      "id": "LANDMARK_LARGE_HALL",
+      "label": "Công trình lớn cuối trục; đề xuất làm đình",
+      "basis": "building_visible_function_proposed"
+    },
+    {
+      "id": "LANDMARK_GARDEN",
+      "label": "Vườn rau và giàn tre bên trái cổng",
+      "basis": "visible_in_REF_01"
+    },
+    {
+      "id": "LANDMARK_LOTUS_POND",
+      "label": "Hồ sen và cầu gỗ bên phải cổng",
+      "basis": "visible_in_REF_01"
+    },
+    {
+      "id": "LANDMARK_HOUSE_ROWS",
+      "label": "Hai dãy nhà; REF_01 hiển thị ba nhà mỗi bên",
+      "basis": "visible_in_REF_01_requires_cross_view_reconciliation"
+    }
+  ],
+  "npcs": [
+    {
+      "id": "NPC_LANG_VIET_LY_TRUONG",
+      "number": 1,
+      "name": "Lý trưởng",
+      "anchor": "Hiên công trình lớn cuối trục làng; đề xuất sử dụng làm đình.",
+      "function": "Giao và trả nhiệm vụ chính; mở chuỗi hướng dẫn.",
+      "props": "Bảng nhiệm vụ hoặc thẻ tên nhỏ cần bổ sung.",
+      "systems": [
+        "dialogue",
+        "quests"
+      ],
+      "idle": "Đứng nghỉ; quay về phía người chơi khi tương tác.",
+      "schematic": [
+        62,
+        18
+      ],
+      "world_transform": null,
+      "placement_status": "proposed_anchor_requires_3d_validation",
+      "model_asset": null,
+      "reference_id": "REF_01",
+      "implementation_status": "not_implemented"
+    },
+    {
+      "id": "NPC_LANG_VIET_VO_SU",
+      "number": 2,
+      "name": "Võ sư",
+      "anchor": "Khoảng sân bên phải đình, lệch khỏi đường chính.",
+      "function": "Hướng dẫn di chuyển, chọn mục tiêu và sử dụng chiêu.",
+      "props": "Bia tập gỗ cần bổ sung; xác nhận đủ khoảng trống.",
+      "systems": [
+        "dialogue",
+        "combat_tutorial"
+      ],
+      "idle": "Tập quyền chậm trong phạm vi sân.",
+      "schematic": [
+        70,
+        23
+      ],
+      "world_transform": null,
+      "placement_status": "proposed_anchor_requires_3d_validation",
+      "model_asset": null,
+      "reference_id": "REF_01",
+      "implementation_status": "not_implemented"
+    },
+    {
+      "id": "NPC_LANG_VIET_THAY_DO",
+      "number": 3,
+      "name": "Thầy đồ",
+      "anchor": "Hiên nhà giữa dãy trái, theo góc nhìn từ cổng vào.",
+      "function": "Đưa câu hỏi học tập do giáo viên cấu hình.",
+      "props": "Bàn gỗ, sách hoặc thẻ tre cần bổ sung.",
+      "systems": [
+        "dialogue",
+        "learning_activity"
+      ],
+      "idle": "Đọc sách hoặc ngồi nghỉ.",
+      "schematic": [
+        33,
+        46
+      ],
+      "world_transform": null,
+      "placement_status": "proposed_anchor_requires_3d_validation",
+      "model_asset": null,
+      "reference_id": "REF_01",
+      "implementation_status": "not_implemented"
+    },
+    {
+      "id": "NPC_LANG_VIET_THAY_THUOC",
+      "number": 4,
+      "name": "Thầy thuốc",
+      "anchor": "Hiên nhà giữa dãy phải; giữ cửa ra vào thông thoáng.",
+      "function": "Hồi phục; nhiệm vụ thu thập dược liệu khi có MAP đích.",
+      "props": "Quầy thuốc và giỏ dược liệu cần bổ sung.",
+      "systems": [
+        "dialogue",
+        "healing",
+        "quests"
+      ],
+      "idle": "Chọn thuốc tại hiên.",
+      "schematic": [
+        67,
+        46
+      ],
+      "world_transform": null,
+      "placement_status": "proposed_anchor_requires_3d_validation",
+      "model_asset": null,
+      "reference_id": "REF_01",
+      "implementation_status": "not_implemented"
+    },
+    {
+      "id": "NPC_LANG_VIET_THO_REN",
+      "number": 5,
+      "name": "Thợ rèn",
+      "anchor": "Nhà gần cổng bên trái; khu làm nghề đặt cạnh hiên.",
+      "function": "Mua bán hoặc sửa trang bị; nâng cấp ở giai đoạn sau.",
+      "props": "Ảnh chưa có lò rèn; bổ sung đe và lò nhỏ sau khi kiểm tra bố cục.",
+      "systems": [
+        "dialogue",
+        "equipment_shop"
+      ],
+      "idle": "Làm việc tại đe; dừng khi mở hội thoại.",
+      "schematic": [
+        33,
+        66
+      ],
+      "world_transform": null,
+      "placement_status": "proposed_anchor_requires_3d_validation",
+      "model_asset": null,
+      "reference_id": "REF_01",
+      "implementation_status": "not_implemented"
+    },
+    {
+      "id": "NPC_LANG_VIET_TAP_HOA",
+      "number": 6,
+      "name": "Người bán hàng",
+      "anchor": "Nhà gần cổng bên phải, phía hiên hướng vào đường làng.",
+      "function": "Bán vật dụng; giới thiệu túi đồ và trao đổi vật phẩm.",
+      "props": "Quầy gỗ, giỏ hàng cần bổ sung.",
+      "systems": [
+        "dialogue",
+        "shop"
+      ],
+      "idle": "Sắp xếp giỏ hàng.",
+      "schematic": [
+        67,
+        66
+      ],
+      "world_transform": null,
+      "placement_status": "proposed_anchor_requires_3d_validation",
+      "model_asset": null,
+      "reference_id": "REF_01",
+      "implementation_status": "not_implemented"
+    },
+    {
+      "id": "NPC_LANG_VIET_NONG_DAN",
+      "number": 7,
+      "name": "Nông dân",
+      "anchor": "Lối vào vườn rau bên trái cổng, trên đường đất cạnh hàng rào.",
+      "function": "Nhiệm vụ chăm vườn và thu thập; giới thiệu vùng ngoài làng.",
+      "props": "Cuốc và giỏ tre cần bổ sung.",
+      "systems": [
+        "dialogue",
+        "quests",
+        "gathering"
+      ],
+      "idle": "Chăm vườn; tuần tra ngắn trên lối đi.",
+      "schematic": [
+        27,
+        78
+      ],
+      "world_transform": null,
+      "placement_status": "proposed_anchor_requires_3d_validation",
+      "model_asset": null,
+      "reference_id": "REF_01",
+      "implementation_status": "not_implemented"
+    },
+    {
+      "id": "NPC_LANG_VIET_TUAN_DINH",
+      "number": 8,
+      "name": "Tuần đinh",
+      "anchor": "Bên phải, phía trong cổng làng; tránh chắn giữa cửa.",
+      "function": "Chỉ đường; thông báo trạng thái lối ra và khu luyện cấp.",
+      "props": "Thẻ chỉ đường hoặc biển gỗ cần bổ sung.",
+      "systems": [
+        "dialogue",
+        "route_status"
+      ],
+      "idle": "Quan sát cổng; phạm vi đi lại nhỏ.",
+      "schematic": [
+        59,
+        86
+      ],
+      "world_transform": null,
+      "placement_status": "proposed_anchor_requires_3d_validation",
+      "model_asset": null,
+      "reference_id": "REF_01",
+      "implementation_status": "not_implemented"
+    }
+  ],
+  "quests": [
+    {
+      "id": "QUEST_LV_01",
+      "name": "Chào làng",
+      "giver_npc": "NPC_LANG_VIET_TUAN_DINH",
+      "turn_in_npc": "NPC_LANG_VIET_LY_TRUONG",
+      "goal": "Đến gặp lý trưởng tại đình.",
+      "depends_on": [],
+      "status": "local_design_proposal"
+    },
+    {
+      "id": "QUEST_LV_02",
+      "name": "Làm quen chiến đấu",
+      "giver_npc": "NPC_LANG_VIET_VO_SU",
+      "turn_in_npc": "NPC_LANG_VIET_VO_SU",
+      "goal": "Thử đòn đánh hoặc chiêu đang có lên bia gỗ.",
+      "depends_on": [
+        "QUEST_LV_01"
+      ],
+      "status": "requires_combat_code_and_dummy",
+      "repeat_reward": false
+    },
+    {
+      "id": "QUEST_LV_03",
+      "name": "Giúp việc vườn",
+      "giver_npc": "NPC_LANG_VIET_NONG_DAN",
+      "turn_in_npc": "NPC_LANG_VIET_NONG_DAN",
+      "goal": "Thu thập vật dụng chăm vườn tại các điểm đã đánh dấu.",
+      "depends_on": [
+        "QUEST_LV_01"
+      ],
+      "status": "local_design_proposal"
+    },
+    {
+      "id": "QUEST_LV_04",
+      "name": "Một câu hỏi của thầy đồ",
+      "giver_npc": "NPC_LANG_VIET_THAY_DO",
+      "turn_in_npc": "NPC_LANG_VIET_THAY_DO",
+      "goal": "Trả lời câu hỏi do giáo viên cung cấp; khi sai, hiện gợi ý rồi thử lại.",
+      "depends_on": [
+        "QUEST_LV_01"
+      ],
+      "status": "optional_requires_lesson_content",
+      "blocks_main_progress": false
+    },
+    {
+      "id": "QUEST_LV_05",
+      "name": "Chuyến đi đầu tiên",
+      "giver_npc": "NPC_LANG_VIET_LY_TRUONG",
+      "turn_in_npc": "NPC_LANG_VIET_LY_TRUONG",
+      "goal": "Thực hiện nhiệm vụ ở khu ngoài làng và quay về trả nhiệm vụ.",
+      "depends_on": [
+        "QUEST_LV_02"
+      ],
+      "status": "blocked_pending_target_map_zip",
+      "target_map_id": null
+    }
+  ],
+  "spawns": [
+    {
+      "id": "SPAWN_LANG_VIET_CONG",
+      "anchor": "Trong cổng, trên đường chính; ngoài thể tích kích hoạt lối ra.",
+      "world_transform": null,
+      "status": "requires_3d_validation"
+    }
+  ],
+  "portals": [
+    {
+      "id": "PORTAL_LANG_VIET_RA_NGOAI",
+      "source_map_design_id": "MAP_LANG_VIET_01",
+      "source_anchor": "Lối đi xuyên cổng làng, hướng ra ngoài.",
+      "source_trigger_volume": null,
+      "destination_map_id": null,
+      "destination_spawn_id": null,
+      "enabled": false,
+      "target_concept": "Khu ngoài làng để luyện cấp; chưa có ZIP trong yêu cầu này.",
+      "blocked_reason": "await_target_zip_target_map_registration_and_valid_spawn",
+      "enable_requires": [
+        "target_map_available",
+        "target_spawn_valid",
+        "tutorial_ready"
+      ],
+      "return_spawn_design_id": "SPAWN_LANG_VIET_CONG",
+      "activation": "Bước vào vùng kích hoạt rồi xác nhận Đi tiếp.",
+      "anti_loop_rule": "Điểm đến ở ngoài vùng kích hoạt chiều về; chờ người chơi rời vùng trước khi kích hoạt lại."
+    }
+  ],
+  "local_traversals": [
+    {
+      "id": "WALK_CAU_HO_SEN",
+      "type": "physical_walk",
+      "cross_map": false,
+      "anchor": "Cầu gỗ qua hồ sen; không coi hồ là bến thuyền."
+    },
+    {
+      "id": "HOUSE_ENTRY_FUTURE",
+      "type": "local_interior_transition",
+      "cross_map": false,
+      "anchor": "Cửa nhà được chọn sau khi đọc mã nội thất thực tế.",
+      "status": "optional_requires_existing_code"
+    }
+  ],
+  "outside_training_concepts": [
+    {
+      "name": "Chuột đồng",
+      "suggested_level_band": [
+        1,
+        2
+      ],
+      "environment_condition": "MAP đích có ruộng, bờ cỏ hoặc bụi cây.",
+      "combat_style": "Ít máu; một mục tiêu; ưu tiên không chủ động tấn công.",
+      "stats": null
+    },
+    {
+      "name": "Lợn rừng",
+      "suggested_level_band": [
+        3,
+        4
+      ],
+      "environment_condition": "MAP đích có rìa rừng hoặc đồi có cây.",
+      "combat_style": "Báo hiệu trước khi húc; truy đuổi ngắn.",
+      "stats": null
+    },
+    {
+      "name": "Lợn rừng đầu đàn",
+      "suggested_level_band": [
+        5,
+        5
+      ],
+      "environment_condition": "MAP đích có bãi đất rộng, đủ chỗ né.",
+      "combat_style": "Thử thách cuối khu; giới thiệu né tránh.",
+      "stats": null
+    }
+  ],
+  "outside_scope": {
+    "build_other_maps_now": false,
+    "only_build_after_target_zip_and_explicit_request": true,
+    "external_maps_and_assets_included_in_package": false
+  },
+  "integration": {
+    "actual_scene_code_available": false,
+    "main_html_attachment_is_redirect": true,
+    "test_checkout_user_path": "H:\\CHAT GPT\\3D-GAME\\VIET-VILLAGE-3D\\VIET-VILLAGE-3D-CAP-NHAT",
+    "main_checkout_mutation_authorized_by_this_plan": false,
+    "existing_script_style_from_readme": "ordered_classic_scripts_not_ES_modules",
+    "instructions": "Đọc mã cảnh và hệ thống hiện có trước khi gán tọa độ hoặc thêm script. JSON này không phải cấu hình chạy game."
+  }
+}

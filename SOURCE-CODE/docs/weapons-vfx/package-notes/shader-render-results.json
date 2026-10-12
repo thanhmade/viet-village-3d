@@ -1,0 +1,83 @@
+{
+  "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+  "version": "OpenGL ES 3.2 Mesa 25.2.8-0ubuntu0.24.04.2",
+  "linkedShaderPrograms": 7,
+  "scenes": [
+    {
+      "skill": "staff.con-quet",
+      "renderedObjects": 13,
+      "glError": 0
+    },
+    {
+      "skill": "staff.ho-than",
+      "renderedObjects": 23,
+      "glError": 0
+    },
+    {
+      "skill": "staff.chan-dia",
+      "renderedObjects": 50,
+      "glError": 0
+    },
+    {
+      "skill": "sword.nhat-kiem",
+      "renderedObjects": 13,
+      "glError": 0
+    },
+    {
+      "skill": "sword.kiem-hoa",
+      "renderedObjects": 22,
+      "glError": 0
+    },
+    {
+      "skill": "sword.kiem-khi",
+      "renderedObjects": 15,
+      "glError": 0
+    },
+    {
+      "skill": "spear.xuyen-kich",
+      "renderedObjects": 16,
+      "glError": 0
+    },
+    {
+      "skill": "spear.thuong-phong",
+      "renderedObjects": 13,
+      "glError": 0
+    },
+    {
+      "skill": "spear.pha-tran",
+      "renderedObjects": 54,
+      "glError": 0
+    },
+    {
+      "skill": "bow.xuyen-tien",
+      "renderedObjects": 17,
+      "glError": 0
+    },
+    {
+      "skill": "bow.lien-tien",
+      "renderedObjects": 25,
+      "glError": 0
+    },
+    {
+      "skill": "bow.mua-ten",
+      "renderedObjects": 21,
+      "glError": 0
+    },
+    {
+      "skill": "axe.khai-son",
+      "renderedObjects": 51,
+      "glError": 0
+    },
+    {
+      "skill": "axe.pha-giap",
+      "renderedObjects": 55,
+      "glError": 0
+    },
+    {
+      "skill": "axe.cuong-phong",
+      "renderedObjects": 54,
+      "glError": 0
+    }
+  ],
+  "scope": "OpenGL ES software rendering of original VFX geometry/shaders; not a browser/WebGL UI test."
+}

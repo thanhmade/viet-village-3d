@@ -1,0 +1,62 @@
+{
+  "checks": [
+    {
+      "name": "JavaScript syntax",
+      "ok": true
+    },
+    {
+      "name": "34 province paths and 14 anchored sites",
+      "ok": true
+    },
+    {
+      "name": "No duplicated DOM IDs",
+      "ok": true
+    },
+    {
+      "name": "No automatic external resources",
+      "ok": true
+    },
+    {
+      "name": "Accent-insensitive site search",
+      "ok": true
+    },
+    {
+      "name": "Planned map filtering",
+      "ok": true
+    },
+    {
+      "name": "Province search",
+      "ok": true
+    },
+    {
+      "name": "Selecting exact province path",
+      "ok": true
+    },
+    {
+      "name": "Site details and local map status",
+      "ok": true
+    },
+    {
+      "name": "Vân Đồn island port description",
+      "ok": true
+    },
+    {
+      "name": "Zoom preserves aspect ratio",
+      "ok": true
+    },
+    {
+      "name": "Administrative and marker layer toggles",
+      "ok": true
+    },
+    {
+      "name": "Source anchors unchanged after interactions",
+      "ok": true
+    },
+    {
+      "name": "Two fictional hubs remain without geographic coordinates",
+      "ok": true
+    }
+  ],
+  "browser_render_check": "Not completed: installed Chromium launch blocked by environment (EPERM socket / process_singleton). No browser screenshots produced.",
+  "test_scope": "Actual embedded script executed against a minimal DOM double; geometry, counts, search, filters, selection and layer behavior tested. Browser event routing, touch gestures and visual layout require browser verification."
+}

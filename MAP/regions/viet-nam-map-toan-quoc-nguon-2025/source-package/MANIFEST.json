@@ -1,0 +1,102 @@
+{
+  "01_Viet_Nam_Nen_Khong_Chu.png": {
+    "bytes": 2053452,
+    "sha256": "02ef5ba546d38f16246d06d78f9d7a7eb96350dacc227326c0a10a7e4d822456"
+  },
+  "01_Viet_Nam_Nen_Khong_Chu.svg": {
+    "bytes": 1978953,
+    "sha256": "ada40eb4ad1bf35ae0dcbf5dbd2c735a69b4235c77387faffbee98ba827bdbd7"
+  },
+  "02_Viet_Nam_Dia_Gioi_Khong_Chu.png": {
+    "bytes": 2085349,
+    "sha256": "1aa76bc05773b3afb2fffe8615dbd1e0b4df7c00ed991dbb4a94f29725f08f9d"
+  },
+  "02_Viet_Nam_Dia_Gioi_Khong_Chu.svg": {
+    "bytes": 1977565,
+    "sha256": "f8880bc589dd2264f54acdd9782dbb7993100038b5ee1e6c7c6420b35751c4c9"
+  },
+  "03_Viet_Nam_Diem_Vao_Map_Khong_Chu.png": {
+    "bytes": 2094455,
+    "sha256": "e0990de0a8346a52c7118ac38cc6f6283c361c5e27abd138490eaeaab48e3cb4"
+  },
+  "03_Viet_Nam_Diem_Vao_Map_Khong_Chu.svg": {
+    "bytes": 1980461,
+    "sha256": "54b0a7fdff91873ac0bc19d10f84dd7166a4066f0a377c8139d9e5bfe62ff4f4"
+  },
+  "04_Xem_Ban_Do.html": {
+    "bytes": 4390901,
+    "sha256": "cc3f24d9dce610780def5a024d6e5bc3ffec68080dd72a55957a27ad51ad6d77"
+  },
+  "README.md": {
+    "bytes": 4256,
+    "sha256": "af542c6690638cda6326daa91ae1a435dd22470fc494cccc02dffe6ee0381614"
+  },
+  "art-validation.json": {
+    "bytes": 1536,
+    "sha256": "962d9843b7cc1805794f99b4267205978d3f2ba8a8301ee6284e3c8855c6a380"
+  },
+  "build_art.py": {
+    "bytes": 8780,
+    "sha256": "77a821ef14ec361345ea53ef16323d85870fc6b9c1a13d924147c81ec55d06a1"
+  },
+  "build_data.py": {
+    "bytes": 7311,
+    "sha256": "40d275f1ef15cc8a981c1d5a6bf6367ce4e32d66f96b3a04183338e706da1df7"
+  },
+  "build_markers.py": {
+    "bytes": 2148,
+    "sha256": "04ec7add52096c730918ce0c341d3ca5dfa565e36e4a32fab4693cc4d5f48497"
+  },
+  "build_viewer.py": {
+    "bytes": 26285,
+    "sha256": "c2aec0adefbf42725a8f8a35b461094a8680a9cb971e6e8a02b0f46736aacf57"
+  },
+  "data/kiem-tra-phep-chieu.json": {
+    "bytes": 6976,
+    "sha256": "f8f2dcf1c6f8377cf2d20b6a37ac735ced63f1aa53978680a75de140498a5012"
+  },
+  "data/map-data.json": {
+    "bytes": 397328,
+    "sha256": "9f1caffc510140f19c71b4a589cb07086cc475c8398b0808fd8b67d390c3c521"
+  },
+  "data/ranh-gioi-34-vung-nguon.json": {
+    "bytes": 508658,
+    "sha256": "ac94d032a22cf13f5202971a1898d9b4583f57d216820adfea367990fca6b698"
+  },
+  "docs/NGUON_VA_DO_CHINH_XAC.md": {
+    "bytes": 6460,
+    "sha256": "3b3f1391277b4500a73982d52ec84afdd74b4668aea34c52f928f8e679d933d0"
+  },
+  "docs/THIET_KE_MAP_TOAN_QUOC.md": {
+    "bytes": 7110,
+    "sha256": "fd024f4bcdaa9237942a71f723fabdbc44a5d67e5101b264efa21824f061595d"
+  },
+  "marker-validation.json": {
+    "bytes": 367,
+    "sha256": "ca11eeb5b28d58f8f5462751786d0ace4dadda3861f73c48fc4d25a0fb5ad6ea"
+  },
+  "sources/Ban_do_hanh_chinh_Viet_Nam_2025_nguon.pdf": {
+    "bytes": 1737279,
+    "sha256": "8caa80f799a05960f6343f1e93a77e55997d0e3933bbf2e2f66f5a51289d2cf9"
+  },
+  "sources/diem-vao-map-ban-dau.json": {
+    "bytes": 4312,
+    "sha256": "9fb84f21a3db3700a485009960b14af85691b61fda072f244ad8715e9af08106"
+  },
+  "sources/official-base.svg": {
+    "bytes": 1721476,
+    "sha256": "650b86c4bf41fe10dc5c2cce4718ddacf219a15d3904c9124f7e67b991fc967f"
+  },
+  "test_viewer.cjs": {
+    "bytes": 4074,
+    "sha256": "8552cba8672dea1c522537d0fa7e72f061f116a597199a488437188e5f6dd803"
+  },
+  "test_viewer_static.cjs": {
+    "bytes": 5414,
+    "sha256": "34782517b8c34b368f792bb4756cd6f25f28b2ff3cde2f66def8c42ce3e1f76f"
+  },
+  "viewer-validation.json": {
+    "bytes": 1529,
+    "sha256": "8d65b720a62968b4b9e8fdea0059063752ec59b6331d8a5b262702db13405a3c"
+  }
+}

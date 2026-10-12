@@ -1,0 +1,70 @@
+/* VIET VILLAGE 3D — Kiếm: 3 kỹ năng riêng.
+ * Thời gian: giây; khoảng cách: mét (quy ước 1 đơn vị Three.js = 1 mét).
+ * Các trị số là mặc định thử nghiệm do thiết kế, không đo từ ảnh.
+ * Hướng trước trong local space là -Z; scene cần dùng hệ trục Y-up.
+ */
+(function (root, factory) {
+  'use strict';
+  const config = factory();
+  if (typeof module === 'object' && module.exports) module.exports = config;
+  if (root) root.SwordSkillConfig = config;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+  return {
+  "weaponId": "sword",
+  "name": "Kiếm",
+  "palette": {
+    "primary": "#80c9ff",
+    "secondary": "#e7f6ff",
+    "core": "#ffffff",
+    "earth": "#d5b77a"
+  },
+  "skills": [
+    {
+      "id": "sword.nhat-kiem",
+      "localId": "nhat-kiem",
+      "name": "Nhất Kiếm",
+      "type": "combo",
+      "slot": 1,
+      "duration": 1.3,
+      "activeAt": 0.12,
+      "activeEnd": 0.9,
+      "cooldown": 1.5,
+      "radius": 3.0,
+      "range": 3.6,
+      "forwardOffset": 0.25,
+      "description": "Liên hoàn nhiều vệt chém cong xanh băng, lõi trắng và điểm va chạm lóe sáng."
+    },
+    {
+      "id": "sword.kiem-hoa",
+      "localId": "kiem-hoa",
+      "name": "Kiếm Hoa",
+      "type": "lotus",
+      "slot": 2,
+      "duration": 1.9,
+      "activeAt": 0.25,
+      "activeEnd": 1.5,
+      "cooldown": 3.0,
+      "radius": 3.8,
+      "range": 3.8,
+      "forwardOffset": 0.0,
+      "description": "Năng lượng nở dạng nhiều cánh hoa kiếm trong không gian, dải xoay và cánh nhỏ bay."
+    },
+    {
+      "id": "sword.kiem-khi",
+      "localId": "kiem-khi",
+      "name": "Kiếm Khí",
+      "type": "projectile",
+      "slot": 3,
+      "duration": 1.4,
+      "activeAt": 0.18,
+      "activeEnd": 1.0,
+      "cooldown": 2.2,
+      "radius": 0.35,
+      "range": 11.0,
+      "forwardOffset": 1.0,
+      "description": "Tụ vòng sáng trước tay rồi phóng mũi kiếm khí xanh trắng dọc hướng nhìn."
+    }
+  ]
+};
+});

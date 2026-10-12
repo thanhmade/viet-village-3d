@@ -102,6 +102,7 @@ for (const change of [
 {
   const require = createRequire(import.meta.url);
   const { run, context, listeners } = require('./harness.cjs')();
+  assert.ok(listeners.get('keydown')?.length, 'exercise the registered game input handlers');
   let prevented = false;
   for (const handler of listeners.get('keydown') || []) handler({
     key: ' ', code: 'Space', target: { tagName: 'BUTTON' },
@@ -115,7 +116,7 @@ for (const change of [
     preventDefault: () => { prevented = true; }
   });
   assert.equal(prevented, false, 'game must not intercept the login button after logout');
-  assert.equal(run('active || roaming || insideHouse'), false);
+  assert.equal(run('active || localWalking || multiplayerWalking || insideHouse'), false);
 }
 console.log('PASS: authentication unit checks — deny invalid sessions; SDK validation; private draft; expiry; logout race; offline recovery; game gate.');
 console.log('UNIT ONLY: Firebase SDK is mocked. This is not a real Google sign-in test.');

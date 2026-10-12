@@ -1,11 +1,12 @@
 import { firebaseConfig } from './firebase-config.js';
 import { createAuthSession, validateFirebaseConfig } from './auth-session.js';
+import { initializeOnline } from './online-entry.js';
 
 const SDK_VERSION = '13.0.0';
 const $auth = id => document.getElementById(id);
 const status = $auth('authStatus'), login = $auth('googleLoginBtn'), retry = $auth('authRetryBtn');
 const gameElements = [...document.querySelectorAll('#view,#hud,#home,#quiz,#levels,#complete,#referenceGallery,#climatePanel,#roomControls,#entryLayer')];
-let session, booting = false, gameReady = false;
+let session, online, booting = false, gameReady = false;
 
 const messages = {
   'app/config-invalid': 'Chưa có cấu hình đăng nhập hợp lệ. Vui lòng liên hệ giáo viên.',
@@ -50,6 +51,7 @@ function renderState({ phase, code = '', profile = null }) {
     window.VietVillageGame?.lock();
     $auth('play').disabled = true;
   }
+  online?.onAuthState(authenticated);
 }
 
 window.VietVillageAuth = Object.freeze({
@@ -81,6 +83,7 @@ async function boot() {
     const provider = new sdk.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     session = createAuthSession({ sdk, auth, provider, projectId: firebaseConfig.projectId, onState: renderState });
+    online = initializeOnline({app,auth,authSDK:sdk,isAuthenticated:()=>session.isAuthenticated(),sdkVersion:SDK_VERSION});
     sdk.onIdTokenChanged(auth, user => session.observe(user), error => session.invalidate(error?.code));
     login.onclick = () => session.signIn();
     $auth('homeLogoutBtn').onclick = $auth('logoutBtn').onclick = () => session.signOut();

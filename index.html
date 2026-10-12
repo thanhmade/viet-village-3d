@@ -1,2 +1,17 @@
 <!doctype html>
-<html lang="vi"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=SOURCE-CODE/index.html"><title>VIET VILLAGE 3D</title><body><a href="SOURCE-CODE/index.html">Mở VIET VILLAGE 3D</a></body></html>
+<html lang="vi">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mở VIET VILLAGE 3D · CAP-NHAT</title></head>
+<body>
+<h1>VIET VILLAGE 3D · Bản thử nghiệm CAP-NHAT</h1>
+<p id="launchMessage">Trên Windows, hãy đóng tab này và nhấp đúp <strong>START-GAME.bat</strong> trong cùng thư mục để mở game qua localhost.</p>
+<p>Không mở HTML trực tiếp bằng file://: Google Login và mô hình NPC cần máy chủ HTTP. Giữ cửa sổ máy chủ mở trong lúc chơi.</p>
+<p><a id="httpEntry" href="SOURCE-CODE/index.html" hidden>Vào game</a></p>
+<script>
+if (location.protocol === 'http:' || location.protocol === 'https:') {
+  document.getElementById('httpEntry').hidden = false;
+  document.getElementById('launchMessage').textContent = 'Đang mở game…';
+  location.replace('SOURCE-CODE/index.html' + location.search + location.hash);
+}
+</script>
+<noscript>Hãy bật JavaScript sau khi khởi động game bằng START-GAME.bat.</noscript>
+</body></html>

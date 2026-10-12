@@ -5,7 +5,8 @@ run("$('play').onclick();climate.clock='manual';climate.weather='clear';climate.
 assert(run('moonLight.intensity>.70'));assert(run('starAmbient.intensity>.28'));assert.equal(run('moonLight.castShadow'),true);
 assert(run('moonDisc.position.clone().sub(camera.position).normalize().dot(moonLight.position.clone().sub(moonLight.target.position).normalize())>.999'));
 run("climate.weather='rain';updateClimate(1,true);");assert(run('moonLight.intensity>.2'));assert(run('starAmbient.intensity>.23'));assert.equal(run('moonDisc.visible'),false);
-run('enterHouse(0);updateClimate(1,true);');assert(run('starAmbient.intensity<.04'));assert.equal(run('moonLight.shadow.camera.right'),7);run('leaveHouse();updateClimate(1,true);');assert.equal(run('moonLight.shadow.camera.right'),36);
+run('enterHouse(0);updateClimate(1,true);');assert(run('starAmbient.intensity<.04'));assert.equal(run('moonLight.shadow.camera.right'),7);run('leaveHouse();updateClimate(1,true);');assert.equal(run('moonLight.shadow.camera.right'),18);
+run("$('overviewBtn').onclick();updateClimate(1,true);");assert.equal(run('moonLight.shadow.camera.right'),36);
 run('climate.hour=12;updateClimate(1,true);');assert.equal(run('moonLight.intensity'),0);assert.equal(run('starAmbient.intensity'),0);assert.equal(run('moonLight.castShadow'),false);
 run("climate.hour=23;climate.weather='clear';$('nightVisibility').value='1.6';$('nightVisibility').oninput();updateClimate(1,true);");assert(run('moonLight.intensity>1'));
 run("$('climateQuality').value='low';$('climateQuality').onchange();updateClimate(1,true);");assert.equal(run('moonLight.castShadow'),false);assert(run('starAmbient.intensity>0'));

@@ -3,7 +3,7 @@
 ## Hai bản làm việc độc lập
 
 - Repository: https://github.com/thanhmade/viet-village-3d.git, giữ nguyên chế độ Private.
-- Nhánh của bản này: `main`; mã nguồn nằm ngay tại gốc nhánh.
+- Nhánh của bản này: `cap-nhat`; mã nguồn nằm ngay tại gốc nhánh.
 - Thư mục chính dùng `main`. Worktree con VIET-VILLAGE-3D-CAP-NHAT dùng `cap-nhat`.
 - Main bỏ qua /VIET-VILLAGE-3D-CAP-NHAT/ trong .gitignore và .git/info/exclude. Không thêm thư mục đó hoặc gitlink vào main.
 - Luôn kiểm tra `git rev-parse --show-toplevel`, `git branch --show-current`, `git status` và `git worktree list` trước khi sửa/commit.
@@ -34,18 +34,24 @@ Bảng sau thống kê tệp nguồn/tài nguyên hiện có trước khi thêm 
 
 | Nhóm | Số tệp | MiB |
 |---|---:|---:|
-| ASSETS | 22 | 12.33 |
+| ASSETS | 38 | 40.13 |
 | BUILDINGS | 26 | 39.26 |
-| CHARACTERS | 8 | 9.86 |
+| CHARACTERS | 18 | 83.01 |
 | DOCUMENTS | 2 | 0.01 |
-| ENVIRONMENT | 3 | 0.01 |
+| ENVIRONMENT | 3 | 0.02 |
 | INTERIORS | 11 | 13.93 |
-| MAP | 16 | 57.12 |
-| SOURCE-CODE | 22 | 0.11 |
+| MAP | 115 | 303.97 |
+| SOURCE-CODE | 118 | 0.86 |
+| firebase | 6 | 0.03 |
+| scripts | 2 | 0.00 |
 
-Bản main giữ nguyên mã game hiện có: Google Login, cổng nhà, điều khiển, công trình, nội thất, ánh sáng và môi trường. Không nhập các tính năng hay 8 GLB NPC từ cap-nhat vào main.
+Bản CAP-NHAT có 8 GLB NPC, đủ clip theo cấu hình và 22 ảnh nhúng; không có URI texture ngoài trong 8 GLB. Các bộ dựng cảnh Làng Việt, Làng Tân Thủ và Đồng Tre, atlas, cổng nhà, thời tiết/ánh sáng, VFX, hồ sơ/phòng và các bài kiểm tra được giữ trong nhánh này. 14 thư mục MAP/regions gồm cả ảnh tham chiếu cho vùng chưa dựng 3D. Không coi tất cả 14 vùng là MAP chơi được.
 
-Hai ZIP vũ khí v2 tại gốc là gói giao nhận nguồn đã kiểm tra danh sách/CRC; lưu để bảo toàn đầu vào, chưa tích hợp chúng vào game main và không tự chạy bộ cài.
+Bốn ZIP nguồn vũ khí dưới ASSETS/WEAPONS đang được quy tắc có sẵn loại khỏi Git: VIET-VILLAGE-3D-WEAPON-VFX.zip, VIET-VILLAGE-3D-WEAPON-VFX-PATCH-V1.1.zip, VIET-VILLAGE-3D-WEAPON-VFX-V1.2-FULL.zip và VIET-VILLAGE-3D-WEAPONS-VFX-v2.zip. Đã đọc danh sách và kiểm tra CRC trước khi giữ quy tắc này. Chúng là gói giao nhận cũ/bản sao; nguồn VFX v2 và 10 ảnh được tích hợp tại SOURCE-CODE/js/vfx và ASSETS/reference. Gói VFX v2 gốc còn được lưu trên nhánh main. Hai cây demo V1.2 đã bị xóa trong công việc trước lần đồng bộ này; lịch sử commit cũ vẫn lưu chúng. Không xóa thêm dữ liệu để đồng bộ.
+
+Các cây giải nén giao nhận VIET-VILLAGE-3D-WEAPONS-VFX-v2 ở gốc và ASSETS/WEAPONS tiếp tục chỉ lưu cục bộ; không chạy game từ các cây bản sao này. Bộ cài INTEGRATION-v2 được giữ trong Git để lưu nguồn đầu vào, không tự chạy bộ cài. Ba ZIP MAP trong MAP/_ARCHIVE_ZIP được giữ cùng nội dung đã nhập.
+
+Báo cáo MAP-IMPORT và MAP-3D trong DOCUMENTS phản ánh thời điểm tạo báo cáo. Danh sách MAP đang chạy và NPC mới hơn xem SOURCE-CODE/docs/world-atlas.md, dong-tre.md và npc-audit.md; không hiểu trạng thái “chưa dựng” trong báo cáo nhập cũ là trạng thái hiện tại.
 
 Không có tài nguyên nào trong danh sách đồng bộ vượt 50 MiB hoặc giới hạn Git 100 MiB. Dùng Git thông thường lần này; chưa bật LFS và không viết lại lịch sử. Tệp lớn 130,4 MiB (emulator JAR) và 82,9 MiB (node.exe) nằm trong cache/công cụ cục bộ, không đưa lên Git. Nếu sau này thêm tài nguyên vượt ngưỡng, phân loại và thỏa thuận LFS/kho tài nguyên trước commit.
 
@@ -55,8 +61,10 @@ Không có tệp âm thanh trong hai cây nguồn đã kiểm kê. Ảnh tham ch
 
 | ZIP | MiB | Thành viên | Phân loại/kết quả |
 |---|---:|---:|---|
+| `MAP/_ARCHIVE_ZIP/BACH_DANG_4_GOC_THAM_CHIEU.zip` | 13.84 | 4 | CRC đạt; lưu gói nguồn, không tự thực thi |
+| `MAP/_ARCHIVE_ZIP/NGOAI_LANG_DONG_TRE_4_GOC_THAM_CHIEU.zip` | 12.84 | 5 | CRC đạt; lưu gói nguồn, không tự thực thi |
+| `MAP/_ARCHIVE_ZIP/VIET_NAM_MAP_TOAN_QUOC_NGUON_2025.zip` | 10.52 | 26 | CRC đạt; lưu gói nguồn, không tự thực thi |
 | `VIET-VILLAGE-3D-WEAPONS-INTEGRATION-v2.zip` | 27.94 | 39 | CRC đạt; lưu gói nguồn, không tự thực thi |
-| `VIET-VILLAGE-3D-WEAPONS-VFX-v2.zip` | 27.90 | 40 | CRC đạt; lưu gói nguồn, không tự thực thi |
 
 ### Dữ liệu chỉ giữ cục bộ
 

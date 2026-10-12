@@ -1,0 +1,17 @@
+/* Keep the iframe's size while closed: the original SVG viewer observes resize. */
+.worldAtlas{position:fixed;inset:0;display:flex;flex-direction:column;visibility:hidden;pointer-events:none;width:calc(100vw - 32px);height:calc(100dvh - 32px);max-width:1600px;max-height:none;margin:auto;padding:0;border:1px solid #477467;border-radius:18px;background:#f4f1e5;color:#193c37;overflow:hidden;box-shadow:0 24px 90px #001d2d66}
+.worldAtlas[open]{visibility:visible;pointer-events:auto}
+.worldAtlas::backdrop{background:#092f3bdd}
+.worldAtlasHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid #cad6c8;flex-shrink:0}
+.worldAtlasHeader h2{margin:0;font-size:20px}.worldAtlasHeader p{margin:3px 0 0;font-size:12px}
+.worldAtlas button{border:1px solid #a8baab;border-radius:10px;padding:10px 16px;min-height:44px;background:#fffdf2;color:#193c37;cursor:pointer;font:inherit}
+.worldAtlas button:hover:not(:disabled){background:#e2eddf}.worldAtlas button:active:not(:disabled){transform:translateY(1px)}
+.worldAtlas button:focus-visible{outline:3px solid #177c6c;outline-offset:2px}
+.worldAtlas button:disabled{opacity:.55;cursor:default}
+.worldAtlasBody{position:relative;flex:1;min-height:0}.worldAtlasFrame{width:100%;height:100%;border:0;display:block;background:#103c40}
+.atlasLoading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;background:#f4f1e5;padding:24px}.atlasLoading[hidden],.worldAtlas [hidden]{display:none}
+.worldAtlasFooter{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 18px;border-top:1px solid #cad6c8;flex-shrink:0}
+.worldAtlasFooter strong{font-size:17px}.worldAtlasFooter p{margin:4px 0 0;font-size:13px;line-height:1.4}
+.worldAtlas #atlasTravelBtn{flex-shrink:0;background:#215d4e;color:#fff8d5;border-color:#215d4e;font-weight:700;min-width:145px}
+.worldAtlas #atlasTravelBtn:hover:not(:disabled){background:#31765f}
+@media(max-width:700px){.worldAtlas{width:100vw;height:100dvh;border-radius:0;border:0}.worldAtlasHeader{padding:8px 12px}.worldAtlasHeader h2{font-size:17px}.worldAtlasHeader p{display:none}.worldAtlasHeader button{padding:8px 12px}.worldAtlasFooter{padding:10px 12px;gap:8px;align-items:stretch;flex-direction:column}.worldAtlasFooter strong{font-size:15px}.worldAtlasFooter p{font-size:12px}.worldAtlas #atlasTravelBtn{width:100%;min-height:42px}}

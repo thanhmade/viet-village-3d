@@ -1,0 +1,42 @@
+{
+  "mode": "UI runtime / renderer simulation using real Three.js geometries",
+  "allPassed": true,
+  "checks": [
+    "5 weapon selection buttons",
+    "3 skill slots",
+    "5 distinct procedural 3D weapon models",
+    "cancel on weapon switch",
+    "preserve cooldowns on switch",
+    "15 skill casts",
+    "keyboard casting",
+    "shield movement",
+    "pause freezes time",
+    "quality selection",
+    "15 skill automatic sequence",
+    "10 reference image paths",
+    "mobile camera resize"
+  ],
+  "sequential": [
+    "staff.con-quet",
+    "staff.ho-than",
+    "staff.chan-dia",
+    "sword.nhat-kiem",
+    "sword.kiem-hoa",
+    "sword.kiem-khi",
+    "spear.xuyen-kich",
+    "spear.thuong-phong",
+    "spear.pha-tran",
+    "bow.xuyen-tien",
+    "bow.lien-tien",
+    "bow.mua-ten",
+    "axe.khai-son",
+    "axe.pha-giap",
+    "axe.cuong-phong"
+  ],
+  "projectedActor": [
+    2.1281682675991304e-16,
+    0.18143304121118667,
+    0.9869738924968686
+  ],
+  "renderCalls": 6027
+}

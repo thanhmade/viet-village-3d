@@ -41,6 +41,28 @@ Kiểm thử launcher: `py -3 -B -m unittest discover -s scripts/tests -v`; ki�
 
 ## Phần thử nghiệm trên cap-nhat
 
+### Đóng gói Firebase Hosting và Alpha (12/10/2026)
+
+Bản xuất riêng nằm trong `public-game/`, giữ nguyên cây đường dẫn từ gốc dự án và thứ tự script. Không dùng `START-GAME.bat` để kiểm tra bản xuất: BAT chạy mã nguồn; dùng Hosting Emulator bên dưới để phục vụ đúng `public-game`. Xem [hướng dẫn và kết quả kiểm tra Hosting](SOURCE-CODE/docs/firebase-hosting.md).
+
+Chạy từ gốc CAP-NHAT bằng **Node 22.23.3 LTS** đã có trên máy này:
+
+```powershell
+Set-Location -LiteralPath 'H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D\VIET-VILLAGE-3D-CAP-NHAT'
+$hostingNodeDir = Join-Path $PWD '.local-tools\node-22\node-v22.23.3-win-x64'
+$env:Path = "$hostingNodeDir;$env:Path"
+node --version
+npm.cmd run build:hosting
+npm.cmd run test:hosting
+npm.cmd run preview:hosting
+```
+
+Mở **http://localhost:5005/** (tự chuyển đến `SOURCE-CODE/index.html`). Lệnh `preview:hosting` chỉ chạy máy chủ cục bộ; không tạo preview online. Nếu cổng 5005 đang bận, giữ tiến trình đó và xem thông báo CLI; có thể đổi `emulators.hosting.port` sang cổng trống. Dừng phiên emulator do mình mở bằng Ctrl+C. Khi clone sang máy khác, dùng Node 22 và cài dependencies theo lockfile; không cần giữ đường dẫn ổ H trong mã game.
+
+`firebase.json` đã có `hosting.site: viet-village-3d` và `hosting.public: public-game`, không có SPA rewrite hoặc GitHub Action triển khai. Cấu hình backend/rules cũ được giữ nguyên. Bản này vẫn dùng Google Authentication thật của `viet-village-3d`; `onlineConfig.enabled=false` nên chưa đọc/ghi hồ sơ và phòng thật. Không chạy `firebase deploy` hoặc triển khai Rules trong quy trình Alpha. Chủ dự án đã cho phép preview channel `alpha` trong 7 ngày sau khi kiểm tra và push `cap-nhat` thành công; xem [quy trình Alpha](SOURCE-CODE/docs/firebase-hosting-alpha.md).
+
+`public-game/` và kiểm kê `.cache/hosting/` là kết quả tạo lại được, không đưa vào Git. Script dừng nếu gặp tài nguyên thiếu, con trỏ LFS, clip NPC thiếu, đường dẫn sai hoa/thường hoặc dấu hiệu khóa bí mật. Nếu bản xuất cũ có tệp người dùng sửa/thêm, script dừng để bảo toàn; các bản xuất cũ hợp lệ được chuyển vào `.cache/hosting/previous-*` khi đóng gói lại. Danh mục tài nguyên tải động ở `scripts/public-game.config.json` cần được xem lại khi thêm MAP/NPC hoặc một cơ chế tải mới.
+
 - Hồ sơ, phòng tối đa 8 người, backend và Security Rules: xem [hướng dẫn Firebase](firebase/README.md). `onlineConfig.enabled` vẫn là `false`; chưa bật ghi hồ sơ/phòng lên Firebase thật.
 - **Vũ khí v2 gắn vào nhân vật trong làng:** sau Google Login chọn **Cầm vũ khí trong làng**, hoặc vào game rồi chọn **Vũ khí**. Chọn Côn, Kiếm, Thương, Cung hoặc Rìu; bấm ba nút chiêu tương ứng hoặc dùng phím 1/2/3 khi đang điều khiển nhân vật. Dùng WASD/mũi tên, chạm nền hoặc cần điều khiển trên thiết bị cảm ứng để đi lại.
 - **Đổi vũ khí** mở lại bảng trang bị; **Cất vũ khí** kết thúc chế độ diễn họa. Hiệu ứng sử dụng scene, nhân vật, độ cao địa hình và vòng lặp hiện có. Chuyển vào nhà, đổi chế độ xem, mở hộp thoại hoặc mất phiên đăng nhập sẽ dừng hiệu ứng phù hợp.

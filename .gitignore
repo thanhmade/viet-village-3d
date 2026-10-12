@@ -36,6 +36,7 @@ venv/
 /dist/
 /build/
 /web-dist/
+/public-game/
 coverage/
 playwright-report/
 test-results/

@@ -1,0 +1,14 @@
+{
+  "entrypoints": ["index.html", "SOURCE-CODE/index.html", "SOURCE-CODE/weapons-vfx-demo.html"],
+  "runtimeData": [
+    "MAP/regions/lang-viet/gameplay.json",
+    "MAP/regions/lang-viet/dialogues.json",
+    "MAP/regions/lang-viet/quests.json"
+  ],
+  "npcCatalog": "MAP/regions/lang-viet/gameplay.json",
+  "atlasCatalog": "MAP/atlas-destinations.js",
+  "dynamicModules": ["ASSETS/vendor/gltf-r160/GLTFLoader.js"],
+  "regionGalleries": ["lang-viet", "lang-tan-thu", "ngoai-lang-dong-tre"],
+  "weaponGallery": ["staff", "sword", "spear", "bow", "axe"],
+  "licenses": ["ASSETS/vendor/LICENSE-THREE.txt"]
+}

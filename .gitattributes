@@ -1,0 +1,14 @@
+# Preserve binary assets byte-for-byte, including PDFs that contain ASCII streams.
+*.glb binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.pdf binary
+*.zip binary
+*.mp3 binary
+*.ogg binary
+*.wav binary
+*.woff binary
+*.woff2 binary

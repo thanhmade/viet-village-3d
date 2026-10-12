@@ -1,5 +1,7 @@
 # VIET-VILLAGE-3D — Game 3D Ngôi Làng
 
+> Cập nhật quy trình Git 12/10/2026: xem [GIT-WORKFLOW.md](GIT-WORKFLOW.md) về hai nhánh, tài nguyên được lưu, chạy từ bản clone và cấu hình tắt tự triển khai Vercel. Các báo cáo giai đoạn bên dưới giữ mốc thời gian ban đầu.
+
 Bối cảnh làng quê Việt Nam dựng bằng HTML, CSS, JavaScript và Three.js: bản đồ làng, cổng, nhà dân, nội thất, chu kỳ ngày đêm và thời tiết. Dự án hướng tới trò chơi Toán cho học sinh; phiên bản hiện tại chủ yếu phục vụ khám phá bối cảnh 3D. Nhân vật hoàn chỉnh và phần chơi câu hỏi/cấp độ còn cần phát triển.
 
 Nguồn xuất từ ChatGPT Sites ngày 10/10/2026, bản v8 tại commit `d36f5be347d606e23e4f06a42630707fd14435d3`. Thư mục phát triển trên máy: `H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D`. Repository: [thanhmade/viet-village-3d](https://github.com/thanhmade/viet-village-3d), đã xác minh **Private** trong giai đoạn kết nối ngày 10/10/2026. Dự án bắt đầu lịch sử Git mới trên nhánh `main`; bundle cũ giữ riêng trên máy. Commit đầu tiên `130c5c1` đã đồng bộ lên GitHub. Nhánh `main` chứa bản chính với vòng dịch chuyển, thanh công cụ thu gọn và Google Login. Nhánh `cap-nhat` lưu bản thử nghiệm độc lập; các thay đổi thử nghiệm không được tự động nhập vào `main`. Giai đoạn 7.1 trước đây được phát triển trên nhánh `feature/google-login`.

@@ -24,6 +24,8 @@ id_ed25519*
 
 # Dependencies, caches and generated deployment output
 node_modules/
+.firebase/
+.local-tools/
 __pycache__/
 *.py[cod]
 .venv/
@@ -55,6 +57,9 @@ Desktop.ini
 # Keep all old backups, including the Git bundle, on disk only.
 # Ignoring a directory does not delete or overwrite its contents.
 /BACKUP/
+
+# Separate cap-nhat worktree: never include it or a gitlink on main.
+/VIET-VILLAGE-3D-CAP-NHAT/
 
 # Only the two development documents below belong in the repository.
 # Original lessons, chat context, provenance, audit manifests and connection

@@ -1,0 +1,19 @@
+#regionTravelStatus{position:fixed;left:50%;bottom:174px;transform:translateX(-50%);display:block;margin:0;padding:8px 12px;border-radius:12px;font-size:12px;max-width:min(460px,calc(100vw - 32px));width:max-content;text-align:center;color:#164d3e;background:#fffbedee;pointer-events:none}
+#regionTravelStatus:empty{display:none}
+#regionTravelBtn:disabled,#houseBtn:disabled,#enterHouseBtn:disabled{opacity:.45;cursor:default}
+@media(max-width:700px){#regionTravelStatus{bottom:256px;max-width:calc(100vw - 32px);font-size:11px}#regionTravelStatus:not(:empty) ~ .help{display:none}}
+
+.regionInteract{pointer-events:auto;position:fixed;z-index:24;left:50%;bottom:118px;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:12px 20px;border:1px solid #7cf0c6;border-radius:14px;color:#eaffd7;background:#164d3eef;box-shadow:0 6px 24px #092f3b50;font:700 15px system-ui;cursor:pointer;touch-action:manipulation}
+.regionInteract:disabled{opacity:.65;cursor:default}.regionInteract:hover:not(:disabled){background:#246e54}.regionInteract:focus-visible{outline:3px solid #eddf94;outline-offset:3px}
+@media(max-width:700px){.regionInteract{bottom:204px;padding:10px 14px;font-size:13px}}
+
+.region-destination-menu{width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 32px);box-sizing:border-box;overflow-y:auto;margin:auto;padding:22px;border:1px solid #b8d1b9;border-radius:20px;background:#fffbed;color:#164d3e;box-shadow:0 16px 60px #092f3b55;overscroll-behavior:contain;touch-action:pan-y}
+.region-destination-menu::backdrop{background:#08292b70}
+.region-destination-menu.hidden{display:none!important}
+.region-destination-menu header{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.region-destination-menu h2{font-size:26px;margin:6px 0 12px}.region-destination-menu p{line-height:1.5;font-size:14px}.region-destination-menu small{color:#506b5e;font-size:12px}
+.region-destination-menu button{font:600 15px system-ui;cursor:pointer;min-height:44px;padding:10px 14px;border:1px solid #b2cbb6;border-radius:12px;background:#e5eedc;color:#174d3b;touch-action:manipulation}
+.region-destination-menu button:hover:not(:disabled){background:#cde9c8}.region-destination-menu button:active:not(:disabled){background:#b5d8af}.region-destination-menu button:focus-visible{outline:3px solid #af7927;outline-offset:3px}
+.region-destination-menu button:disabled{opacity:.55;cursor:not-allowed}.region-destination{margin:12px 0;padding:14px;border-radius:14px;background:#f1f0df}.region-destination button{width:100%;text-align:left;background:#195840;color:#fff9e7}.region-destination button:hover:not(:disabled){background:#277652}.region-destination p{margin:8px 0 0;font-size:13px}.region-destination button:disabled+p,#regionDestinationMessage{color:#865221}
+#regionDestinationMessage:empty{display:none}#dongTreTravelBtn[hidden]{display:none!important}#view:focus{outline:none}
+@media(max-width:480px){.region-destination-menu{padding:18px}.region-destination-menu h2{font-size:24px}}

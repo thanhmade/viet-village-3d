@@ -1,0 +1,43 @@
+{
+  "source_svg_sha256": "650b86c4bf41fe10dc5c2cce4718ddacf219a15d3904c9124f7e67b991fc967f",
+  "outputs": [
+    {
+      "source_elements_preserved": 3220,
+      "source_path_count": 2616,
+      "source_use_symbols": 461,
+      "source_geometry_unchanged": true,
+      "visible_text_elements": 0,
+      "viewBox": "11.3386 62.362000488281296 575.4323999999999 694.4868",
+      "administrative_regions": 34,
+      "decorations": "Same-geometry shoreline paint, color gradients and faint ocean-grain marks; no DEM/bathymetry, added boundary or maritime line.",
+      "png_size": [
+        4971,
+        6000
+      ],
+      "svg_sha256": "ada40eb4ad1bf35ae0dcbf5dbd2c735a69b4235c77387faffbee98ba827bdbd7",
+      "files": [
+        "01_Viet_Nam_Nen_Khong_Chu.svg",
+        "01_Viet_Nam_Nen_Khong_Chu.png"
+      ]
+    },
+    {
+      "source_elements_preserved": 3220,
+      "source_path_count": 2616,
+      "source_use_symbols": 461,
+      "source_geometry_unchanged": true,
+      "visible_text_elements": 0,
+      "viewBox": "11.3386 62.362000488281296 575.4323999999999 694.4868",
+      "administrative_regions": 34,
+      "decorations": "Same-geometry shoreline paint, color gradients and faint ocean-grain marks; no DEM/bathymetry, added boundary or maritime line.",
+      "png_size": [
+        4971,
+        6000
+      ],
+      "svg_sha256": "f8880bc589dd2264f54acdd9782dbb7993100038b5ee1e6c7c6420b35751c4c9",
+      "files": [
+        "02_Viet_Nam_Dia_Gioi_Khong_Chu.svg",
+        "02_Viet_Nam_Dia_Gioi_Khong_Chu.png"
+      ]
+    }
+  ]
+}

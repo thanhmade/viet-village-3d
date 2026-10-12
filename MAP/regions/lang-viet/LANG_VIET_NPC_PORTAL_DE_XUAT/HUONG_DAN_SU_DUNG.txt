@@ -1,0 +1,46 @@
+HỒ SƠ ĐỀ XUẤT - LÀNG VIỆT
+Ngày: 11/10/2026
+Nguồn: Lang-Viet(1).zip - 5 ảnh JPG. Không có mô hình GLB/FBX hoặc mã dựng MAP.
+
+ĐỌC TRƯỚC
+Đây là hồ sơ phân tích và đề xuất. Chưa tích hợp vào game, chưa xác minh tọa độ 3D.
+JSON có runtime_ready=false; tọa độ và tài nguyên mô hình để null. Không nạp như cấu hình chạy.
+Ảnh tham chiếu trong REFERENCES được sao chép nguyên byte, đặt lại tên để dễ nhận diện.
+DOCUMENTS chứa PDF phân tích; DESIGN chứa hồ sơ NPC, nhiệm vụ, cổng và dữ liệu nguồn.
+
+TRÁI / PHẢI
+Lấy REF_01_CHINH_DIEN.jpg làm chuẩn: đứng ở cổng nhìn về công trình lớn phía cuối làng.
+Đây là quy ước bố cục, không phải hướng địa lý thật.
+
+NPC ĐỀ XUẤT
+1. Lý trưởng: hiên công trình lớn cuối làng; nhận/trả nhiệm vụ chính.
+2. Võ sư: sân bên phải công trình lớn; hướng dẫn chiến đấu với bia tập.
+3. Thầy đồ: nhà giữa dãy trái; hoạt động học tập do giáo viên cung cấp.
+4. Thầy thuốc: nhà giữa dãy phải; hồi phục và nhiệm vụ dược liệu.
+5. Thợ rèn: nhà gần cổng bên trái; trang bị. Ảnh chưa có lò rèn.
+6. Người bán hàng: nhà gần cổng bên phải; vật dụng và túi đồ.
+7. Nông dân: lối vào vườn rau trái cổng; chăm vườn và thu thập.
+8. Tuần đinh: mép phải phía trong cổng; chỉ đường và thông báo trạng thái tuyến.
+
+CỔNG VÀ MAP
+Cổng làng: đặt trước thiết kế lối ra khu luyện cấp; giữ vô hiệu khi MAP đích chưa sẵn sàng.
+Cầu gỗ qua hồ: đi bộ trong MAP hiện tại; không tự biến thành cổng hoặc bến thuyền.
+Cửa nhà: dùng cơ chế vào/ra nội thất nếu mã game hiện có hỗ trợ.
+MAP tổng: giao diện chọn vùng/tuyến đường; chỉ mở địa điểm đã được đăng ký.
+Khu ngoài làng và MAP phụ chỉ được dựng sau khi người dùng đưa ZIP tương ứng và yêu cầu.
+
+CÂU LỆNH CHUYỂN CHO PHIÊN CODE DESKTOP
+Làm việc trong H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D\VIET-VILLAGE-3D-CAP-NHAT.
+Đọc AGENTS.md nếu có. Đọc mã SOURCE-CODE/index.html thực tế, MAP, CHARACTERS,
+INTERIORS và hệ thống nhân vật/chiêu thức hiện có trước khi sửa.
+Dùng hồ sơ này và 5 ảnh làm tài liệu tham chiếu để dựng/bổ sung MAP Làng Việt.
+Đối chiếu từng công trình với REF_01 trước; kiểm tra các góc còn lại và xử lý sai khác.
+Giữ đường cổng-cây đa-công trình lớn thông thoáng. Đặt NPC theo mốc công trình,
+kiểm tra mặt đất/va chạm rồi mới lưu tọa độ. Giai đoạn đầu triển khai Lý trưởng,
+Võ sư, Tuần đinh; sau đó bổ sung các NPC còn lại theo hệ thống game đang có.
+Giữ tuyến ra ngoài ở trạng thái chờ nếu chưa có ZIP MAP đích và điểm xuất hiện hợp lệ.
+Không dựng các MAP khác từ tên tuyến; không tự đặt quái trong làng.
+Kiểm tra camera, đi bộ, chiêu thức, vào/ra nhà và giữ trạng thái nhân vật khi chuyển cảnh.
+Giữ thứ tự script hiện có; README đang mô tả script thông thường, không tự đổi sang ES module.
+Chạy kiểm tra phù hợp nếu mã dự án có sẵn; thử game bằng trình duyệt qua máy chủ cục bộ.
+Báo cáo file sửa và kết quả kiểm tra. Chưa cập nhật về thư mục chính hoặc nhánh main.

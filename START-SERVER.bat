@@ -1,17 +1,16 @@
 @echo off
-cd /d "%~dp0"
+setlocal
+cd /d "%~dp0" || exit /b 1
 where py >nul 2>nul
 if errorlevel 1 goto usepython
-start "" http://localhost:8000/SOURCE-CODE/index.html
-py -m http.server 8000 --bind 127.0.0.1
-goto end
+py -3 -B "%~dp0scripts\serve-game.py" %*
+exit /b %errorlevel%
 :usepython
 where python >nul 2>nul
 if errorlevel 1 goto missing
-start "" http://localhost:8000/SOURCE-CODE/index.html
-python -m http.server 8000 --bind 127.0.0.1
-goto end
+python -B "%~dp0scripts\serve-game.py" %*
+exit /b %errorlevel%
 :missing
-echo Python is not installed. Open START-GAME.bat instead.
+echo Python 3 is required. No software has been installed.
 pause
-:end
+exit /b 1

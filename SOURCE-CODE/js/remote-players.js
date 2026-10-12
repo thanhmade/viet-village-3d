@@ -13,6 +13,10 @@ export function createRemotePlayers({THREE, game}) {
   }
   function create(member) {
     const root = game.avatarTemplate().clone(true), materials=[];
+    // Equipment/VFX for the local player is not part of the room protocol yet.
+    const localOnly=[];
+    root.traverse(node=>{if(node!==root && node.userData.localOnly)localOnly.push(node);});
+    localOnly.forEach(node=>node.parent?.remove(node));
     root.userData.uid = member.uid;
     root.traverse(mesh=>{if(mesh.isMesh){mesh.material=mesh.material.clone();materials.push(mesh.material);
       if(mesh.material.color.getHex()===0x269991) mesh.material.color.setHex(colors[member.avatarId] || colors['villager-default']);}});
@@ -22,7 +26,7 @@ export function createRemotePlayers({THREE, game}) {
     const texture=new THREE.CanvasTexture(canvas), material=new THREE.SpriteMaterial({map:texture,depthTest:false});
     const label=new THREE.Sprite(material);label.position.set(0,3,0);label.scale.set(3.4,.53,1);root.add(label);
     root.visible=false;game.scene().add(root);
-    const item={root,label,materials,member,target:new THREE.Vector3(),yaw:0,initialized:false};peers.set(member.uid,item);return item;
+    const item={root,label,materials,member,target:new THREE.Vector3(),yaw:0,mapId:null,initialized:false};peers.set(member.uid,item);return item;
   }
   function update(value) {
     state=value;
@@ -38,10 +42,18 @@ export function createRemotePlayers({THREE, game}) {
       item ||= create(member);
       const pose=latestPeerPose(state.poses?.[member.uid],state.connections?.[member.uid],time);
       item.root.visible=!!pose && pose.mapId===local?.mapId && game.canRenderPeers();
-      if(!pose)continue; item.target.set(pose.x,pose.y,pose.z); item.yaw=pose.yaw;
-      if(!item.initialized){item.root.position.copy(item.target);item.initialized=true;}
-      item.root.position.lerp(item.target,1-Math.exp(-dt*12));
-      const body=item.root.children[0];body.rotation.y+=Math.atan2(Math.sin(item.yaw-body.rotation.y),Math.cos(item.yaw-body.rotation.y))*Math.min(1,dt*12);
+      if(!item.root.visible){item.initialized=false;continue;}
+      item.target.set(pose.x,pose.y,pose.z); item.yaw=pose.yaw;
+      const body=item.root.children[0];
+      // Different maps have independent coordinates. Never interpolate through
+      // another region, or from an old pose when a hidden peer becomes visible.
+      if(!item.initialized || item.mapId!==pose.mapId){
+        item.root.position.copy(item.target);body.rotation.y=item.yaw;
+        item.initialized=true;item.mapId=pose.mapId;
+      }else{
+        item.root.position.lerp(item.target,1-Math.exp(-dt*12));
+        body.rotation.y+=Math.atan2(Math.sin(item.yaw-body.rotation.y),Math.cos(item.yaw-body.rotation.y))*Math.min(1,dt*12);
+      }
     }
   }
   return {update,tick,clear:()=>{state=null;for(const uid of [...peers.keys()])remove(uid);}};

@@ -1,0 +1,13 @@
+{
+  "schemaVersion":1,
+  "mapId":"lang-viet",
+  "storageScope":"local-firebase-uid",
+  "rewardsEnabled":false,
+  "quests":[
+    {"id":"QUEST_LV_01","name":"Chào làng","giverNpc":"NPC_LANG_VIET_TUAN_DINH","turnInNpc":"NPC_LANG_VIET_LY_TRUONG","goal":"Nhận lời Tuần đinh, đến trò chuyện rồi báo hoàn thành với Lý trưởng.","dependsOn":[],"objective":{"type":"talk","npcId":"NPC_LANG_VIET_LY_TRUONG"},"enabled":true},
+    {"id":"QUEST_LV_02","name":"Làm quen chiến đấu","giverNpc":"NPC_LANG_VIET_VO_SU","turnInNpc":"NPC_LANG_VIET_VO_SU","goal":"Đứng trong phạm vi 3 m, hướng về bia tập và dùng một chiêu thành công; quay lại báo Võ sư.","dependsOn":["QUEST_LV_01"],"objective":{"type":"practice-skill","propId":"BIA_TAP_LANG_VIET_01"},"enabled":true,"repeatReward":false},
+    {"id":"QUEST_LV_03","name":"Giúp việc vườn","giverNpc":"NPC_LANG_VIET_NONG_DAN","turnInNpc":"NPC_LANG_VIET_NONG_DAN","goal":"Thu thập vật dụng chăm vườn tại các điểm đã đánh dấu.","dependsOn":["QUEST_LV_01"],"enabled":false,"repeatReward":false,"reason":"Nông dân đã có mặt; còn thiếu mã vật phẩm, số lượng, điểm thu thập, túi đồ và phần thưởng được cấu hình."},
+    {"id":"QUEST_LV_04","name":"Một câu hỏi của thầy đồ","enabled":false,"reason":"Đã học được với Thầy đồ; chuỗi nhiệm vụ và phần thưởng chưa bật.","blocksMainProgress":false},
+    {"id":"QUEST_LV_05","name":"Chuyến đi đầu tiên","enabled":false,"reason":"Đồng Tre đã mở theo chính sách hiện có; nhiệm vụ tại vùng đích và phần thưởng chưa được thiết kế."}
+  ]
+}

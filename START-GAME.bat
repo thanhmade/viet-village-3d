@@ -1,2 +1,2 @@
 @echo off
-start "" "%~dp0SOURCE-CODE\index.html"
+call "%~dp0START-SERVER.bat" %*

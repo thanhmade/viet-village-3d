@@ -1,5 +1,7 @@
 # VIET-VILLAGE-3D — Game 3D Ngôi Làng
 
+> Cập nhật quy trình Git 12/10/2026: xem [GIT-WORKFLOW.md](GIT-WORKFLOW.md) về hai nhánh, tài nguyên được lưu, chạy từ bản clone và cấu hình tắt tự triển khai Vercel. Các báo cáo giai đoạn bên dưới giữ mốc thời gian ban đầu.
+
 Bối cảnh làng quê Việt Nam dựng bằng HTML, CSS, JavaScript và Three.js: bản đồ làng, cổng, nhà dân, nội thất, chu kỳ ngày đêm và thời tiết. Dự án hướng tới trò chơi Toán cho học sinh; phiên bản hiện tại chủ yếu phục vụ khám phá bối cảnh 3D. Nhân vật hoàn chỉnh và phần chơi câu hỏi/cấp độ còn cần phát triển.
 
 Nguồn xuất từ ChatGPT Sites ngày 10/10/2026, bản v8 tại commit `d36f5be347d606e23e4f06a42630707fd14435d3`. Thư mục phát triển trên máy: `H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D`. Repository: [thanhmade/viet-village-3d](https://github.com/thanhmade/viet-village-3d), đã xác minh **Private** trong giai đoạn kết nối ngày 10/10/2026. Dự án bắt đầu lịch sử Git mới trên nhánh `main`; bundle cũ giữ riêng trên máy. Commit đầu tiên là `130c5c1`. Worktree thử nghiệm dùng nhánh `cap-nhat` tại `H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D\VIET-VILLAGE-3D-CAP-NHAT`; phát triển và đồng bộ độc lập với bản chính `main`.
@@ -26,9 +28,13 @@ Nếu dùng bản clone ở nơi khác, chạy lệnh máy chủ từ thư mục
 ## Phần thử nghiệm trên cap-nhat
 
 - Hồ sơ, phòng tối đa 8 người, backend và Security Rules: xem [hướng dẫn Firebase](firebase/README.md). `onlineConfig.enabled` vẫn là `false`; chưa bật ghi hồ sơ/phòng lên Firebase thật.
-- Bộ vũ khí/VFX mới nằm ở `ASSETS/WEAPONS/VFX-DEMO`, là demo riêng; mở [VFX demo](http://localhost:8001/ASSETS/WEAPONS/VFX-DEMO/index.html). Three.js của demo được tải từ CDN và cần Internet.
-- Gói mã v1.2 trong `ASSETS/WEAPONS/VIET-VILLAGE-3D-WEAPON-VFX-V1.2-FULL/VIET-VILLAGE-3D-WEAPON-VFX` có một số thay đổi khác với `VFX-DEMO` và được giữ riêng. Chưa tự cài bản vá hoặc thay thế demo đang chạy; ZIP phân phối và `BACKUP-BEFORE-V1.2` chỉ giữ trên máy.
-- Không tự nhập nhánh thử nghiệm vào `main`, triển khai website hoặc thay đổi Firebase.
+- **Vũ khí v2 gắn vào nhân vật trong làng:** sau Google Login chọn **Cầm vũ khí trong làng**, hoặc vào game rồi chọn **Vũ khí**. Chọn Côn, Kiếm, Thương, Cung hoặc Rìu; bấm ba nút chiêu tương ứng hoặc dùng phím 1/2/3 khi đang điều khiển nhân vật. Dùng WASD/mũi tên, chạm nền hoặc cần điều khiển trên thiết bị cảm ứng để đi lại.
+- **Đổi vũ khí** mở lại bảng trang bị; **Cất vũ khí** kết thúc chế độ diễn họa. Hiệu ứng sử dụng scene, nhân vật, độ cao địa hình và vòng lặp hiện có. Chuyển vào nhà, đổi chế độ xem, mở hộp thoại hoặc mất phiên đăng nhập sẽ dừng hiệu ứng phù hợp.
+- Nút **Diễn họa vũ khí** mở sân luyện riêng tại [localhost:8001/SOURCE-CODE/weapons-vfx-demo.html](http://localhost:8001/SOURCE-CODE/weapons-vfx-demo.html). Sân luyện có chạy lần lượt 15 chiêu, so sánh ảnh, mức chất lượng và điều khiển camera bằng chuột hoặc hai ngón. Đây là trang diễn họa cục bộ, không đọc/ghi hồ sơ Firebase.
+- Mã v2 nằm tại `SOURCE-CODE/js/vfx`, ảnh gốc tại `ASSETS/reference`. Dùng chung Three.js r160 đã có, không tải thêm CDN cho phần VFX. Xem [hướng dẫn mã VFX](SOURCE-CODE/docs/weapons-vfx/README.md).
+- VFX hiện chỉ diễn họa cục bộ: chưa có sát thương, HP, kiểm tra trúng địch hoặc đồng bộ trang bị/chiêu qua phòng multiplayer. Bản sao nhân vật từ xa không mang nhầm trang bị cục bộ.
+- Gói ZIP và hai thư mục giải nén gốc được giữ trên máy, không dùng làm đường dẫn chạy. Các thư mục VFX v1 đã bị xóa trước đợt tích hợp v2; không tự khôi phục hoặc xóa thêm dữ liệu cũ.
+- Cập nhật v2 chưa commit/push, chưa nhập vào `main`, chưa triển khai website hoặc thay đổi Firebase.
 
 ## Điều khiển và chức năng
 

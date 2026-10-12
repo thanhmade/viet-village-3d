@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "note": "Bản sao PNG nguyên nội dung; chỉ đổi tên và đường dẫn. Không phải model 3D, texture atlas hay icon đã tách.",
+  "count": 10,
+  "entries": [
+    {
+      "weaponId": "staff",
+      "kind": "weapon",
+      "uploadedName": "Con-gay(2).png",
+      "path": "ASSETS/reference/staff/weapon-reference.png",
+      "sha256": "f2a93a916a151685eae266d4225232dd565754ccc2d67ecf6c593ead1a0f6d1e",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    },
+    {
+      "weaponId": "staff",
+      "kind": "skills",
+      "uploadedName": "Skill-Con-gay(4).png",
+      "path": "ASSETS/reference/staff/skills-reference.png",
+      "sha256": "e1bf1751b7e862ac539004c5d68cd33c6180862c943599af97dfd3000a352c65",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    },
+    {
+      "weaponId": "sword",
+      "kind": "weapon",
+      "uploadedName": "Kiem(2).png",
+      "path": "ASSETS/reference/sword/weapon-reference.png",
+      "sha256": "08e0fd21a09ea11b15f9dda6ced2af492f7ee2456cfce055b3c1255041289771",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    },
+    {
+      "weaponId": "sword",
+      "kind": "skills",
+      "uploadedName": "Skill-Kiem(2).png",
+      "path": "ASSETS/reference/sword/skills-reference.png",
+      "sha256": "145beb81a9f32e2693694fc87270b2dbf28c8e517c784dd1290ea6b8ebcb30f8",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    },
+    {
+      "weaponId": "spear",
+      "kind": "weapon",
+      "uploadedName": "Thuong(2).png",
+      "path": "ASSETS/reference/spear/weapon-reference.png",
+      "sha256": "0802f00b3b2f2aed616728006a30e3e84ea30ae90c8e99226a03facc620355e7",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    },
+    {
+      "weaponId": "spear",
+      "kind": "skills",
+      "uploadedName": "Skill-Thuong(2).png",
+      "path": "ASSETS/reference/spear/skills-reference.png",
+      "sha256": "11c51e852b8bf33c4c737abdb8204aaf4287d17b758b944c8d2deb30b90b0f08",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    },
+    {
+      "weaponId": "bow",
+      "kind": "weapon",
+      "uploadedName": "Cung(2).png",
+      "path": "ASSETS/reference/bow/weapon-reference.png",
+      "sha256": "292501c0ee008b039ffc7f8c44c142c30823863ef1540f5a2b02d4edd5512b87",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    },
+    {
+      "weaponId": "bow",
+      "kind": "skills",
+      "uploadedName": "Skill-Cung(2).png",
+      "path": "ASSETS/reference/bow/skills-reference.png",
+      "sha256": "c228d87d88847def14e67f3f162313dffeb5cb0904fd5da65cb8730051674f9d",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    },
+    {
+      "weaponId": "axe",
+      "kind": "weapon",
+      "uploadedName": "Riu(2).png",
+      "path": "ASSETS/reference/axe/weapon-reference.png",
+      "sha256": "365d71e6a37c5f611858a1ee4d3e22c8588d6a1c77a2e5fb97377f0db03631ff",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    },
+    {
+      "weaponId": "axe",
+      "kind": "skills",
+      "uploadedName": "Skill-Riu(2).png",
+      "path": "ASSETS/reference/axe/skills-reference.png",
+      "sha256": "cf0da2e3a3bf0bfd08949f9cdfd820e7e0ad014d52c8cbf8777348cbadc6a507",
+      "width": 1122,
+      "height": 1402,
+      "mediaType": "image/png",
+      "role": "reference-only",
+      "imageEdited": false
+    }
+  ]
+}

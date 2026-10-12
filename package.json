@@ -3,11 +3,20 @@
   "version": "0.7.2",
   "private": true,
   "type": "module",
-  "workspaces": ["firebase/functions"],
+  "workspaces": [
+    "firebase/functions"
+  ],
   "scripts": {
-    "test": "node SOURCE-CODE/tests/run-checks.cjs && node --test SOURCE-CODE/tests/online-unit.test.mjs",
+    "test": "node SOURCE-CODE/tests/run-checks.cjs && node --test SOURCE-CODE/tests/online-unit.test.mjs && node --test SOURCE-CODE/tests/performance.test.cjs SOURCE-CODE/tests/environment-performance.test.cjs && npm run test:vfx && npm run test:portals && npm run test:regions && npm run test:atlas && npm run test:dong-tre && npm run test:access && npm run test:npcs",
+    "test:portals": "node --test SOURCE-CODE/tests/house-portals.test.cjs SOURCE-CODE/tests/portal-access.test.cjs SOURCE-CODE/tests/house-travel.test.cjs SOURCE-CODE/tests/toolbar.test.cjs",
     "test:firebase": "node scripts/firebase-local.mjs test",
-    "emulators": "node scripts/firebase-local.mjs start"
+    "emulators": "node scripts/firebase-local.mjs start",
+    "test:vfx": "node --test SOURCE-CODE/tests/weapons-vfx.test.cjs SOURCE-CODE/tests/weapons-demo-input.test.cjs SOURCE-CODE/tests/weapons-demo-link.test.cjs SOURCE-CODE/tests/weapons-village.test.cjs SOURCE-CODE/tests/weapons-vfx-assets.test.cjs",
+    "test:regions": "node --test SOURCE-CODE/tests/lang-tan-thu-scene.test.cjs SOURCE-CODE/tests/region-travel.test.cjs",
+    "test:atlas": "node --test SOURCE-CODE/tests/world-atlas.test.cjs",
+    "test:dong-tre": "node --test SOURCE-CODE/tests/dong-tre-scene.test.cjs SOURCE-CODE/tests/dong-tre-travel.test.cjs",
+    "test:access": "node --test SOURCE-CODE/tests/player-journey.test.cjs SOURCE-CODE/tests/region-access.test.cjs",
+    "test:npcs": "node --test SOURCE-CODE/tests/village-npcs.test.cjs SOURCE-CODE/tests/npc-gltf.test.cjs SOURCE-CODE/tests/vo-su-gltf.test.cjs SOURCE-CODE/tests/tuan-dinh-gltf.test.cjs SOURCE-CODE/tests/thay-do-gltf.test.cjs SOURCE-CODE/tests/thay-thuoc-gltf.test.cjs SOURCE-CODE/tests/tho-ren-gltf.test.cjs SOURCE-CODE/tests/tap-hoa-gltf.test.cjs SOURCE-CODE/tests/nong-dan-gltf.test.cjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "6.0.0",

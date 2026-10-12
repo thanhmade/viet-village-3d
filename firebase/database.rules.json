@@ -47,7 +47,7 @@
               ".validate": "newData.isNumber() && newData.val() >= -7 && newData.val() <= 7"
             },
             "mapId": {
-              ".validate": "newData.isString() && (newData.val() == 'village' || newData.val().matches(/^house-[1-6]$/))"
+              ".validate": "newData.isString() && (newData.val() == 'village' || newData.val() == 'lang-tan-thu' || newData.val() == 'ngoai-lang-dong-tre' || newData.val().matches(/^house-[1-6]$/))"
             },
             "moving": {
               ".validate": "newData.isBoolean()"

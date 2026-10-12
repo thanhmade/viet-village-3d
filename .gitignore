@@ -58,12 +58,15 @@ Desktop.ini
 # Ignoring a directory does not delete or overwrite its contents.
 /BACKUP/
 
-# Only the two development documents below belong in the repository.
+# Only explicitly listed development documents belong in the repository.
 # Original lessons, chat context, provenance, audit manifests and connection
 # reports stay on this computer and are excluded from Git.
 /DOCUMENTS/*
 !/DOCUMENTS/EXPORT-STATUS.md
 !/DOCUMENTS/VALIDATION.md
+!/DOCUMENTS/MAP-IMPORT-REPORT.md
+!/DOCUMENTS/MAP-IMPORT-REPORT-20261011-NEW-PACKAGES.md
+!/DOCUMENTS/MAP-3D-REGIONS-REPORT.md
 
 # Local reports and audit tools must not be committed if copied here later.
 /audit-*.py
@@ -83,3 +86,9 @@ Desktop.ini
 /ASSETS/WEAPONS/VIET-VILLAGE-3D-WEAPON-VFX-PATCH-V1.1.zip
 /ASSETS/WEAPONS/VIET-VILLAGE-3D-WEAPON-VFX-V1.2-FULL.zip
 /ASSETS/WEAPONS/VFX-DEMO/BACKUP-BEFORE-V1.2/
+
+# Original v2 delivery packages; canonical code and references are integrated above.
+/VIET-VILLAGE-3D-WEAPONS-VFX-v2.zip
+/VIET-VILLAGE-3D-WEAPONS-VFX-v2/
+/ASSETS/WEAPONS/VIET-VILLAGE-3D-WEAPONS-VFX-v2.zip
+/ASSETS/WEAPONS/VIET-VILLAGE-3D-WEAPONS-VFX-v2/

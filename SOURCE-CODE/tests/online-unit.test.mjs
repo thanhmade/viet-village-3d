@@ -46,15 +46,20 @@ test('game remains blocked before verified auth; room walking is an optional add
   assert.equal(run('typeof renderer'),'undefined');assert.equal(run('VietVillageGame.initialize()'),false);
   run('openScenery();startRoomWalk();');assert.equal(run('typeof renderer'),'undefined');assert.equal(run('overlays()'),true);
   context.testAuthAllowed=true;assert.equal(run('VietVillageGame.initialize()'),true);
-  run('openScenery()');assert.equal(run('player.visible'),false,'existing standalone scenery behavior preserved');
+  run('openScenery()');assert.equal(run('player.visible && localWalking && !multiplayerWalking'),true,'verified standalone player can reach the house portals without an online room');
+  run("$('overviewBtn').onclick()");assert.equal(run('player.visible || localWalking || multiplayerWalking'),false,'the existing scenery overview remains available');
   context.VietVillageOnline={hasRoom:()=>true};run('startRoomWalk()');assert.equal(run('player.visible && multiplayerWalking'),true);
   assert.equal(run('VietVillageGame.getPose().mapId'),'village');
-  run('VietVillageGame.lock()');assert.equal(run('multiplayerWalking || active || insideHouse'),false);
+  run('VietVillageGame.lock()');assert.equal(run('localWalking || multiplayerWalking || active || insideHouse'),false);
 });
 test('Three.js peer clones keep UID, map visibility and original geometry; limited to seven peers',()=>{
   const {run,context}=require('./harness.cjs')();run('openScenery()');
   const originalDocument=globalThis.document;globalThis.document=context.document;
   const template=context.VietVillageGame.avatarTemplate(),shirt=template.children[0].children.find(mesh=>mesh.material?.color.getHex()===0x269991);
+  const localWeapon=new context.THREE.Group();localWeapon.name='local-only-test-weapon';localWeapon.userData.localOnly=true;
+  const weaponMesh=new context.THREE.Mesh(new context.THREE.BoxGeometry(.1,1,.1),new context.THREE.MeshBasicMaterial());
+  localWeapon.add(weaponMesh);template.children[0].add(localWeapon);
+  let disposedWeapon=0;weaponMesh.geometry.addEventListener('dispose',()=>disposedWeapon++);
   let disposedGeometry=0;shirt.geometry.addEventListener('dispose',()=>disposedGeometry++);
   const remote=createRemotePlayers({THREE:context.THREE,game:context.VietVillageGame}),now=Date.now();
   const actors=Array.from({length:9},(_,i)=>({uid:'peer-'+i,nickname:'Bạn '+i,avatarId:'villager-blue'}));
@@ -65,11 +70,53 @@ test('Three.js peer clones keep UID, map visibility and original geometry; limit
     remote.update(state);remote.tick(.016,now);
     const copies=context.VietVillageGame.scene().children.filter(root=>root.userData.uid);
     assert.equal(copies.length,7);assert.equal(new Set(copies.map(root=>root.userData.uid)).size,7);assert.ok(copies.every(root=>root.visible));
+    assert.ok(copies.every(root=>!root.getObjectByName('local-only-test-weapon')),'room peers must not inherit local equipment');
     const peerShirt=copies[0].children[0].children.find(mesh=>mesh.material?.color.getHex()===0x407cc2);
     assert.ok(peerShirt);assert.notEqual(peerShirt.material,shirt.material);assert.equal(peerShirt.geometry,shirt.geometry);
     assert.equal(shirt.material.color.getHex(),0x269991);
     state.poses['peer-0'].session.mapId='house-1';remote.tick(.016,now);assert.equal(copies[0].visible,false);
     remote.clear();assert.equal(context.VietVillageGame.scene().children.filter(root=>root.userData.uid).length,0);
     assert.equal(disposedGeometry,0,'removing peers must preserve shared source model geometry');
+    assert.equal(disposedWeapon,0,'stripping clone equipment must not dispose the local weapon');
+    assert.equal(localWeapon.parent,template.children[0],'the local avatar keeps its own equipment');
   } finally {remote.clear();globalThis.document=originalDocument;}
+});
+
+test('remote peers snap across village, newcomer region and houses, then resume smoothing within one map',()=>{
+  const {run,context}=require('./harness.cjs')();run('openScenery()');
+  const originalDocument=globalThis.document;globalThis.document=context.document;
+  let localMap='village',renderPeers=true;
+  const game={...context.VietVillageGame,getPose:()=>({mapId:localMap}),canRenderPeers:()=>renderPeers};
+  const remote=createRemotePlayers({THREE:context.THREE,game}),now=Date.now();
+  const pose={x:10,y:.3,z:12,yaw:2,mapId:'village',moving:true,updatedAt:now};
+  const state={uid:'local-fixture',members:[{uid:'peer',nickname:'Bạn',avatarId:'villager-blue'}],
+    connections:{peer:{session:{}}},poses:{peer:{session:pose}}};
+  try{
+    remote.update(state);remote.tick(.016,now);
+    const peer=game.scene().children.find(root=>root.userData.uid==='peer');
+    const exactPose=()=>{
+      assert.equal(peer.visible,true);assert.equal(peer.position.x,pose.x);assert.equal(peer.position.y,pose.y);
+      assert.equal(peer.position.z,pose.z);assert.equal(peer.children[0].rotation.y,pose.yaw);
+    };
+    exactPose();
+    pose.x=20;pose.yaw=1;remote.tick(.016,now);
+    assert.ok(peer.position.x>10 && peer.position.x<20,'Ordinary same-map motion is still interpolated');
+    assert.ok(peer.children[0].rotation.y>1 && peer.children[0].rotation.y<2);
+    // Both players change region between frames: there may be no hidden frame.
+    localMap=pose.mapId='lang-tan-thu';Object.assign(pose,{x:-23,z:-21,yaw:-2});
+    remote.tick(.016,now);exactPose();
+    // Only the peer enters a house. It must disappear until the local player follows.
+    pose.mapId='house-1';Object.assign(pose,{x:2,z:3,yaw:.8});
+    remote.tick(.016,now);assert.equal(peer.visible,false);
+    localMap='house-1';remote.tick(.016,now);exactPose();
+    // Returning to the old village must also bypass interpolation.
+    localMap=pose.mapId='village';Object.assign(pose,{x:19,z:18,yaw:-.6});
+    remote.tick(.016,now);exactPose();
+    renderPeers=false;remote.tick(.016,now);assert.equal(peer.visible,false);
+    Object.assign(pose,{x:-18,z:-17,yaw:2.6});renderPeers=true;
+    remote.tick(.016,now);exactPose();
+    pose.updatedAt=now-60001;remote.tick(.016,now);assert.equal(peer.visible,false);
+    Object.assign(pose,{x:0,z:0,yaw:0,updatedAt:now});
+    remote.tick(.016,now);exactPose();
+  }finally{remote.clear();globalThis.document=originalDocument;}
 });

@@ -1,0 +1,9 @@
+/* A walking control remains available without equipping a weapon. */
+.walking.touch #stick,.inside.touch #stick{display:block!important}
+.walking .help{bottom:155px}
+.inside.touch #stick{left:auto;right:18px;bottom:24px;z-index:8}
+.inside.touch .roomControls{max-width:calc(100vw - 150px)}
+.inside.touch .roomMove{display:none}
+.inside .weaponSkillBar{display:none!important}
+.inside .help{display:none}
+@media(max-width:700px){.inside.touch #stick{right:12px;bottom:20px}.inside.touch .roomControls{max-width:calc(100vw - 144px)}}

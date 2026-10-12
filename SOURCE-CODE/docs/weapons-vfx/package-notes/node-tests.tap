@@ -1,0 +1,107 @@
+TAP version 13
+# Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html\#manual/en/introduction/Installation
+# Subtest: 5 vũ khí đăng ký đúng 15 mã chiêu riêng và có mốc thời gian hợp lệ
+ok 1 - 5 vũ khí đăng ký đúng 15 mã chiêu riêng và có mốc thời gian hợp lệ
+  ---
+  duration_ms: 2.934047
+  type: 'test'
+  ...
+# Subtest: mọi chiêu hoàn tất đúng sự kiện ở 30 FPS, 60 FPS, delta lệch và delta lớn
+ok 2 - mọi chiêu hoàn tất đúng sự kiện ở 30 FPS, 60 FPS, delta lệch và delta lớn
+  ---
+  duration_ms: 142.634772
+  type: 'test'
+  ...
+# Subtest: liên tiễn và mưa tên giữ các va chạm riêng khi một frame đi qua nhiều mốc
+ok 3 - liên tiễn và mưa tên giữ các va chạm riêng khi một frame đi qua nhiều mốc
+  ---
+  duration_ms: 6.913661
+  type: 'test'
+  ...
+# Subtest: hồi chiêu tách biệt theo mã chiêu và nhân vật
+ok 4 - hồi chiêu tách biệt theo mã chiêu và nhân vật
+  ---
+  duration_ms: 2.042933
+  type: 'test'
+  ...
+# Subtest: giới hạn số hiệu ứng không làm tiêu hao hồi chiêu khi từ chối
+ok 5 - giới hạn số hiệu ứng không làm tiêu hao hồi chiêu khi từ chối
+  ---
+  duration_ms: 1.033079
+  type: 'test'
+  ...
+# Subtest: kiểm tra vũ khí đang cầm khi có hook; không ép khi game chưa cung cấp hook
+ok 6 - kiểm tra vũ khí đang cầm khi có hook; không ép khi game chưa cung cấp hook
+  ---
+  duration_ms: 0.870163
+  type: 'test'
+  ...
+# Subtest: khiên theo vị trí thế giới dưới group quay và sau khi nhân vật di chuyển
+ok 7 - khiên theo vị trí thế giới dưới group quay và sau khi nhân vật di chuyển
+  ---
+  duration_ms: 0.921991
+  type: 'test'
+  ...
+# Subtest: Chấn Địa giữ điểm nện trên địa hình sau va chạm
+ok 8 - Chấn Địa giữ điểm nện trên địa hình sau va chạm
+  ---
+  duration_ms: 0.758464
+  type: 'test'
+  ...
+# Subtest: chiêu định hướng nhận điểm hữu hạn trong tầm, không nhận điểm ngoài tầm
+ok 9 - chiêu định hướng nhận điểm hữu hạn trong tầm, không nhận điểm ngoài tầm
+  ---
+  duration_ms: 48.953018
+  type: 'test'
+  ...
+# Subtest: mũi tên mưa chạm đúng mặt đất dốc theo vị trí thế giới dưới group quay
+ok 10 - mũi tên mưa chạm đúng mặt đất dốc theo vị trí thế giới dưới group quay
+  ---
+  duration_ms: 1.269205
+  type: 'test'
+  ...
+# Subtest: cancel khiên phát shield-end một lần và tài nguyên chỉ giải phóng một lần
+ok 11 - cancel khiên phát shield-end một lần và tài nguyên chỉ giải phóng một lần
+  ---
+  duration_ms: 1.376987
+  type: 'test'
+  ...
+# Subtest: pool hạt giữ giới hạn khi nhiều người dùng chiêu cùng lúc
+ok 12 - pool hạt giữ giới hạn khi nhiều người dùng chiêu cùng lúc
+  ---
+  duration_ms: 56.811557
+  type: 'test'
+  ...
+# Subtest: đổi chất lượng huỷ hiệu ứng cũ và khởi chạy hiệu ứng mới sạch
+ok 13 - đổi chất lượng huỷ hiệu ứng cũ và khởi chạy hiệu ứng mới sạch
+  ---
+  duration_ms: 4.937247
+  type: 'test'
+  ...
+# Subtest: dispose nhiều lần không xoá hoặc dispose tài nguyên của game
+ok 14 - dispose nhiều lần không xoá hoặc dispose tài nguyên của game
+  ---
+  duration_ms: 1.204357
+  type: 'test'
+  ...
+# Subtest: delta 0 giữ timeline; đầu vào hỏng không tạo hiệu ứng hoặc giữ hồi chiêu
+ok 15 - delta 0 giữ timeline; đầu vào hỏng không tạo hiệu ứng hoặc giữ hồi chiêu
+  ---
+  duration_ms: 1.138547
+  type: 'test'
+  ...
+# Subtest: hạt vũ khí phát ở đầu côn thật theo world transform
+ok 16 - hạt vũ khí phát ở đầu côn thật theo world transform
+  ---
+  duration_ms: 0.674668
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 16
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 479.163193

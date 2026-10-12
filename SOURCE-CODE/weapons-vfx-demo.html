@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ngũ khí · Tam thức — VIET VILLAGE 3D</title>
+  <link rel="stylesheet" href="css/weapons-vfx-demo.css">
+</head>
+<body>
+  <div id="stage" aria-label="Sân luyện võ 3D"></div>
+  <header class="masthead">
+    <a class="brand" href="./index.html" aria-label="Quay lại game Ngôi làng Việt"><span class="brand-mark">V</span><span>VIET VILLAGE <b>3D</b></span></a>
+    <span class="chapter">NGŨ KHÍ · MƯỜI LĂM CHIÊU</span>
+    <button id="help-toggle" class="round" aria-label="Hướng dẫn điều khiển" title="Hướng dẫn">?</button>
+  </header>
+  <main class="panel">
+    <p class="eyebrow">SÂN ĐÌNH · LUYỆN VÕ</p>
+    <h1>Ngũ khí <span>·</span> Tam thức</h1>
+    <p class="intro">Năm vũ khí, năm đường vận khí.<br>Chọn võ khí và thi triển ba chiêu riêng.</p>
+    <div id="weapons" class="weapons" aria-label="Chọn vũ khí"></div>
+    <div class="weapon-caption"><span id="weapon-name">Côn / Gậy</span><small id="weapon-index">01 / 05</small></div>
+    <div id="skills" class="skills" aria-label="Chọn chiêu thức"></div>
+    <p id="skill-description" class="skill-description"></p>
+    <div class="skill-meta"><span id="skill-range"></span><span id="skill-cooldown"></span><span id="skill-duration"></span></div>
+    <button id="cast-selected" class="primary"><span id="cast-label">Thi triển</span><span aria-hidden="true">↗</span></button>
+    <div class="small-controls"><button id="sequence">Xem 15 chiêu</button><button id="reset">Làm mới sân</button></div>
+    <details class="reference"><summary>Đối chiếu hình tham chiếu</summary><div class="reference-tabs"><button data-reference="weapon" class="selected">Vũ khí</button><button data-reference="skills">Ba chiêu</button></div><img id="reference-image" alt="Hình tham chiếu vũ khí do thầy cung cấp"><p class="reference-note">Mô hình 3D trong sân là bản dựng hình học để thử hiệu ứng và quỹ đạo.</p></details>
+  </main>
+  <aside class="scene-badge"><span class="live-dot"></span><span>SÂN LUYỆN VÕ<br><small>Không gian 3D · Xoay góc nhìn 360°</small></span></aside>
+  <aside class="right-controls">
+    <label>Độ chi tiết <select id="quality"><option value="low">Nhẹ</option><option value="medium" selected>Vừa</option><option value="high">Cao</option></select></label>
+    <label><input type="checkbox" id="camera-shake"> Rung camera khi đánh</label>
+    <button id="view-reset">Góc nhìn ban đầu</button>
+    <button id="pause" aria-pressed="false">Tạm dừng</button>
+  </aside>
+  <footer class="bottom-bar">
+    <div class="status-copy"><small>CHIÊU ĐANG XEM</small><strong id="active-label">Sẵn sàng luyện võ</strong></div>
+    <div class="timeline"><span id="timeline-progress"></span></div>
+    <span id="phase-label">Chọn chiêu thức</span>
+    <div class="legend"><i class="jade"></i> Khí lực <i class="gold"></i> Tâm chiêu</div>
+  </footer>
+  <div class="help" id="help"><b>Điều khiển sân luyện</b><p>Phím 1 / 2 / 3: ra chiêu<br>Q / E: đổi vũ khí<br>WASD / mũi tên: di chuyển<br>Kéo chuột hoặc một ngón: xoay góc nhìn<br>Cuộn chuột hoặc chụm/tách hai ngón: gần / xa<br>Space: tạm dừng</p><span>Di chuyển khi đứng nghỉ hoặc giữ Hộ Thân. Đổi vũ khí sẽ dừng chiêu đang thi triển.</span></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="error" role="alert" hidden></div>
+  <script src="../ASSETS/vendor/three.min.js"></script>
+  <script src="js/vfx/weapon-vfx-core.js?v=2.0.2-perf"></script>
+  <script src="js/vfx/staff-skill-config.js"></script>
+  <script src="js/vfx/staff-skill-vfx.js"></script>
+  <script src="js/vfx/sword-skill-config.js"></script>
+  <script src="js/vfx/sword-skill-vfx.js"></script>
+  <script src="js/vfx/spear-skill-config.js"></script>
+  <script src="js/vfx/spear-skill-vfx.js"></script>
+  <script src="js/vfx/bow-skill-config.js"></script>
+  <script src="js/vfx/bow-skill-vfx.js"></script>
+  <script src="js/vfx/axe-skill-config.js"></script>
+  <script src="js/vfx/axe-skill-vfx.js"></script>
+  <script src="js/demo/weapons-vfx-demo.js?v=2.0.2-perf"></script>
+</body>
+</html>

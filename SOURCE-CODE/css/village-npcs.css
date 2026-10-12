@@ -1,0 +1,24 @@
+.npc-overlay{position:fixed;inset:0;z-index:72;display:grid;place-items:center;padding:16px;background:#071f26a8;overscroll-behavior:contain;touch-action:pan-y}
+.npc-card{width:min(540px,100%);max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #d6c391;border-radius:22px;padding:24px;background:#fffbee;color:#1c443b;box-shadow:0 18px 70px #001d2666}
+.npc-card header{display:flex;align-items:start;justify-content:space-between;gap:12px}.npc-card h2{font-size:25px;margin:6px 0 14px}.npc-card p{line-height:1.6;margin:8px 0}
+.npc-card button{min-height:44px;border:1px solid #c7c9ad;border-radius:12px;padding:10px 14px;background:#e9eddc;color:#204c3b;cursor:pointer;font:600 14px system-ui}.npc-card button:hover{background:#d4e5cd}.npc-card button:focus-visible,.npc-interact:focus-visible{outline:3px solid #ba8122;outline-offset:3px}
+.npc-actions,#npcList{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.npc-quest{margin:14px 0;padding:14px;border:1px solid #d8cfb1;border-radius:12px;background:#f3eddc}.npc-quest-status{font-weight:700;color:#476934}.npc-card small{color:#6a6f58}.npc-route{font-weight:600}
+.npc-interact{position:fixed;z-index:25;left:50%;bottom:178px;transform:translateX(-50%);pointer-events:auto;max-width:calc(100vw - 24px);min-height:44px;padding:10px 20px;border:1px solid #e2c782;border-radius:14px;background:#163f36f5;color:#fff4cb;font:700 14px system-ui;cursor:pointer;touch-action:manipulation}
+.npc-interact:hover{background:#2d634c}.npc-overlay.hidden{display:none!important}
+@media(max-width:700px){.npc-card{padding:18px}.npc-interact{bottom:260px;font-size:13px}.npc-card h2{font-size:22px}}
+.npc-card button:disabled{opacity:.5;cursor:wait;background:#e9eddc}
+#npcAnimationStatus:empty,#npcDemoGuidance:empty,#npcAnimations:empty{display:none}
+#npcAnimationStatus{font-size:13px;font-weight:600;color:#496238;min-height:1.6em}
+#npcLesson:empty{display:none}
+#npcLesson{margin-top:14px;padding:14px;border:1px solid #d8cfb1;border-radius:12px;background:#f3eddc}
+#npcLesson h3{margin:0 0 8px;font-size:18px}#npcLessonFeedback{font-weight:600}
+#npcServiceStatus:empty{display:none}
+#npcServiceStatus{padding:12px;border-radius:12px;background:#e7efde;font-weight:600}
+.health-hud{position:absolute;left:22px;top:126px;width:164px;padding:9px 12px;border-radius:12px;background:#fffbeeeb;color:#214d3b;font-size:12px;pointer-events:none}
+.health-hud span{display:flex;justify-content:space-between;gap:12px}.health-hud progress{display:block;width:100%;height:7px;margin-top:6px;border:0;border-radius:5px;overflow:hidden;accent-color:#218d60;background:#cedbcf}
+.health-hud progress::-webkit-progress-bar{background:#cedbcf}.health-hud progress::-webkit-progress-value{background:#218d60}.health-hud progress::-moz-progress-bar{background:#218d60}
+.health-restored{box-shadow:0 0 18px #67e69aa0}
+@media(max-width:700px){.health-hud{top:104px;left:10px;width:134px;font-size:11px;padding:7px 10px}}
+.npc-demo-mode{place-items:center end;background:#071f2610}
+.npc-demo-mode .npc-card{width:min(370px,36vw);max-height:calc(100dvh - 32px);padding:20px}
+@media(max-width:700px){.npc-demo-mode{place-items:end center;padding:10px}.npc-demo-mode .npc-card{width:100%;max-height:46dvh;padding:14px}.npc-demo-mode .npc-card h2{margin:0 0 8px}.npc-demo-mode .npc-card header small{display:none}}

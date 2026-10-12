@@ -93,9 +93,23 @@ test('two distinct emulator identities: shared poses, map IDs, and rejection of 
   assert.equal((await get(ref(s,target))).val().mapId,'village');
   await assertFails(set(ref(s,target),pose));
   const own=`presence/${room.code}/fixture-student/${id(2)}`;
-  for(const invalid of [{x:999},{email:'private@example.invalid'},{mapId:'admin'},{updatedAt:1}])
+  for(const invalid of [{x:999},{email:'private@example.invalid'},{mapId:'admin'},{mapId:'lang-viet'},{mapId:'lang-tan-thu-2'},
+    {mapId:'dong_tre'},{mapId:'ngoai-lang-dong-tre-2'},{mapId:'ngoai-lang-dong-tre/secret'},
+    {mapId:'random-region'},{mapId:'house-0'},{mapId:'house-7'},{updatedAt:1}])
     await assertFails(set(ref(s,own),{...pose,...invalid}));
-  await assertSucceeds(set(ref(s,own),{...pose,mapId:'house-1'}));
+  for(const mapId of ['village','house-1','house-2','house-3','house-4','house-5','house-6','lang-tan-thu','ngoai-lang-dong-tre']){
+    await assertSucceeds(set(ref(s,own),{...pose,mapId}));
+    assert.equal((await get(ref(t,own))).val().mapId,mapId);
+  }
+  for(const mapId of ['lang-tan-thu','ngoai-lang-dong-tre']){
+    const newRegionPose={...pose,mapId};
+    await assertFails(set(ref(s,target),newRegionPose));
+    await assertFails(set(ref(database(outsider),`presence/${room.code}/fixture-outsider/${id(20)}`),newRegionPose));
+    await assertFails(set(ref(database(environment.unauthenticatedContext()),own),newRegionPose));
+    await assertFails(set(ref(s,`presence/${room.code}/fixture-student/${id(99)}`),newRegionPose));
+    for(const invalid of [{x:101},{y:21},{z:-101}])await assertFails(set(ref(s,own),{...newRegionPose,...invalid}));
+  }
+  await assertFails(get(ref(database(outsider),own)));
   const lease=`rooms/${room.code}/members/fixture-student/connections/${id(2)}/leaseExpiresAt`;
   await assertSucceeds(set(ref(s,lease),Date.now()+58000));
   await assertFails(set(ref(s,lease),Date.now()+999999));

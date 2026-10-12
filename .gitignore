@@ -58,6 +58,9 @@ Desktop.ini
 # Ignoring a directory does not delete or overwrite its contents.
 /BACKUP/
 
+# Keep the separate development worktree outside main commits.
+/VIET-VILLAGE-3D-CAP-NHAT/
+
 # Only explicitly listed development documents belong in the repository.
 # Original lessons, chat context, provenance, audit manifests and connection
 # reports stay on this computer and are excluded from Git.

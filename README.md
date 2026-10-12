@@ -1,5 +1,7 @@
 # VIET-VILLAGE-3D — Game 3D Ngôi Làng
 
+> Đưa bản CAP-NHAT đã duyệt vào main ngày 12/10/2026: xem [phiên bản, phạm vi ghép và cách khôi phục](SOURCE-CODE/docs/main-promotion-20261012.md). Chạy BAT trong đúng checkout và dùng URL được in; nhãn CAP-NHAT trong giao diện được giữ từ phiên bản đã kiểm tra.
+
 > Cập nhật quy trình Git 12/10/2026: xem [GIT-WORKFLOW.md](GIT-WORKFLOW.md) về hai nhánh, tài nguyên được lưu, chạy từ bản clone và cấu hình tắt tự triển khai Vercel. Các báo cáo giai đoạn bên dưới giữ mốc thời gian ban đầu.
 
 Bối cảnh làng quê Việt Nam dựng bằng HTML, CSS, JavaScript và Three.js: bản đồ làng, cổng, nhà dân, nội thất, chu kỳ ngày đêm và thời tiết. Dự án hướng tới trò chơi Toán cho học sinh; phiên bản hiện tại chủ yếu phục vụ khám phá bối cảnh 3D. Nhân vật hoàn chỉnh và phần chơi câu hỏi/cấp độ còn cần phát triển.

@@ -66,3 +66,29 @@ test('unchanged climate labels avoid DOM writes and reusable color samples reset
  assert(run('(()=>{const a=lightState(12),b=lightState(12);a.top.setHex(0);return a!==b&&a.top!==b.top&&b.top.getHex()===0x499bd4;})()'));
  assert(run('(()=>{const a=lightState(12);a.top.setHex(0);return lightState(12,a)===a&&a.top.getHex()===0x499bd4;})()'));
 });
+
+test('a time jump switches to the target hour light set at once while intensities still fade',()=>{
+ const {run}=night();
+ run('climate.hour=12;updateClimate(1,true);');const noon=run('climateLightSignature()');
+ run('climate.hour=21;updateClimate(1,true);');assert.notEqual(run('climateLightSignature()'),noon);
+ run('climate.hour=12;updateClimate(1/30);');
+ assert.equal(run('climateLightSignature()'),noon,'lagging intensities must not create extra shader light sets');
+ assert(run('!moonLight.visible&&!starAmbient.visible&&villageLights.every(l=>!l.root.visible&&!l.lamp.castShadow)'));
+ assert(run('moonLight.intensity>.01&&villageLights[0].level>.5'),'only the compiled light set switches; brightness keeps fading');
+});
+
+test('background warm-up compiles each other hourly light set once and restores the live scene',async()=>{
+ const harness=night(),{run}=harness;
+ harness.context.setTimeout=fn=>{fn();return 1;};
+ run("window.isVillageContentLoading=()=>false;renderer.compiled=[];renderer.extensions={has:name=>name==='KHR_parallel_shader_compile'};renderer.compileAsync=s=>{renderer.compiled.push(climateLightSignature()+'@'+climate.hour.toFixed(1));return Promise.resolve(s);};");
+ const live=()=>run("JSON.stringify({clock:climate.clock,hour:climate.hour,set:climateLightSignature(),moon:moonLight.visible,lamps:villageLights.map(l=>l.root.visible)})");
+ const before=live();
+ assert.equal(await run('warmClimateShaders()'),false,'the first check only waits for a settled context');
+ const variants=await run('warmClimateShaders()'),compiled=run('renderer.compiled').map(item=>item.split('@')[0]);
+ assert(variants>=2&&compiled.length===variants);assert.equal(new Set(compiled).size,compiled.length,'each light set compiles once');
+ assert(!compiled.includes(JSON.parse(before).set),'the current set is compiled by normal rendering');
+ assert.equal(live(),before,'sampling hours never leaves the scene at another hour');
+ assert.equal(await run('warmClimateShaders()'),false,'a warmed context is not compiled again');
+ run("renderer.extensions={has:()=>false};VillagePerformance.setMode('low');updateClimate(1,true);");
+ assert.equal(await run('warmClimateShaders()'),false,'without parallel compile the old behaviour is kept');
+});

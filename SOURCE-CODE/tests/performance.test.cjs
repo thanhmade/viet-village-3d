@@ -43,3 +43,26 @@ test('village skips hidden rendering and caps high refresh without creating anot
  run('perfRenders=0;last=0;nextFrameAt=0;for(let i=0;i<150;i++)tick(20000+i*1000/75);');
  assert(run('perfRenders>=118&&perfRenders<=122'),'75 Hz displays should render about 60 FPS, not alternate down to 37.5 FPS');
 });
+test('a first-use shader pause does not lower quality, while sustained slow frames still do',()=>{
+ // Chrome measured 1.7-1.9 s pauses when dawn/dusk lighting first compiled; each lowered the tier.
+ const {result}=make();let ms=0;
+ for(let pause=0;pause<4;pause++){frames(result,ms,150,16.67);ms+=150*16.67+2100;}
+ assert.equal(result.policy.level,2,'isolated pauses are not a slow device');assert.equal(result.policy.shadows,true);
+ frames(result,ms,90,50);assert.equal(result.policy.level,1,'sustained 20 FPS still lowers the tier');
+});
+test('uneven 144 Hz pacing around the 60 FPS limiter still restores detail',()=>{
+ const {result}=make();frames(result,0,70,50);assert.equal(result.policy.level,1);
+ let ms=4000;for(let i=0;i<3000;i++){result.sample(ms,true);ms+=i%2?20.83:13.89;}
+ assert.equal(result.policy.level,2);
+});
+test('quality waits while village models stream in, with a bounded wait',()=>{
+ const {run}=require('./harness.cjs')();
+ run("$('play').onclick();window.__samples=[];window.isVillageContentLoading=()=>true;");
+ run("window.VillagePerformance={policy:VillagePerformance.policy,beforeRender(){},resetSample(){},sample:(ms,playing)=>window.__samples.push(playing)};");
+ run('last=0;nextFrameAt=0;for(let i=0;i<30;i++)tick(1000+i*16.67);');
+ assert(run('__samples.length>20&&__samples.slice(8).every(p=>p===false)'),'GLB/NPC streaming frames are not judged');
+ run('window.isVillageContentLoading=()=>false;for(let i=30;i<60;i++)tick(1000+i*16.67);');
+ assert.equal(run('__samples[__samples.length-1]'),true);
+ run('window.isVillageContentLoading=()=>true;for(let i=0;i<30;i++)tick(70000+i*16.67);');
+ assert.equal(run('__samples[__samples.length-1]'),true,'a hung download cannot pause adaptation forever');
+});

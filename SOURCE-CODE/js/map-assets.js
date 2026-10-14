@@ -223,5 +223,5 @@
   for(const material of glowMaterials)material.emissiveIntensity=night?.85:.08;
  }
  global.VietVillageMapAssets=Object.freeze({initialize,update,canWalk,pondContainsWater,setInterior,setWind:value=>{windStrength=Math.max(0,Math.min(1,Number(value)||0));},
-  get status(){return {ready,loaded:templates.size,groups:[...loadedGroups.keys()],errors:errors.slice(),pond:pondModel?{ready:true,url:pondModel.url,terrainCut:true,bankColliders:pondModel.bankColliders.length,...pondModel.animator.state}:{ready:false,url:assetRecords.get('LV_AO_SEN_01')?.loadedUrl}};}});
+  get status(){return {ready,loading:!!pending&&!ready,loaded:templates.size,groups:[...loadedGroups.keys()],errors:errors.slice(),pond:pondModel?{ready:true,url:pondModel.url,terrainCut:true,bankColliders:pondModel.bankColliders.length,...pondModel.animator.state}:{ready:false,url:assetRecords.get('LV_AO_SEN_01')?.loadedUrl}};}});
 })(typeof window==='undefined'?globalThis:window);

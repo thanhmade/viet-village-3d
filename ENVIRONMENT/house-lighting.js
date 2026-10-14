@@ -24,7 +24,7 @@ const shadowBudget=Number.isFinite(policy?.houseShadows)?Math.max(0,Math.floor(p
 let visibleMask=0;
 for(let i=0;i<villageLights.length;i++){
  const item=villageLights[i];item.level+=(target-item.level)*blend;
- item.root.visible=item.level>.002;item.glowMat.emissiveIntensity=item.level*2.2;
+ item.root.visible=target>.002;item.glowMat.emissiveIntensity=item.level*2.2;
  item.glowMat.color.setHex(item.level>.05?0xbf8645:0x4b3018);
  const visible=!insideHouse&&(item.preview?housePreview.visible:world.visible&&(!window.VietVillageRegions||window.VietVillageRegions.currentId==='lang-viet'));
  item.lamp.intensity=visible?item.level*16:0;item.lamp.visible=false;item.lamp.castShadow=false;
@@ -46,7 +46,7 @@ let remaining=lightBudget,shadows=0;
 for(const item of houseLightCandidates){
  if(!remaining)break;
  item.lamp.visible=true;remaining--;
- if(renderer.shadowMap.enabled&&policy?.shadows!==false&&item.level>.01&&shadows<shadowBudget){item.lamp.castShadow=true;shadows++;}
+ if(renderer.shadowMap.enabled&&policy?.shadows!==false&&target>.01&&shadows<shadowBudget){item.lamp.castShadow=true;shadows++;}
  // Low mode preserves a porch light at each of the nearest two houses.
  if(lightBudget>=3)for(const light of item.windowLamps){if(!remaining)break;light.visible=true;remaining--;}
 }

@@ -21,7 +21,7 @@ const positions=new Float32Array(1400*6);for(let i=0;i<1400;i++){let x=(i*17.713
 rebuildRainRoofCache();
 roomLight.position.set(-3.03,1.52,.28);roomLight.castShadow=true;roomLight.shadow.mapSize.set(512,512);roomLight.shadow.bias=-.002;
 for(const m of materials.values())m.userData.dryRoughness=m.roughness;
-$('climateBtn').onclick=()=>{$('climatePanel').classList.contains('hidden')?$('climatePanel').classList.remove('hidden'):$('climatePanel').classList.add('hidden');};$('closeClimate').onclick=()=>$('climatePanel').classList.add('hidden');$('timeMode').onchange=()=>{climate.clock=$('timeMode').value;if(climate.clock==='manual')climate.hour=climate.displayHour;};$('timeSlider').oninput=()=>{climate.clock='manual';$('timeMode').value='manual';climate.hour=Number($('timeSlider').value);};for(const [id,h] of [['day',8],['noon',12],['afternoon',15.5],['sunset',17.6],['evening',20],['midnight',0]])$('time-'+id).onclick=()=>{climate.clock='manual';climate.hour=h;$('timeMode').value='manual';$('timeSlider').value=h;};$('seasonMode').onchange=()=>climate.season=$('seasonMode').value;$('weatherMode').onchange=()=>climate.weather=$('weatherMode').value;$('climateQuality').value=$('quality').value;$('climateQuality').onchange=()=>{$('quality').value=$('climateQuality').value;quality();};$('nightVisibility').oninput=()=>nightVisibility=Number($('nightVisibility').value);quality();initHouseLights();climateReady=true;updateClimate(1,true);}
+$('climateBtn').onclick=()=>{$('climatePanel').classList.contains('hidden')?$('climatePanel').classList.remove('hidden'):$('climatePanel').classList.add('hidden');};$('closeClimate').onclick=()=>$('climatePanel').classList.add('hidden');$('timeMode').onchange=()=>{climate.clock=$('timeMode').value;if(climate.clock==='manual')climate.hour=climate.displayHour;};$('timeSlider').oninput=()=>{climate.clock='manual';$('timeMode').value='manual';climate.hour=Number($('timeSlider').value);};for(const [id,h] of [['day',8],['noon',12],['afternoon',15.5],['sunset',17.6],['evening',20],['midnight',0]])$('time-'+id).onclick=()=>{climate.clock='manual';climate.hour=h;$('timeMode').value='manual';$('timeSlider').value=h;};$('seasonMode').onchange=()=>climate.season=$('seasonMode').value;$('weatherMode').onchange=()=>climate.weather=$('weatherMode').value;$('climateQuality').value=$('quality').value;$('climateQuality').onchange=()=>{$('quality').value=$('climateQuality').value;quality();};$('nightVisibility').oninput=()=>nightVisibility=Number($('nightVisibility').value);quality();initHouseLights();climateReady=true;updateClimate(1,true);scheduleClimateShaderWarmup();}
 function exteriorRoofAt(x,z){return window.VietVillageRegions?.current?.roofHeight(x,z)??langVietRoofHeight(x,z);}
 function langVietRoofHeight(x,z){for(let h of village.houses)if(Math.abs(x-h.x)<3.7&&Math.abs(z-h.z)<2.9)return 5.1;if(Math.abs(x)<7&&Math.abs(z+19)<4.3)return 7.5;if(Math.abs(x)<4.8&&Math.abs(z-24)<2)return 6.3;return .3;}
 function roofAt(x,z){return insideHouse?0:exteriorRoofAt(x,z);}
@@ -34,9 +34,9 @@ const followPlayer=player.visible&&world.visible;
 if(insideHouse)focus.set(0,1,0);else if(followPlayer)focus.copy(player.position);else focus.set(housePreview.visible?11:0,0,0);
 moonLight.target.position.copy(focus);moonLight.position.copy(focus).addScaledVector(moonDirection,60);
 const power=night*.78*(1-cloud*.74)*nightVisibility;moonLight.intensity+=(power-moonLight.intensity)*blend;
-moonLight.visible=moonLight.intensity>.0001;moonLight.castShadow=renderer.shadowMap.enabled&&climatePolicy()?.shadows!==false&&night>.02;
+moonLight.visible=power>.0001;moonLight.castShadow=renderer.shadowMap.enabled&&climatePolicy()?.shadows!==false&&night>.02;
 const span=insideHouse?7:followPlayer?18:housePreview.visible?9:36;if(moonLight.shadow.camera.right!==span){Object.assign(moonLight.shadow.camera,{left:-span,right:span,top:span,bottom:-span});moonLight.shadow.camera.updateProjectionMatrix();}
-const fill=night*(.30-cloud*.06)*nightVisibility*(insideHouse?.12:1);starAmbient.intensity+=(fill-starAmbient.intensity)*blend;starAmbient.visible=starAmbient.intensity>.0001;}
+const fill=night*(.30-cloud*.06)*nightVisibility*(insideHouse?.12:1);starAmbient.intensity+=(fill-starAmbient.intensity)*blend;starAmbient.visible=fill>.0001;}
 
 function updateClimate(dt,instant=false){if(!climateReady)return;
 const second=Math.floor(Date.now()/1000);if(instant||second!==climateDateSecond){climateDateSecond=second;climateDate=vnTime(new Date(second*1000));}
@@ -56,3 +56,40 @@ updateHouseLights(dt,h,instant);window.VietVillageRegions?.updateEnvironment(dt,
 const hh=String(Math.floor(h)).padStart(2,'0'),mm=String(Math.floor(h*60)%60).padStart(2,'0');climateText('climateStatus',hh+':'+mm+' · '+phaseLabel(h)+' · '+w.label);climateText('clockReadout',hh+':'+mm+' · '+(climate.clock==='live'?'Giờ Việt Nam':climate.clock==='demo'?'Tua 24 giờ / 4 phút':'Xem thử'));climateText('seasonReadout',(season==='rainy'?'Mùa mưa':'Mùa khô')+' · '+w.label);if(climate.clock!=='manual'&&Number(climateNode('timeSlider').value)!==h)climateNode('timeSlider').value=h;
 }
 
+// Sun, moon, star fill and house lamps switch with the hour, which changes the light counts
+// compiled into every lit shader: the first dawn, dusk or time preset froze the game for
+// 1-2 s. Their visibility now follows each hour's target values, so one hour maps to one
+// light set. Compile the other sets once in the background (KHR_parallel_shader_compile)
+// after loading settles; without that extension nothing changes.
+const climateWarmup={done:new Set(),candidate:'',busy:false,timer:0};
+function climateLightSignature(){const counts=[0,0,0,0,0,0,0,0];scene.traverseVisible(o=>{if(!o.isLight)return;const i=o.isDirectionalLight?0:o.isSpotLight?2:o.isPointLight?4:o.isHemisphereLight?6:7;counts[i]++;if(o.castShadow&&i<6)counts[i+1]++;});return counts.join('')+(renderer.shadowMap.enabled?'+':'-');}
+function climateWarmupContext(){
+ if(window.isVillageContentLoading?.())return null;
+ return [window.VietVillageRegions?.currentId||'',insideHouse?1:0,renderer.shadowMap.enabled?1:0,window.VietVillagePlayerAvatar?.state?.modelId||''].join(':');
+}
+function atClimateHours(hours,visit){
+ // Synchronous and restored before returning, so no frame is rendered at a sampled hour.
+ const clock=climate.clock,hour=climate.hour;
+ try{climate.clock='manual';for(const h of hours){climate.hour=h;updateClimate(0,true);visit(h);}}
+ finally{climate.clock=clock;climate.hour=hour;updateClimate(0,true);}
+}
+async function warmClimateShaders(){
+ if(climateWarmup.busy||!climateReady||document.hidden||typeof renderer==='undefined'||typeof renderer?.compileAsync!=='function'||!renderer.extensions.has('KHR_parallel_shader_compile'))return false;
+ if(window.VietVillageRegions?.status.transitioning||housePortalSystem?.status?.pending)return false;
+ // Same context on two checks: loading finished and lighting fades have converged.
+ const context=climateWarmupContext();
+ if(!context||climateWarmup.done.has(context)||climateWarmup.candidate!==context){climateWarmup.candidate=context||'';return false;}
+ climateWarmup.busy=true;
+ try{
+  const seen=new Set([climateLightSignature()]),hours=[];
+  atClimateHours(Array.from({length:240},(_,i)=>i/10),h=>{const signature=climateLightSignature();if(!seen.has(signature)){seen.add(signature);hours.push(h);}});
+  for(const h of hours){
+   // One light set per task keeps each main-thread slice short; the GPU driver compiles in parallel.
+   if(document.hidden||climateWarmupContext()!==context)return false;
+   let pending;atClimateHours([h],()=>{pending=renderer.compileAsync(scene,camera);});
+   await pending;await new Promise(resolve=>setTimeout(resolve,300));
+  }
+  climateWarmup.done.add(context);return hours.length;
+ }finally{climateWarmup.busy=false;}
+}
+function scheduleClimateShaderWarmup(){clearTimeout(climateWarmup.timer);climateWarmup.timer=setTimeout(()=>{Promise.resolve().then(warmClimateShaders).catch(error=>console.warn('Bỏ qua biên dịch trước ánh sáng:',error)).finally(scheduleClimateShaderWarmup);},2500);}

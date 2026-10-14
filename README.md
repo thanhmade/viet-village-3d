@@ -41,6 +41,10 @@ Kiểm thử launcher: `py -3 -B -m unittest discover -s scripts/tests -v`; ki�
 
 ## Phần thử nghiệm trên cap-nhat
 
+### Kiểm tra và tối ưu ánh sáng theo giờ (Claude, 14/10/2026)
+
+Đo trên Chrome: lần đầu chuyển ngày ↔ đêm (bình minh, hoàng hôn hoặc nút giờ trong **Thời gian & thời tiết**) game đứng hình tới ~2 giây vì phải biên dịch lại shader, và chế độ chất lượng **Tự động** hiểu nhầm cú khựng đó (cùng lúc nạp GLB) là máy yếu nên tắt bóng đổ. Nay bộ chất lượng bỏ qua khung khựng đơn lẻ và chờ mô hình làng/NPC/nhân vật nạp xong; đèn trăng, ánh sao và đèn nhà bật/tắt theo giờ đích; các cấu hình đèn còn lại được biên dịch nền sau khi tải. Khi bấm nút đổi giờ, cửa sổ phát sáng và đèn trăng đổi ngay thay vì mờ dần; độ sáng chung vẫn chuyển dần. Báo cáo, số đo trước/sau và cách khôi phục: `DOCUMENTS/CLAUDE-REVIEW.md` (chỉ lưu trên máy).
+
 ### Tài nguyên 3D Làng Việt (local, 13/10/2026)
 
 Đã xử lý 50 bộ tham chiếu, dựng và tích hợp **48 GLB không rig** vào cảnh Làng Việt và nội thất. Hai bộ `LV_CUM_DA_01`, `LV_THUNG_GO_01` chưa dựng vì không có ảnh đọc được; 23 bộ khác thiếu một hoặc nhiều góc và đã ghi phần suy luận. Mô hình dùng hình học 3D và vật liệu màu PBR, chưa có texture vẽ riêng. Cây chuyển động bằng mã runtime; cửa/nắp có pivot để xem thử.
@@ -128,7 +132,7 @@ Mở **http://localhost:5005/** (tự chuyển đến `SOURCE-CODE/index.html`).
 | `DOCUMENTS/` | Git giữ báo cáo giới hạn nguồn và phạm vi kiểm tra; bài giảng, kiểm kê, ngữ cảnh và báo cáo kết nối chỉ lưu trên máy |
 | `BACKUP/` | Chỉ lưu trên máy: bundle lịch sử Git, bản v8, HTML cũ, upload và helper phát triển; không có trong bản clone GitHub |
 
-Trang CAP-NHAT tải **52 script theo `SOURCE-CODE/load-order.json`**, cùng các script giao diện và module đăng nhập. Các script toàn cục dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
+Trang CAP-NHAT tải **62 script theo `SOURCE-CODE/load-order.json`**, cùng các script giao diện và module đăng nhập. Các script toàn cục dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
 
 ## Tài nguyên 3D và giới hạn hiện tại
 

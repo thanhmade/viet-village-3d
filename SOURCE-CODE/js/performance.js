@@ -1,8 +1,15 @@
 'use strict';
+// Streaming the village GLBs, NPCs and the player model keeps frames slow for several
+// seconds. That is loading, not the steady frame rate that quality and shader warm-up follow.
+window.isVillageContentLoading = function () {
+  const npcs = window.VietVillageNPCs?.status;
+  return !!(window.VietVillageMapAssets?.status.loading || npcs && !npcs.loaded && !npcs.error || window.VietVillagePlayerAvatar?.state?.loading);
+};
 // Quality changes are infrequent; simulation and controls keep their existing frame loop.
 window.createVillagePerformance = function ({renderer, getSun, getSize, readout, storage}) {
-  let mode = 'auto', tier = 2, policy, sampleStart = null, sampleFrames = 0;
+  let mode = 'auto', tier = 2, policy, sampleStart = null, sampleFrames = 0, lastSample = 0;
   let slowSeconds = 0, fastSeconds = 0, settleUntil = 0, nextShadow = 0, fps = 0;
+  const intervals = [];
   try { const saved = storage?.getItem('viet-village-render-quality'); if (['auto','low','high'].includes(saved)) mode = saved; } catch {}
   function apply() {
     const {width, height, dpr, mobile} = getSize();
@@ -26,7 +33,7 @@ window.createVillagePerformance = function ({renderer, getSun, getSize, readout,
       }
     }
   }
-  function resetSample() { sampleStart = null; sampleFrames = 0; slowSeconds = fastSeconds = 0; }
+  function resetSample() { sampleStart = null; sampleFrames = 0; slowSeconds = fastSeconds = 0; intervals.length = 0; }
   function setMode(value) {
     mode = ['auto','low','high'].includes(value) ? value : 'auto';
     tier = 2; resetSample(); settleUntil = 0; apply();
@@ -34,15 +41,24 @@ window.createVillagePerformance = function ({renderer, getSun, getSize, readout,
   }
   function sample(ms, playing) {
     if (!playing) { resetSample(); return; }
-    if (sampleStart === null) { sampleStart = ms; sampleFrames = 0; return; }
-    sampleFrames++;
+    if (sampleStart === null) { sampleStart = lastSample = ms; sampleFrames = 0; intervals.length = 0; return; }
+    sampleFrames++; intervals.push(ms - lastSample); lastSample = ms;
     const elapsed = ms - sampleStart;
     if (elapsed < 1000) return;
     fps = sampleFrames * 1000 / elapsed;
-    sampleStart = ms; sampleFrames = 0;
+    // A first-use shader compile or GPU upload can freeze one frame for a second or more.
+    // Judge quality without such isolated pauses, otherwise one pause lowers the tier,
+    // which toggles shadows and compiles every lit shader again. Sustained slow frames
+    // stay below the limit because it scales with the median frame.
+    intervals.sort((a, b) => a - b);
+    const hitch = Math.max(250, intervals[intervals.length >> 1] * 4);
+    let steadyTime = 0, steadyFrames = 0;
+    for (const interval of intervals) if (interval <= hitch) { steadyTime += interval; steadyFrames++; }
+    const typicalFps = steadyFrames * 1000 / Math.max(1, steadyTime);
+    sampleStart = ms; sampleFrames = 0; intervals.length = 0;
     if (mode === 'auto' && ms >= settleUntil) {
-      slowSeconds = fps < 42 ? slowSeconds + elapsed / 1000 : 0;
-      fastSeconds = fps > 57 ? fastSeconds + elapsed / 1000 : 0;
+      slowSeconds = typicalFps < 42 ? slowSeconds + elapsed / 1000 : 0;
+      fastSeconds = typicalFps > 57 ? fastSeconds + elapsed / 1000 : 0;
       if (slowSeconds >= 2 && tier > 0) { tier--; apply(); resetSample(); settleUntil = ms + 6000; }
       else if (fastSeconds >= 20 && tier < 2) { tier++; apply(); resetSample(); settleUntil = ms + 15000; }
     }

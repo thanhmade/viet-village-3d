@@ -73,7 +73,7 @@ function claimActivityExperience(kind,id){
 }
 function openScenery(){if(!window.VietVillageAuth?.isAuthenticated()||(window.VietVillageCharacter&&!window.VietVillageCharacter.isReady()))return;stopVillageWalk();if(insideHouse)leaveHouse();world.visible=true;housePreview.visible=false;active=false;clearMotion();$('home').classList.add('hidden');$('hud').style.display='block';gems.forEach(g=>g.visible=false);player.visible=false;portal.visible=false;treasure.visible=false;sceneryFocus.set(0,1,0);sceneryRadius=60;yaw=.55;pitch=.67;gateView=-1;houseView=-1;if(window.VietVillageOnline?.hasRoom())startRoomWalk();else startRoaming();}
 function bindScenery(){yaw=.55;pitch=.67;$('pondBtn').onclick=showPondView;$('play').onclick=()=>window.VietVillageAuth?.enterGame(openScenery);$('walkBtn').onclick=startRoaming;$('houseBtn').onclick=()=>{if(regionTravel&&regionTravel.currentId!=='lang-viet')return;stopVillageWalk();world.visible=false;housePreview.visible=true;clearMotion();gateView=-1;houseView=(houseView+1)%4;sceneryFocus.set(11,2.0,0);sceneryRadius=Math.max(12,7.5/camera.aspect);yaw=[0,Math.PI,-Math.PI/2,Math.PI/2][houseView];pitch=.22;toast('Nhà dân · '+['Mặt trước','Mặt sau','Bên trái','Bên phải'][houseView]);};$('overviewBtn').onclick=()=>{stopVillageWalk();world.visible=true;housePreview.visible=false;gateView=-1;houseView=-1;sceneryFocus.set(0,1,0);sceneryRadius=60;yaw+=Math.PI/2;pitch=.67;};$('cameraBtn').onclick=()=>{stopVillageWalk();world.visible=true;housePreview.visible=false;gateView=-1;houseView=-1;sceneryFocus.set(0,1,0);sceneryRadius=60;yaw=.55;pitch=.67;};}
-let clockT=0,climateElapsed=0,uiElapsed=0,nextFrameAt=0;
+let clockT=0,climateElapsed=0,uiElapsed=0,nextFrameAt=0,contentLoading=true,contentWatchUntil=0;
 const cameraDestination=new THREE.Vector3(),cameraOffset=new THREE.Vector3();
 function tick(ms){requestAnimationFrame(tick);experienceView?.update();if(document.hidden||!window.VietVillageAuth?.isAuthenticated()){villageWeapons?.suspend();window.VillagePerformance?.resetSample();resetHouseTravel();regionTravel?.reset();last=0;nextFrameAt=0;return;}
 // The opaque atlas does not need a second GPU render underneath it. Room presence continues.
@@ -108,9 +108,9 @@ if(insideHouse){updateInterior(dt);}else if(gateView>=0){let positions=[[0,4.6,3
 climateElapsed+=dt;uiElapsed+=dt;
 if(climateElapsed>=1/30){updateClimate(climateElapsed);window.VietVillageMapAssets?.update(clockT,climate,world.visible&&!insideHouse&&regionTravel?.currentId==='lang-viet');climateElapsed=0;}
 playerHealthView?.update(dt);
-if(uiElapsed>=.1){updatePondChecks();updateEntrances();if($('minimap').offsetParent!==null)minimap();uiElapsed=0;}
+if(uiElapsed>=.1){if(!contentWatchUntil)contentWatchUntil=ms+60000;contentLoading=ms<contentWatchUntil&&!!window.isVillageContentLoading?.();updatePondChecks();updateEntrances();if($('minimap').offsetParent!==null)minimap();uiElapsed=0;}
 if(playerAvatar?.isGLTF)body.position.y=0;playerAvatar?.update(dt,avatarSpeed);
-regionTravel?.update(portalDt);window.VietVillageNPCs?.update(dt);learningCollectibles?.update(dt);housePortalSystem?.update(portalDt);villageWeapons?.update(dt);window.VietVillageOnline?.tick(dt);window.VillagePerformance?.beforeRender(ms);renderer.render(scene,camera);window.VillagePerformance?.sample(ms,!overlays());
+regionTravel?.update(portalDt);window.VietVillageNPCs?.update(dt);learningCollectibles?.update(dt);housePortalSystem?.update(portalDt);villageWeapons?.update(dt);window.VietVillageOnline?.tick(dt);window.VillagePerformance?.beforeRender(ms);renderer.render(scene,camera);window.VillagePerformance?.sample(ms,!overlays()&&!contentLoading);
 }
 let gameInitialized=false,gameInitializationStarted=false,enteredCharacterUid=null;
 function initializeVillageGame(){

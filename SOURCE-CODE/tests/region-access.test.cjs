@@ -36,7 +36,10 @@ test('testing needs real registered safe resources, living level one actor and n
 test('death and insufficient level have identical denial codes for both destination spawns and do not move or charge',()=>{
  const {run,context}=game(),regions=context.VietVillageRegions,journey=context.VietVillageJourney;
  for(const [state,code,reason] of [[{alive:false,level:1},'region/character-dead',/gục/],[{alive:true,level:0},'region/level-required',/cấp 1/i]]){
-  journey.setCharacterState(state);
+  journey.setCharacterState({alive:state.alive});
+  // Invalid/unavailable progression is injected only into this access-policy fixture.
+  // Character LV now comes from the EXP store, not the health setter.
+  context.VietVillageJourney={...journey,getState:()=>({...journey.getState(),level:state.level})};
   for(const spawn of ['village-entry','from-lang-viet']){
    const check=regions.checkTravelAccess(DONG,spawn,{loadDestination:true});assert.equal(check.code,code);assert.match(check.message,reason);
    assert.equal(regions.travelTo(DONG,spawn).code,code);

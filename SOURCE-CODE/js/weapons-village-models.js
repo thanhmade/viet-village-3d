@@ -31,7 +31,12 @@ window.createVillageWeaponModels = function (T) {
   function newModel(id) {
     const group = new T.Group(); group.name = 'weapon-' + id; weaponRig.add(group);
     const tip = new T.Object3D(); tip.name = id + '-tip'; group.add(tip);
-    const info = { group, tip }; models.set(id, info); return info;
+    const info = { group, tip, gripPoint: new T.Vector3() }; models.set(id, info); return info;
+  }
+  function markGrip(model, handle) {
+    // Anchor to the centre of the actual handle, not the model's display origin.
+    handle.name = model.group.name + '-grip'; model.gripPoint.copy(handle.position);
+    return handle;
   }
   // The reference images are concept sheets. These meshes reproduce their main
   // silhouettes without pretending to include the final engraved game assets.
@@ -42,7 +47,7 @@ window.createVillageWeaponModels = function (T) {
       const cap = cylinder(m.group, Math.abs(x) > 1 ? 0.072 : 0.063, 0.12, gold, 0, Math.PI / 2); cap.position.x = x;
       const rim = ring(m.group, 0, Math.abs(x) > 1 ? 0.074 : 0.064); rim.rotation.set(0, Math.PI / 2, 0); rim.position.x = x;
     }
-    const handle = cylinder(m.group, 0.063, 0.5, grip, 0, Math.PI / 2);
+    const handle = markGrip(m, cylinder(m.group, 0.063, 0.5, grip, 0, Math.PI / 2));
     for (let i = 0; i < 12; i++) {
       const r = ring(m.group, 0, 0.064, grip); r.rotation.set(0, Math.PI / 2, 0); r.position.x = -0.22 + i * 0.04;
     }
@@ -53,7 +58,7 @@ window.createVillageWeaponModels = function (T) {
   }
   {
     const m = newModel('sword');
-    cylinder(m.group, .056, .37, grip, -.12);
+    markGrip(m, cylinder(m.group, .056, .37, grip, -.12));
     for (let i = 0; i < 8; i++) ring(m.group, -.28 + i * .045, .056, grip);
     cylinder(m.group, .072, .07, gold, -.32);
     const pommel = mesh(new T.SphereGeometry(.095, 12, 8), gold, m.group); pommel.position.y = -.39; pommel.scale.z = .52;
@@ -66,7 +71,7 @@ window.createVillageWeaponModels = function (T) {
   {
     const m = newModel('spear');
     cylinder(m.group, .04, 2.75, shaftWood, .1);
-    cylinder(m.group, .047, .56, grip, -.65);
+    markGrip(m, cylinder(m.group, .047, .56, grip, -.65));
     for (const y of [-1.22,-.92,-.4,.38,1.24,1.43]) { cylinder(m.group,.055,.1,gold,y); ring(m.group,y,.057); }
     shapeMesh(m.group, [[0,2.04],[-.14,1.58],[-.09,1.41],[0,1.47],[.09,1.41],[.14,1.58]], steel,.065);
     shapeMesh(m.group, [[0,2.04],[-.018,1.52],[0,1.46],[.018,1.52]], bladeEdge,.075);
@@ -82,7 +87,7 @@ window.createVillageWeaponModels = function (T) {
     const m = newModel('bow');
     const limb = [[0,-1.07,.14],[0,-.87,-.08],[0,-.55,-.38],[0,-.25,-.31],[0,0,-.26],[0,.25,-.31],[0,.55,-.38],[0,.87,-.08],[0,1.07,.14]];
     tube(m.group,limb,.043,shaftWood);
-    cylinder(m.group,.054,.32,grip,0).position.z = -.26;
+    const handle = cylinder(m.group,.054,.32,grip,0); handle.position.z = -.26; markGrip(m, handle);
     for (const y of [-.95,-.4,.4,.95]) {
       const goldPoint = limb.reduce((best,p) => Math.abs(p[1]-y)<Math.abs(best[1]-y)?p:best,limb[0]);
       const trim = mesh(new T.SphereGeometry(.057,8,6),gold,m.group);trim.position.set(0,y,goldPoint[2]);trim.scale.set(.8,1.6,.9);
@@ -97,7 +102,7 @@ window.createVillageWeaponModels = function (T) {
   }
   {
     const m = newModel('axe');
-    cylinder(m.group,.052,1.88,shaftWood,-.06);cylinder(m.group,.058,.57,grip,-.6);
+    cylinder(m.group,.052,1.88,shaftWood,-.06);markGrip(m, cylinder(m.group,.058,.57,grip,-.6));
     for(const y of [-.93,-.32,.13,.77,.98]){cylinder(m.group,.068,.11,gold,y);ring(m.group,y,.071);}
     // Single broad blade with a short opposing spike, as in the supplied sheet.
     shapeMesh(m.group,[[-.07,1.05],[-.31,1.11],[-.62,1.4],[-.78,1.17],[-.85,.83],[-.8,.47],[-.66,.24],[-.47,.65],[-.26,.73],[-.06,.68]],steel,.09);

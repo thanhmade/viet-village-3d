@@ -9,7 +9,7 @@ function initializeHouseTravel(){
   travelCameraBounds.push(new THREE.Box3(new THREE.Vector3(-4.8,3.4,22),new THREE.Vector3(4.8,7.2,26)));
   housePortalSystem=window.createHousePortals({THREE,world,interiorRoot,entries:housePortalConfigs,
     getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),
-      enabled:(insideHouse||!window.VietVillageRegions||window.VietVillageRegions.currentId==='lang-viet')&&houseTravelFocused&&!document.hidden&&!overlays()&&(insideHouse||gateView<0&&houseView<0&&world.visible&&(active||localWalking||multiplayerWalking)),
+      enabled:!window.VietVillagePlayerAvatar?.isJumping&&(insideHouse||!window.VietVillageRegions||window.VietVillageRegions.currentId==='lang-viet')&&houseTravelFocused&&!document.hidden&&!overlays()&&(insideHouse||gateView<0&&houseView<0&&world.visible&&(active||localWalking||multiplayerWalking)),
       mapId:insideHouse?housePortalConfigs[selectedHouse]?.interiorId:'village',
       houseId:insideHouse?housePortalConfigs[selectedHouse]?.id:null,position:insideHouse?insidePosition:player.position,camera}),
     onEnter:entry=>{prepareHouseDestination(entry.interiorId);enterHouse(entry.index);return true;},

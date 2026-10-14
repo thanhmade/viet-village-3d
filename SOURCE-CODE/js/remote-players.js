@@ -17,6 +17,8 @@ export function createRemotePlayers({THREE, game}) {
     const localOnly=[];
     root.traverse(node=>{if(node!==root && node.userData.localOnly)localOnly.push(node);});
     localOnly.forEach(node=>node.parent?.remove(node));
+    // Female model and local weapons are excluded from the current room protocol.
+    root.traverse(node=>{if(node.userData.proceduralAvatarPart)node.visible=true;});
     root.userData.uid = member.uid;
     root.traverse(mesh=>{if(mesh.isMesh){mesh.material=mesh.material.clone();materials.push(mesh.material);
       if(mesh.material.color.getHex()===0x269991) mesh.material.color.setHex(colors[member.avatarId] || colors['villager-default']);}});

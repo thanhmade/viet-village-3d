@@ -23,7 +23,7 @@ const test = process.argv[2] === 'test';
 if (!test && process.argv[2] !== 'start') throw new Error('Use test or start. No deployment command is provided.');
 const args = ['node_modules/firebase-tools/lib/bin/firebase.js', test ? 'emulators:exec' : 'emulators:start',
   '--only','auth,firestore,database,functions','--project','demo-viet-village-3d','--config','firebase.json'];
-if (test) args.push('node --test --test-concurrency=1 SOURCE-CODE/tests/firebase-emulator.test.mjs');
+if (test) args.push('node --test --test-concurrency=1 SOURCE-CODE/tests/firebase-emulator.test.mjs SOURCE-CODE/tests/experience-emulator.test.mjs SOURCE-CODE/tests/quest-emulator.test.mjs');
 const child = spawn(localNode, args, {cwd: root, env, stdio:'inherit'});
 child.on('error', error => {console.error(error.message);process.exitCode = 1;});
 child.on('exit', code => {process.exitCode = code ?? 1;});

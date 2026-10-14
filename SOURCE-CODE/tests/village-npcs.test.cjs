@@ -15,7 +15,7 @@ test('runtime data reuses design IDs but measured world coordinates, with only p
  assert.equal(g.mapId,'lang-viet');assert.equal(g.npcs.length,8);assert.equal(g.props.length,1);assert.deepEqual(g.hostileSpawns,[]);assert.equal(g.npcCombatEnabled,false);
  for(const npc of g.npcs){assert(design.npcs.some(n=>n.id===npc.id));assert(d.dialogues[npc.dialogueId]);assert.notDeepEqual([npc.position.x,npc.position.z],design.npcs.find(n=>n.id===npc.id).schematic);}
  assert(q.quests.filter(q=>q.enabled).every(q=>design.quests.some(old=>q.id===old.id)));
- assert.equal(q.rewardsEnabled,false);assert(g.npcs.find(n=>n.role==='trainer').position.x>6.45);
+ assert.equal(q.rewardsEnabled,true);assert.equal(q.rewardScope,"local-character-exp");assert.equal(q.itemRewardsEnabled,false);assert.equal(q.currencyRewardsEnabled,false);assert(g.npcs.find(n=>n.role==='trainer').position.x>6.45);
 });
 
 test('porch height matches rendered temple meshes and only its front steps are opened',()=>{
@@ -158,4 +158,70 @@ test('interact re-evaluates the closest NPC even before the next prompt refresh'
  h.run('player.position.set(8.1,.3,-14.6)');assert(n.interact());
  assert.equal(n.status.opened,'NPC_LANG_VIET_VO_SU');
  assert(!n.interact('NPC_LANG_VIET_LY_TRUONG'),'Only one conversation can be active');
+});
+
+function playerReactions(h){const events=[];h.context.VietVillagePlayerAvatar={...h.context.VietVillagePlayerAvatar,onInteraction:event=>events.push({...event})};return events;}
+function animationControl(h,id){return h.run(`$('npcAnimations').children.find(b=>b.id==='${id}')`);}
+function questControl(h,id){return h.run(`$('npcQuests').children.flatMap(row=>row.children).find(b=>b.id==='${id}')`);}
+// The controller tests below stub only the NPC animation status; model geometry,
+// exact GLB clips and mixer transitions are covered by the existing GLB suites.
+function npcVisualDouble(h,id){
+ const actors=h.context.mountVillageNPCs({THREE:h.context.THREE,region:h.context.VietVillageRegions.current,gameplay:load('gameplay')});
+ const state={clip:'idle',busy:false,phase:'idle'},visual={animationState:state,
+  playOnce(clip){if(state.busy)return false;Object.assign(state,{clip,busy:true,phase:'once'});return true;},
+  returnToIdle(){Object.assign(state,{clip:'idle',busy:false,phase:'idle'});},update(){},dispose(){}};
+ actors.npcs.get(id).visual=visual;return visual;
+}
+
+test('player social hooks greet only a valid conversation, acknowledge accepted quests and celebrate one successful hand-in',async()=>{
+ const h=await game(),n=h.context.VietVillageNPCs,events=playerReactions(h);
+ assert(!n.interact('NPC_LANG_VIET_LY_TRUONG'));assert.equal(events.length,0);
+ stand(h,7.6,21.6);assert(n.interact('NPC_LANG_VIET_TUAN_DINH'));
+ assert.deepEqual(events.at(-1),{type:'npc-greeting',npcId:'NPC_LANG_VIET_TUAN_DINH',clip:'greet_01'});
+ assert(!n.interact('NPC_LANG_VIET_TUAN_DINH'));assert.equal(events.length,1);
+ const accept=questControl(h,'accept-QUEST_LV_01');for(let i=0;i<8;i++)accept.onclick();
+ assert.equal(events.filter(e=>e.type==='npc-agree').length,1);assert.equal(n.status.quests.QUEST_LV_01,'active');
+ n.lock();assert.deepEqual(events.at(-1),{type:'npc-close',npcId:'NPC_LANG_VIET_TUAN_DINH'});
+ stand(h,2,-10.9);assert(n.interact('NPC_LANG_VIET_LY_TRUONG'));
+ assert.equal(events.at(-1).clip,'bow');const handIn=questControl(h,'finish-QUEST_LV_01');
+ for(let i=0;i<8;i++)handIn.onclick();assert.equal(n.status.quests.QUEST_LV_01,'completed');
+ assert.deepEqual(events.filter(e=>e.type==='activity-complete'),[{type:'activity-complete',npcId:'NPC_LANG_VIET_LY_TRUONG',clip:'cheer',activityId:'QUEST_LV_01'}]);
+ const before=events.length;stand(h,0,16.5);assert.equal(events.length,before+1);assert.equal(events.at(-1).type,'npc-close');
+ handIn.onclick();assert.equal(events.length,before+1);assert.equal(h.run('progress.score'),0);
+});
+
+test('player lesson hooks reject wrong/duplicate/stale answers and clap only after both reading and a correct answer',async()=>{
+ const h=await game(),n=h.context.VietVillageNPCs,events=playerReactions(h);
+ stand(h,-9.8,4.25);assert(n.interact('NPC_LANG_VIET_THAY_DO'));assert.equal(events.at(-1).clip,'bow');
+ const study=animationControl(h,'npc-study');animationControl(h,'npc-question').onclick();
+ const answer=index=>h.run(`$('npcLesson').children.find(e=>e.className==='npc-actions').children[${index}]`);
+ answer(1).onclick();assert.equal(events.length,1,'Wrong answer must not look successful');
+ const correct=answer(0);for(let i=0;i<8;i++)correct.onclick();
+ assert.equal(events.filter(e=>e.type==='npc-agree').length,1);assert(!events.some(e=>e.type==='activity-complete'));
+ for(let i=0;i<8;i++)study.onclick();
+ assert.deepEqual(events.filter(e=>e.type==='activity-complete'),[{type:'activity-complete',npcId:'NPC_LANG_VIET_THAY_DO',clip:'clap',activityId:'core:0'}]);
+ animationControl(h,'npc-end-conversation').onclick();const closed=events.length;study.onclick();correct.onclick();
+ assert.equal(events.length,closed);assert.equal(events.at(-1).type,'npc-close');assert(!n.isOpen());
+});
+
+test('player agree hooks require a successful NPC action or heal; unavailable services, full HP and repeated clicks do not succeed',async()=>{
+ const h=await game(),n=h.context.VietVillageNPCs,j=h.context.VietVillageJourney,events=playerReactions(h);
+ const guard=npcVisualDouble(h,'NPC_LANG_VIET_TUAN_DINH');stand(h,7.6,21.6);n.interact('NPC_LANG_VIET_TUAN_DINH');
+ const agree=animationControl(h,'npc-animation-agree');agree.onclick();assert.equal(events.length,1,'Greeting is still busy');
+ guard.returnToIdle();agree.onclick();for(let i=0;i<8;i++)agree.onclick();assert.equal(events.filter(e=>e.type==='npc-agree').length,1);n.lock();
+ const shop=load('gameplay').npcs.find(x=>x.role==='merchant');
+ stand(h,shop.approach.x,shop.approach.z);n.interact(shop.id);const beforeShop=events.length;
+ animationControl(h,'npc-service-general-buy').onclick();animationControl(h,'npc-service-general-sell').onclick();assert.equal(events.length,beforeShop);n.lock();
+ const healer=npcVisualDouble(h,'NPC_LANG_VIET_THAY_THUOC');stand(h,12.2,4.25);assert(n.interact('NPC_LANG_VIET_THAY_THUOC'));
+ j.takeDamage(35);const heal=animationControl(h,'npc-heal');heal.onclick();assert.equal(j.getState().hp,65);
+ healer.returnToIdle();const beforeHeal=events.length;heal.onclick();assert.equal(j.getState().hp,100);assert.equal(events.length,beforeHeal+1);assert.equal(events.at(-1).activityId,'healing');
+ for(let i=0;i<8;i++)heal.onclick();healer.returnToIdle();heal.onclick();assert.equal(events.length,beforeHeal+1,'Full HP cannot fire a success reaction');
+ assert(!events.some(e=>e.type==='activity-complete'));
+});
+
+test('an unavailable player animation adapter never breaks existing NPC journal transitions',async()=>{
+ const h=await game(),n=h.context.VietVillageNPCs;let warnings=0;
+ h.context.console={...console,warn(){warnings++;}};h.context.VietVillagePlayerAvatar={...h.context.VietVillagePlayerAvatar,onInteraction(){throw Error('Unavailable visual');}};
+ stand(h,7.6,21.6);assert(n.interact('NPC_LANG_VIET_TUAN_DINH'));questControl(h,'accept-QUEST_LV_01').onclick();
+ assert.equal(n.status.quests.QUEST_LV_01,'active');n.lock();assert(!n.isOpen());assert.equal(warnings,3);
 });

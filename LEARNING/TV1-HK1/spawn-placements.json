@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "mapId": "lang-viet",
+  "validation": {
+    "method": "Three.js r160 actual GLB scene raycast; existing runtime ground/collision/pathfinding; NPC/portal clearance",
+    "start": {
+      "x": 0,
+      "z": 16.5
+    },
+    "floorTolerance": 0.07,
+    "checkedAt": "2026-10-14",
+    "scope": "Automated scene checks; browser walk test documented separately"
+  },
+  "zones": {
+    "Z_GATE": [
+      {
+        "id": "gate-1",
+        "position": {
+          "x": 4,
+          "y": 0.3,
+          "z": 21
+        },
+        "validated": true
+      },
+      {
+        "id": "gate-2",
+        "position": {
+          "x": 3,
+          "y": 0.3,
+          "z": 22
+        },
+        "validated": true
+      },
+      {
+        "id": "gate-3",
+        "position": {
+          "x": 2.5,
+          "y": 0.3,
+          "z": 22
+        },
+        "validated": true
+      }
+    ],
+    "Z_BANYAN": [
+      {
+        "id": "banyan-1",
+        "position": {
+          "x": 4,
+          "y": 0.3,
+          "z": 3
+        },
+        "validated": true
+      },
+      {
+        "id": "banyan-2",
+        "position": {
+          "x": 5,
+          "y": 0.3,
+          "z": 0
+        },
+        "validated": true
+      },
+      {
+        "id": "banyan-3",
+        "position": {
+          "x": 4,
+          "y": 0.3,
+          "z": -3
+        },
+        "validated": true
+      }
+    ],
+    "Z_SCHOOL": [
+      {
+        "id": "school-1",
+        "position": {
+          "x": -6,
+          "y": 0.3,
+          "z": 4.5
+        },
+        "validated": true
+      },
+      {
+        "id": "school-2",
+        "position": {
+          "x": -6,
+          "y": 0.3,
+          "z": 3.7
+        },
+        "validated": true
+      },
+      {
+        "id": "school-3",
+        "position": {
+          "x": -6,
+          "y": 0.3,
+          "z": 5.5
+        },
+        "validated": true
+      }
+    ],
+    "Z_GARDEN": [
+      {
+        "id": "garden-1",
+        "position": {
+          "x": -6,
+          "y": 0.3,
+          "z": 18.6
+        },
+        "validated": true
+      },
+      {
+        "id": "garden-2",
+        "position": {
+          "x": -6,
+          "y": 0.3,
+          "z": 19.7
+        },
+        "validated": true
+      },
+      {
+        "id": "garden-3",
+        "position": {
+          "x": -6,
+          "y": 0.3,
+          "z": 17.5
+        },
+        "validated": true
+      }
+    ],
+    "Z_POND": [
+      {
+        "id": "pond-1",
+        "position": {
+          "x": 15,
+          "y": 0.3,
+          "z": 23
+        },
+        "validated": true
+      },
+      {
+        "id": "pond-2",
+        "position": {
+          "x": 20,
+          "y": 0.3,
+          "z": 23
+        },
+        "validated": true
+      },
+      {
+        "id": "pond-3",
+        "position": {
+          "x": 10,
+          "y": 0.3,
+          "z": 22.5
+        },
+        "validated": true
+      }
+    ],
+    "Z_SHOP": [
+      {
+        "id": "shop-2",
+        "position": {
+          "x": 9,
+          "y": 0.3,
+          "z": 15.6
+        },
+        "validated": true
+      },
+      {
+        "id": "shop-3",
+        "position": {
+          "x": 10.3,
+          "y": 0.36,
+          "z": 17
+        },
+        "validated": true
+      }
+    ],
+    "Z_HALL": [
+      {
+        "id": "hall-1",
+        "position": {
+          "x": 3.5,
+          "y": 0.3,
+          "z": -11
+        },
+        "validated": true
+      },
+      {
+        "id": "hall-2",
+        "position": {
+          "x": 4.5,
+          "y": 0.3,
+          "z": -11
+        },
+        "validated": true
+      },
+      {
+        "id": "hall-3",
+        "position": {
+          "x": 3.5,
+          "y": 0.3,
+          "z": -12
+        },
+        "validated": true
+      }
+    ]
+  }
+}

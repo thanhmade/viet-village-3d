@@ -1,6 +1,6 @@
 (function(global){
  'use strict';
- global.createVillageNPCController=function({THREE,region,getState,getIdentity,getJourney,healPlayer,onHealed,storage,pause,goTo,notify,loadData,getLesson=definition=>global.resolveVillageLesson(definition)}){
+ global.createVillageNPCController=function({THREE,region,getState,getIdentity,getJourney,healPlayer,onHealed,storage,pause,goTo,notify,loadData,onActivityCompleted=()=>{},onLearningOpen=null,getLesson=definition=>global.resolveVillageLesson(definition)}){
   const el=id=>document.getElementById(id),panel=el('npcDialog'),menu=el('npcDirectory'),prompt=el('npcInteractBtn');
   let data=null,actors=null,journal=null,loading=null,opened=null,menuOpen=false,nearest=null,error='',pulse=0,elapsed=0,disposed=false;
   const listeners=[],ambientRemaining=new Map();let animationButtons=[],pendingGreeting=null,lessonSession=null,lessonView=null,lessonIdentity=null,lessonError='',lessonReactions=[];
@@ -9,7 +9,16 @@
   function listen(node,event,fn){node?.addEventListener(event,fn);listeners.push(()=>node?.removeEventListener?.(event,fn));}
   function hide(node,value){node.classList[value?'add':'remove']('hidden');}
   function button(text,action,id){const b=document.createElement('button');b.type='button';b.textContent=text;if(id)b.id=id;b.onclick=action;return b;}
-  function close({focus=true}={}){dialogueVersion++;healing=false;questReaction=null;actors?.npcs.get(opened)?.visual?.returnToIdle();resetAmbient(opened);opened=null;pendingGreeting=null;animationButtons=[];lessonSession=null;lessonView=null;lessonIdentity=null;lessonError='';lessonReactions=[];menuOpen=false;panel.classList.remove('npc-demo-mode');hide(panel,true);hide(menu,true);pause();if(focus)document.activeElement?.blur?.();}
+  // Player reactions are visual only; a failed/absent avatar must not interrupt
+  // the already validated lesson, journal, healing or NPC animation workflow.
+  function playerReaction(type,detail={}){try{return global.VietVillagePlayerAvatar?.onInteraction?.({type,npcId:opened,...detail});}catch(e){console.warn('Chưa phát được động tác người chơi khi trò chuyện.',e);return false;}}
+  function lessonReaction(events){
+   lessonReactions.push(...events);
+   if(events.includes('agree'))playerReaction('npc-agree',{activityId:lessonSession.lesson.id});
+   if(events.includes('clap'))playerReaction('activity-complete',{clip:'clap',activityId:lessonSession.lesson.id});
+   if(events.includes('clap')&&lessonSession.state.completed)onActivityCompleted('lessons',lessonSession.lesson.id);
+  }
+  function close({focus=true}={}){if(opened)playerReaction('npc-close');dialogueVersion++;healing=false;questReaction=null;actors?.npcs.get(opened)?.visual?.returnToIdle();resetAmbient(opened);opened=null;pendingGreeting=null;animationButtons=[];lessonSession=null;lessonView=null;lessonIdentity=null;lessonError='';lessonReactions=[];menuOpen=false;panel.classList.remove('npc-demo-mode');hide(panel,true);hide(menu,true);pause();if(focus)document.activeElement?.blur?.();}
   function travelToPoint(point){close();const state=getState();if(!state.inVillage||!state.authenticated)return false;return goTo(point);}
   function route(id){const item=actors?.npcs.get(id)||actors?.props.get(id);return item?travelToPoint(item.definition.approach):false;}
   function usable(state=getState()){return !!actors&&!opened&&!menuOpen&&state.authenticated&&state.inVillage&&!state.transitioning&&state.canInteract&&getJourney()?.alive===true;}
@@ -36,7 +45,7 @@
    healing=true;
    try{
     const result=healPlayer?.();box.textContent=result?.message||'Chưa kết nối được chỉ số HP. Hãy thử lại sau.';
-    if(result?.ok){actor.visual?.playOnce('agree');onHealed?.(result);notify(result.message);}
+    if(result?.ok){actor.visual?.playOnce('agree');playerReaction('npc-agree',{activityId:'healing'});onHealed?.(result);notify(result.message);}
    }finally{healing=false;updateAnimationUI();}
   }
   function renderLesson(){
@@ -44,17 +53,19 @@
    box.textContent='';if(!lessonSession||!lessonView)return;
    const version=dialogueVersion,{lesson,state}=lessonSession,title=document.createElement('h3');title.textContent=lesson.title;box.append(title);
    const text=document.createElement('p');text.textContent=lessonView==='study'?lesson.knowledge:lesson.question;box.append(text);
+   const lessonExp=global.VillageExperienceConfig?.rewards.lessons[lesson.id];
+   if(lessonExp){const reward=document.createElement('small');reward.textContent='Hoàn thành học và trả lời đúng: '+lessonExp+' EXP Alpha · Nhận một lần cho nhân vật.';box.append(reward);}
    if(lessonView==='question'){
     const choices=document.createElement('div');choices.className='npc-actions';box.append(choices);
     lesson.answers.forEach((answer,index)=>{const b=button(answer,()=>{
-     if(!canStudy(version))return;lessonReactions.push(...lessonSession.answer(index));renderLesson();updateAnimationUI();
+     if(!canStudy(version))return;lessonReaction(lessonSession.answer(index));renderLesson();updateAnimationUI();
      if(lessonSession.state.correct)el('closeNpcDialog').focus?.();else el('npcLesson').querySelector?.('button')?.focus();
     },'npc-answer-'+index);b.disabled=state.correct;choices.append(b);});
    }
    const feedback=document.createElement('p');feedback.id='npcLessonFeedback';feedback.setAttribute?.('role','status');feedback.setAttribute?.('aria-live','polite');
    feedback.textContent=state.feedback+(state.completed?' Đã hoàn thành bài học.':state.correct?' Chọn Học bài để ôn kiến thức và hoàn thành.':'');box.append(feedback);
   }
-  function showLesson(view,version){if(!canStudy(version))return;lessonView=view;if(view==='study')lessonReactions.push(...lessonSession.study());renderLesson();updateAnimationUI();if(view==='question')el('npcLesson').querySelector?.('button')?.focus();}
+  function showLesson(view,version){if(!canStudy(version))return;lessonView=view;if(view==='study')lessonReaction(lessonSession.study());renderLesson();updateAnimationUI();if(view==='question')el('npcLesson').querySelector?.('button')?.focus();}
   function conversationValid(version,npcId=opened){
    const actor=actors?.npcs.get(opened),s=getState();
    return version===dialogueVersion&&opened===npcId&&!!actor&&s.authenticated&&getIdentity()?.uid===lessonIdentity&&s.inVillage&&!s.transitioning&&getJourney()?.alive===true&&inRange(actor.definition,s);
@@ -71,15 +82,18 @@
    const box=el('npcQuests');box.replaceChildren();
    for(const q of data.quests.quests.filter(q=>q.enabled&&(q.giverNpc===npc.id||q.turnInNpc===npc.id))){
     const state=journal.status(q.id),row=document.createElement('div');row.className='npc-quest';
+    // Reconcile completed old journals and retry an interrupted EXP save, once per receipt.
+    if(state==='completed')onActivityCompleted('quests',q.id);
     const title=document.createElement('strong');title.textContent=q.name;row.append(title);
-    const text=document.createElement('p');text.textContent=q.goal;row.append(text);
+    const text=document.createElement('p');text.textContent=q.goal;
+    const questExp=global.VillageExperienceConfig?.rewards.quests[q.id];if(questExp)text.textContent+=' Thưởng lần đầu: '+questExp+' EXP Alpha.';row.append(text);
     const label=document.createElement('p');label.className='npc-quest-status';label.textContent={available:'Chưa nhận',active:'Đang thực hiện',ready:'Đã đạt mục tiêu · Hãy báo hoàn thành',completed:'Đã hoàn thành'}[state];row.append(label);
     if(journal.canAccept(q.id,npc.id))row.append(button('Nhận nhiệm vụ',()=>{
      if(!conversationValid(version,npc.id)||!journal.accept(q.id,npc.id))return;
-     questReaction=d.questReactionClip||null;renderDialogue();
+     questReaction=d.questReactionClip||null;playerReaction('npc-agree',{activityId:q.id});renderDialogue();
     },'accept-'+q.id));
     else if(state==='ready'&&q.turnInNpc===npc.id)row.append(button(d.turnInLabel||'Báo hoàn thành',()=>{
-     if(conversationValid(version,npc.id)&&journal.turnIn(q.id,npc.id)){questReaction=d.questReactionClip||null;notify('Hoàn thành: '+q.name);renderDialogue();}
+     if(conversationValid(version,npc.id)&&journal.turnIn(q.id,npc.id)){questReaction=d.questReactionClip||null;playerReaction('activity-complete',{clip:'cheer',activityId:q.id});notify('Hoàn thành: '+q.name);renderDialogue();}
     },'finish-'+q.id));
     else if(state==='available'&&q.dependsOn.length){const reason=document.createElement('small');reason.textContent='Hoàn thành “Chào làng” trước khi nhận.';row.append(reason);}
     box.append(row);
@@ -113,6 +127,7 @@
      const actor=actors?.npcs.get(opened),s=getState();
      if(version!==dialogueVersion||!actor||!s.authenticated||getIdentity()?.uid!==lessonIdentity||!s.inVillage||s.transitioning||pendingGreeting||getJourney()?.alive!==true||!inRange(actor.definition,s))return;
      if(actor.visual?.playOnce(item.clip)){
+      if(item.clip==='agree')playerReaction('npc-agree');
       el('npcDemoGuidance').textContent=item.clip==='fold_arms'?(d.guidance||[]).join(' '):'';
       updateAnimationUI();
      }
@@ -149,6 +164,10 @@
     const [label,action]=actionMap[id];
     actions.append(button(label,()=>{if(conversationValid(version,npc.id))action();},'npc-action-'+id));
    }
+   if(typeof onLearningOpen==='function')actions.append(button('Nhiệm vụ Tiếng Việt 1',()=>{
+    if(!conversationValid(version,npc.id))return;
+    close({focus:false});onLearningOpen(npc.id);
+   },'npc-action-learning'));
    // Rebuilding action buttons must not leave keyboard focus behind the dialog.
    el('closeNpcDialog').focus?.();
   }
@@ -188,7 +207,9 @@
    const definition=data.dialogues.dialogues[npc.definition.dialogueId].lesson;
    lessonSession=null;lessonReactions=[];questReaction=null;lessonView=null;lessonError='';lessonIdentity=getIdentity()?.uid;
    if(definition)try{lessonSession=global.createVillageLessonSession(getLesson(definition));}catch(e){lessonError='Chưa mở được bài học: '+e.message;}
-   journal.record('talk',id);renderDialogue();el('closeNpcDialog').focus?.();return true;
+   journal.record('talk',id);renderDialogue();
+   playerReaction('npc-greeting',{clip:['elder','trainer','teacher','healer'].includes(npc.definition.role)?'bow':'greet_01'});
+   el('closeNpcDialog').focus?.();return true;
   }
   function renderDirectory(){
    const models=actors?.modelStatuses||[],failed=models.find(m=>m.state==='error');
@@ -263,6 +284,7 @@
   listen(global,'keydown',e=>{if(e.code==='KeyF'&&!e.repeat&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&!['BUTTON','INPUT','SELECT','TEXTAREA'].includes(e.target?.tagName)&&!e.target?.isContentEditable){if(interact())e.preventDefault();}});
   close({focus:false});
   return Object.freeze({load,update,interact,route,onSkillUsed,openDirectory,isOpen:()=>!!opened||menuOpen,
+   isNear(id){const actor=actors?.npcs.get(id),s=getState();return !!actor&&s.authenticated&&s.inVillage&&!s.transitioning&&getJourney()?.alive===true&&inRange(actor.definition,s);},
    lock(){close({focus:false});journal?.lock();if(actors)actors.root.visible=false;prompt.style.display='none';},
    get status(){return {loaded:!!actors,error,count:actors?.npcs.size||0,propCount:actors?.props.size||0,nearest,opened,models:actors?.modelStatuses||[],quests:journal?.snapshot()||{},lesson:lessonSession?{id:lessonSession.lesson.id,...lessonSession.state}:null};},
    dispose(){disposed=true;close({focus:false});listeners.forEach(remove=>remove());actors?.dispose();actors=null;}

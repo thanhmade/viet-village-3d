@@ -10,6 +10,7 @@ function villageTempleFloor(x,z){
 function langVietGroundHeight(x,z){const templeFloor=villageTempleFloor(x,z);if(templeFloor!==null)return templeFloor;const access=houseAccessFloor(x,z);if(access)return access.y;return Math.abs(z-18)<.95&&x>=9.2&&x<=20.8?.45+1.25*Math.sin(Math.PI*(x-9.2)/11.6):.3;}
 function langVietCanWalk(x,z){
  if(!Number.isFinite(x)||!Number.isFinite(z)||Math.abs(x)>24.1||Math.abs(z)>26.1)return false;
+ if(window.VietVillageMapAssets?.canWalk(x,z)===false)return false;
  if(villageTempleFloor(x,z)!==null){
   // Open only the front porch/steps, never the hall walls or supporting columns.
   return ![-4.9,-2.5,0,2.5,4.9].some(column=>Math.hypot(x-column,z+16.3)<.43);
@@ -26,7 +27,9 @@ function langVietCanWalk(x,z){
  if(houseAccessFloor(x,z))return true;
  if(obstacles.slice(6).some(o=>o.w?Math.abs(x-o.x)<o.w&&Math.abs(z-o.z)<o.d:Math.hypot(x-o.x,z-o.z)<o.r))return false;
  const p=village.pond;
- if(((x-p.x)/p.rx)**2+((z-p.z)/p.rz)**2<1.12&&!(Math.abs(z-18)<.8&&x>=8.3&&x<=21.7))return false;
+ const importedWater=window.VietVillageMapAssets?.pondContainsWater(x,z);
+ const inWater=importedWater==null?((x-p.x)/p.rx)**2+((z-p.z)/p.rz)**2<1.12:importedWater;
+ if(inWater&&!(Math.abs(z-18)<.8&&x>=8.3&&x<=21.7))return false;
  return true;
 }
 function bridgeHeight(x,z){return window.VietVillageRegions?.current?.groundHeight(x,z)??langVietGroundHeight(x,z);}

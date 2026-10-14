@@ -16,9 +16,10 @@ export function publishPath(relative) {
   if (typeof relative !== 'string' || relative.includes('\\') || path.posix.isAbsolute(relative) ||
       relative.split('/').some(p => !p || p === '..' || p.startsWith('.')) || /[:\x00-\x1f]/.test(relative))
     fail('Unsafe publication path: ' + relative);
-  if (/(^|\/)(BACKUP|node_modules|DOCUMENTS|docs|tests|scripts|firebase|_IMPORT_ZIP|_ARCHIVE_ZIP|LANG_VIET_NPC_PORTAL_DE_XUAT)(\/|$)/i.test(relative) ||
-      /(?:service[-_]?account|credentials|secrets|player[-_]?data|players-export)/i.test(relative) ||
-      !/\.(?:html|js|css|json|glb|gltf|bin|png|jpe?g|webp|svg|gif|mp3|ogg|wav|woff2?|txt)$/i.test(relative))
+  const sharedExperience = /^firebase\/functions\/shared\/experience-(config|core)\.js$/.test(relative);
+  if (!sharedExperience && (/(^|\/)(BACKUP|node_modules|DOCUMENTS|docs|tests|scripts|firebase|_IMPORT_ZIP|_ARCHIVE_ZIP|LANG_VIET_NPC_PORTAL_DE_XUAT)(\/|$)/i.test(relative) ||
+      /(?:teacher|answer[-_]?key|service[-_]?account|credentials|secrets|player[-_]?data|players-export)/i.test(relative) ||
+      !/\.(?:html|js|css|json|glb|gltf|bin|png|jpe?g|webp|svg|gif|mp3|ogg|wav|woff2?|txt)$/i.test(relative)))
     fail('File outside the runtime publication policy: ' + relative);
   return relative;
 }
@@ -113,6 +114,18 @@ export function collectPackage(base = root) {
     const model = models.find(m => m.path === p);
     for (const clip of [npc.model.clip, ...(npc.model.oneShots || [])])
       if (!model?.animations.includes(clip)) fail('Missing NPC clip ' + clip + ': ' + p);
+  }
+  if (config.mapAssetCatalog) {
+    add(config.mapAssetCatalog, 'Reviewed map asset catalog');
+    const catalog=readJSON(path.join(base,config.mapAssetCatalog));
+    for (const asset of catalog.assets) {
+      if(asset.status==='built') {
+        if(!asset.url)fail('Built asset missing GLB: '+asset.id);
+        add(dependency('SOURCE-CODE/index.html',asset.url),'3D map asset: '+asset.id);
+        if(asset.lod1Url)add(dependency('SOURCE-CODE/index.html',asset.lod1Url),'Alternative LOD1: '+asset.id);
+      }
+      for(const ref of Object.values(asset.references||{}))add(dependency('SOURCE-CODE/index.html',ref),'Asset viewer comparison: '+asset.id);
+    }
   }
   const atlasSource = fs.readFileSync(path.join(base, config.atlasCatalog), 'utf8');
   const atlasURL = atlasSource.match(/viewerPath:\s*['"]([^'"]+)['"]/)?.[1];

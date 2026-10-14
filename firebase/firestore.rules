@@ -26,6 +26,39 @@ service cloud.firestore {
         && request.resource.data.lastLoginAt == request.time;
       allow list, delete: if false;
     }
+    // Server-confirmed characters and rewards. Do not accept local EXP/LV or
+    // completion flags as authority; only Admin backend transactions may write.
+    match /players/{uid}/characters/{characterId} {
+      allow get: if googleUser(uid) && characterId == 'primary';
+      allow list, write: if false;
+      match /progression/{documentId} {
+        allow get: if googleUser(uid) && characterId == 'primary' && documentId == 'experience';
+        allow list, write: if false;
+      }
+      match /experienceReceipts/{receiptId} {
+        allow read: if googleUser(uid) && characterId == 'primary';
+        allow write: if false;
+      }
+      match /experienceCompletions/{completionId} {
+        allow read: if googleUser(uid) && characterId == 'primary';
+        allow write: if false;
+      }
+      match /questIndex/{documentId} {
+        allow get: if googleUser(uid) && characterId == 'primary' && documentId == 'tv1-hk1-v1';
+        allow list, write: if false;
+      }
+      match /questRuns/{questId} {
+        allow read: if googleUser(uid) && characterId == 'primary';
+        allow write: if false;
+      }
+      match /questAssignments/{assignmentId} {
+        allow read: if googleUser(uid) && characterId == 'primary';
+        allow write: if false;
+      }
+      // Proximity proofs are internal to the trusted game server, never a
+      // client-writeable flag or a browser position accepted as authority.
+      match /questInteractionProofs/{proofId} { allow read, write: if false; }
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }

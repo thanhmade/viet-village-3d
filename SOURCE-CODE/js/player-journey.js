@@ -6,7 +6,7 @@
 
   // getIdentity returns only Firebase's current {authenticated, uid}. These local
   // tutorial flags are UI progress, never trusted grades, roles or server rights.
-  global.createVillageJourney = function ({getIdentity, storage, notify} = {}) {
+  global.createVillageJourney = function ({getIdentity, storage, notify, getExperience} = {}) {
     let identity = null, authenticated = false, uid = null, walked = 0;
     let alive = false, hp = 0, level = 0, movement = false, skills = false, snapshot;
     function publish() {
@@ -47,7 +47,13 @@
       try { notify?.(message); } catch (_) { /* A notification must not cancel an action. */ }
       return true;
     }
-    function getState() { syncIdentity(); return snapshot; }
+    function getState() {
+      syncIdentity();
+      if (!getExperience || !authenticated) return snapshot;
+      const experience = getExperience();
+      return Object.freeze({...snapshot, level: experience.status === 'ready' ? experience.level : 0,
+        exp: experience.exp ?? 0, experience});
+    }
     function recordMovement(distance) {
       if (!syncIdentity() || !alive || movement || !Number.isFinite(distance) || distance <= 0) return false;
       walked += distance;

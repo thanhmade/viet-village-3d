@@ -66,7 +66,11 @@ test('healer idle and both actions keep real geometry finite, sleeves attached, 
 
 test('real healer changes HP once, clamps at max, updates HUD/effect and preserves progress and equipment across maps',async()=>{
  const h=await game(),n=h.context.VietVillageNPCs,j=h.context.VietVillageJourney,model=()=>n.status.models.find(m=>m.id===config.id);
- j.recordMovement(3);j.recordSkillUse();j.setCharacterState({level:7});assert(j.takeDamage(63));assert.equal(j.getState().hp,37);
+ // Seed this isolated account through the legacy progression path, rather than
+ // using the HP setter to replace the authoritative character level.
+ h.context.localStorage.setItem('viet-village:character:v1:healer-isolated-test',JSON.stringify({schemaVersion:1,uid:'healer-isolated-test',level:7,exp:341}));
+ h.context.VietVillageExperience.refresh();
+ j.recordMovement(3);j.recordSkillUse();assert(j.takeDamage(63));assert.equal(j.getState().hp,37);
  assert(h.context.VietVillageWeapons.equip('sword'));
  const before=h.run('JSON.stringify(progress)'),tutorials=JSON.stringify(j.getState().tutorials),quests=JSON.stringify(n.status.quests),weapon=JSON.stringify(h.context.VietVillageWeapons.state);
  stand(h);assert(n.interact(config.id));assert.equal(model().animation.clip,'bow');assert.equal(h.run("$('npcDialogTitle').textContent"),'Thầy thuốc');

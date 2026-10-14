@@ -101,7 +101,7 @@ test('existing journal success triggers one agree, ready-only turn-in and duplic
  advance(n,4);assert.equal(model().animation.clip,'agree');advance(n,4.6);assert.equal(model().animation.clip,'idle');assert.equal(writes,3);assert.equal(h.run('progress.score'),0);
  control(h,'npc-end-conversation').onclick();assert(!n.isOpen());finish.onclick();assert.equal(writes,3);n.dispose();
  // The deployed data must remain disabled and must not invent a reward/item.
- const q=load('quests');assert.equal(q.rewardsEnabled,false);assert.equal(q.quests.find(q=>q.id==='QUEST_LV_03').enabled,false);
+ const q=load('quests');assert.equal(q.itemRewardsEnabled,false);assert.equal(q.currencyRewardsEnabled,false);assert.equal(q.quests.find(q=>q.id==='QUEST_LV_03').enabled,false);
 });
 
 test('quest callback guards reject wrong NPC, old conversation, changed UID, death and distance; close discards pending agree',async()=>{

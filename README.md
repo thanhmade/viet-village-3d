@@ -41,6 +41,38 @@ Kiểm thử launcher: `py -3 -B -m unittest discover -s scripts/tests -v`; ki�
 
 ## Phần thử nghiệm trên cap-nhat
 
+### Tài nguyên 3D Làng Việt (local, 13/10/2026)
+
+Đã xử lý 50 bộ tham chiếu, dựng và tích hợp **48 GLB không rig** vào cảnh Làng Việt và nội thất. Hai bộ `LV_CUM_DA_01`, `LV_THUNG_GO_01` chưa dựng vì không có ảnh đọc được; 23 bộ khác thiếu một hoặc nhiều góc và đã ghi phần suy luận. Mô hình dùng hình học 3D và vật liệu màu PBR, chưa có texture vẽ riêng. Cây chuyển động bằng mã runtime; cửa/nắp có pivot để xem thử.
+
+- Game nguồn: **http://localhost:8002/SOURCE-CODE/index.html**.
+- [Trang xem 50 tài nguyên](SOURCE-CODE/lang-viet-assets.html): **http://localhost:8002/SOURCE-CODE/lang-viet-assets.html**; chọn mô hình, bốn góc, ảnh đối chiếu, gió, cửa/nắp và kiểm tra tải toàn bộ.
+- Bản đóng gói local: **http://localhost:8002/public-game/**. Đã build lại từ nguồn trong tác vụ này; bản Firebase Alpha online không thay đổi.
+- [Báo cáo tổng và danh mục](DOCUMENTS/LANG-VIET-3D-ASSETS-REPORT.md), [bố trí và va chạm](DOCUMENTS/LANG-VIET-ASSET-INTEGRATION.md), [manifest tiếp tục công việc](DOCUMENTS/LANG-VIET-ASSET-MANIFEST.json).
+- `npm run build:map-assets`: dựng lại GLB từ mã có sẵn; `npm run test:map-assets`: kiểm thử mô hình và tích hợp; `npm run build:hosting`: đóng gói; `npm run test:hosting`: kiểm tra đầu ra. Node 22 có sẵn tại `.local-tools/node-22/node-v22.23.3-win-x64/`.
+
+Nguồn ảnh bên ngoài chỉ dùng khi nhập tham chiếu; game và bản đóng gói không đọc ổ H: hoặc thư mục nguồn ảnh. Các báo cáo trong DOCUMENTS lưu trên máy theo cấu hình Git hiện có; chưa commit/push/deploy.
+
+### EXP–LV Alpha (local, 13/10/2026)
+
+Đã tích hợp EXP với Journey, HUD và hồ sơ nhân vật: bảng LV1–100, giới hạn Alpha20; thưởng một lần cho Chào làng (60), Làm quen chiến đấu (100) và bài học Thầy đồ (40). Giữ tiến độ cũ, chống thưởng trùng giữa tab. Tiến độ hiện lưu theo tài khoản trên trình duyệt; backend và Rules đã kiểm thử emulator, chưa hoạt động online. Xem [cấu hình, dữ liệu, kiểm thử và phần còn thiếu](SOURCE-CODE/docs/experience-levels.md). Chạy nguồn tại **http://localhost:8002/SOURCE-CODE/index.html**; ở bước EXP chưa cập nhật public-game hoặc Alpha; lần đóng gói tài nguyên 3D bên trên đã đồng bộ public-game local.
+
+### Khởi tạo nhân vật Nam/Nữ (local, 12/10/2026)
+
+Sau Google Login, tài khoản chưa tạo nhân vật sẽ mở **KHỞI TẠO NHÂN VẬT**. Chọn Nam hoặc Nữ, nhập biệt danh, rồi **Tạo nhân vật & vào làng**. Tài khoản đã tạo tự tải lại mẫu đã lưu. **Công cụ → Nhân vật** mở hồ sơ để xem, không tạo lại hay đặt lại tiến độ.
+
+Hồ sơ ngoại hình lưu cục bộ theo Firebase UID trên cùng trình duyệt/origin; chưa đồng bộ lên Firebase hoặc thiết bị khác. Cả Nam và Nữ dùng GLB thật, 65 khớp và 33 animation riêng của từng tệp, chọn theo tên clip. Hai mẫu chưa có morph targets hay vật liệu tách riêng để tùy chỉnh tóc/mặt/trang phục; giao diện ghi rõ phần chưa hỗ trợ. Game vẫn dùng bản đồ, NPC, camera, va chạm và nhiệm vụ hiện tại.
+
+Chạy nguồn tại URL launcher in ra (đã kiểm tra **http://localhost:8002/SOURCE-CODE/index.html**). Thêm `?characterTest=1` trên localhost để mở bảng 33 hoạt ảnh qua **Công cụ → Nhân vật → Kiểm tra hoạt ảnh**. Ở bước nhân vật, `public-game` và Firebase Alpha còn giữ phiên bản cũ; lần đóng gói tài nguyên 3D bên trên đã đồng bộ public-game local, Alpha không thay đổi.
+
+Kiểm tra: `npm run test:characters`. Xem [báo cáo tệp, dữ liệu lưu và kết quả kiểm tra](SOURCE-CODE/docs/character-creation.md). Người dùng đã xác nhận vào làng, tải lại vẫn giữ đúng tên và mẫu Nữ.
+
+Hoàn thiện FEMALE: Space hoặc nút **Nhảy** phát động tác nhảy tại chỗ (chưa có vật lý vượt vật cản), phản ứng chào/đồng ý/hoàn thành với NPC, căn cán từng vũ khí vào bàn tay. Cùng tài khoản được xác thực lại giữ vị trí đang chơi; F5 vẫn dùng điểm vào an toàn vì chưa có lưu vị trí. Đã thử thật tạo Nữ, gặp Thầy đồ, dùng kiếm, chuyển MAP và tải lại trong tab Codex; `npm test` đạt 284 test. Xem [báo cáo FEMALE và giới hạn kiểm thử](SOURCE-CODE/docs/female-integration.md).
+
+Mẫu MALE dùng mã hồ sơ `male-base`, cấu hình và căn bàn tay từ GLB Nam; bộ điều khiển dùng chung với Nữ. Đổi mẫu trong **Kiểm tra hoạt ảnh** chỉ áp dụng cho phiên, không ghi đè hồ sơ đã tạo. `npm test` sau khi tích hợp Nam đạt **297/297 test**, cùng 5 script kiểm tra logic. Xem [báo cáo MALE và phạm vi kiểm thử thực tế](SOURCE-CODE/docs/male-integration.md).
+
+Kiểm tra trực tiếp ngày **13/10/2026** trên tab Codex 8002 đã xác thực Google: tạo **Nam thử nghiệm**, lưu rồi vào Làng Việt bằng mô hình Nam, HP 100/100. Sau F5 và sau lần đăng xuất/đăng nhập Google lại riêng biệt, **Công cụ → Nhân vật** vẫn giữ đúng tên/mẫu Nam ở chế độ xem. Không ghi đè hồ sơ Nữ cũ; dữ liệu vẫn chỉ lưu cục bộ theo UID.
+
 ### Đóng gói Firebase Hosting và Alpha (12/10/2026)
 
 Bản xuất riêng nằm trong `public-game/`, giữ nguyên cây đường dẫn từ gốc dự án và thứ tự script. Không dùng `START-GAME.bat` để kiểm tra bản xuất: BAT chạy mã nguồn; dùng Hosting Emulator bên dưới để phục vụ đúng `public-game`. Xem [hướng dẫn và kết quả kiểm tra Hosting](SOURCE-CODE/docs/firebase-hosting.md).
@@ -96,7 +128,7 @@ Mở **http://localhost:5005/** (tự chuyển đến `SOURCE-CODE/index.html`).
 | `DOCUMENTS/` | Git giữ báo cáo giới hạn nguồn và phạm vi kiểm tra; bài giảng, kiểm kê, ngữ cảnh và báo cáo kết nối chỉ lưu trên máy |
 | `BACKUP/` | Chỉ lưu trên máy: bundle lịch sử Git, bản v8, HTML cũ, upload và helper phát triển; không có trong bản clone GitHub |
 
-Trang CAP-NHAT tải **50 script theo `SOURCE-CODE/load-order.json`**, cùng các script giao diện và module đăng nhập. Các script toàn cục dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
+Trang CAP-NHAT tải **52 script theo `SOURCE-CODE/load-order.json`**, cùng các script giao diện và module đăng nhập. Các script toàn cục dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
 
 ## Tài nguyên 3D và giới hạn hiện tại
 
@@ -137,3 +169,12 @@ Repository Private hạn chế người xem kho mã; HTML/JavaScript và tài ng
 ## Giấy phép
 
 Three.js giữ giấy phép MIT tại `ASSETS/vendor/LICENSE-THREE.txt`. Chưa đặt giấy phép chung cho mã game, ảnh và tài liệu người dùng. Cần xác nhận quyền sử dụng các nội dung trước khi xuất bản website cho học sinh.
+
+
+## Bộ nhiệm vụ Tiếng Việt 1 – Học kì 1 (local)
+
+Đã nhập 18 tuần, 87 khung, 435 phiên bản. Chạy `START-GAME.bat --port 8002`, mở URL máy chủ báo (hiện là `http://localhost:8002/SOURCE-CODE/index.html`). Công cụ → Nhiệm vụ học tập → Tuần 8 → B033 → Khởi đầu → Xem thử localhost. Đi tới Tuần đinh, nhận bài, đi tìm thẻ và nhặt bằng G/nút chạm, làm bài. Preview dùng Google thật và máy chủ cục bộ; dừng ở chờ giáo viên, chưa phát EXP. Không đổi tiến độ nhân vật cũ.
+
+Dùng launcher dự án, **không dùng `python -m http.server` tại root**: root chứa ngân hàng đáp án máy chủ và dữ liệu thử theo tài khoản. Launcher và bản build đã chặn chúng. Giữ `.cache/learning-preview/state.json` nếu muốn giữ tiến trình nhiệm vụ thử. Chưa triển khai backend, Rules hoặc Hosting.
+
+Kiểm thử: `npm run test:learning`, `npm run test:firebase` (demo emulator), `npm test`. Hướng dẫn và kết quả đầy đủ: [DOCUMENTS/TV1-HK1-INTEGRATION.md](DOCUMENTS/TV1-HK1-INTEGRATION.md); [kiến trúc backend](firebase/QUEST-BACKEND.md); [client và điểm đặt](SOURCE-CODE/docs/learning-client.md).

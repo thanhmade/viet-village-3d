@@ -10,7 +10,18 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   const nameLabel = el('equippedWeaponName');
   const skillButtons = [el('weaponSkill1'), el('weaponSkill2'), el('weaponSkill3')];
   const hiddenState = new WeakMap();
-  let models = null, grip = null, manager = null, selectedModel = null;
+  let models = null, grip = null, manager = null, selectedModel = null, avatarSocket = null;
+  function attachGrip() {
+    if (!grip) return;
+    (avatarSocket || rightArm).add(grip);
+    grip.scale.setScalar(.7); grip.rotation.set(0, Math.PI, 0);
+    if (avatarSocket) {
+      // Each weapon has a different authored grip centre. Align that exact
+      // point with the animated palm and retain the existing model orientation.
+      grip.position.copy(selectedModel?.gripPoint || new T.Vector3()).multiplyScalar(-.7).applyQuaternion(grip.quaternion);
+    } else grip.position.set(0, -.50, .28);
+  }
+  function setAvatarSocket(socket) { cancel(); avatarSocket = socket || null; attachGrip(); }
   // The village avatar faces +Z; the VFX contract faces -Z.
   const caster = new T.Object3D(); caster.name = 'village-weapon-caster';
   caster.rotation.y = Math.PI; caster.userData.localOnly = true; body.add(caster);
@@ -22,7 +33,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     models = window.createVillageWeaponModels(T); grip = models.root;
     grip.name = 'village-local-weapon';
     grip.position.set(0, -.50, .28); grip.scale.setScalar(.7); grip.rotation.y = Math.PI;
-    rightArm.add(grip); grip.visible = false;
+    attachGrip(); grip.visible = false;
     // Keep unequipped models out of the scene's matrix traversal.
     for (const model of models.models.values()) model.group.removeFromParent();
     manager = new window.WeaponVFXCore({THREE: T, scene, quality: 'low', maxActive: 4,
@@ -72,6 +83,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     ensureResources(); cancel(); weaponId = id; currentConfig = configById.get(id); caster.userData.weaponId = id;
     if (selectedModel) { selectedModel.group.visible = false; selectedModel.group.removeFromParent(); }
     selectedModel = models.models.get(id); grip.add(selectedModel.group); selectedModel.group.visible = true;
+    attachGrip();
     closePanel();
     if (!startRoaming()) return false;
     enabled = true; update(0); render(usable()); return true;
@@ -102,7 +114,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       if (changed) render(false);
       return;
     }
-    if (poseLength) {
+    if (poseLength && !avatarSocket) {
       poseTime += dt;
       const phase = Math.min(1, poseTime / poseLength);
       grip.rotation.z = Math.sin(phase * Math.PI) * (weaponId === 'bow' ? .15 : -.75);
@@ -135,7 +147,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   listen(window, 'focus', () => { focused = true; });
   listen(document, 'visibilitychange', () => { if (document.hidden) { cancel(); clearMotion(); update(0); } });
   hide(panel, true); hide(bar, true); setExpanded(false); render(false);
-  return Object.freeze({equip, cast, update, openPanel, closePanel, deactivate,
+  return Object.freeze({equip, cast, update, openPanel, closePanel, deactivate, setAvatarSocket,
     suspend() { cancel(); showEquipped(false); lastAllowed = false; render(false); },
     lock() { deactivate(); },
     get state() { return {enabled, weaponId, active: manager?.effects.length || 0, particles: manager?.pool.count || 0}; },

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kiểm tra tài nguyên 3D · Làng Việt</title>
+  <link rel="stylesheet" href="css/lang-viet-assets.css">
+</head>
+<body>
+  <header class="asset-header">
+    <div><p class="eyebrow">LÀNG VIỆT · XƯỞNG TÀI NGUYÊN</p><h1>Kiểm tra mô hình 3D</h1></div>
+    <a class="button" href="index.html">Mở game local ↗</a>
+  </header>
+  <p class="intro" id="assetIntro">Mô hình được dựng bằng hình học 3D từ ảnh tham chiếu. Kích thước là đề xuất; ảnh tham chiếu chỉ dùng để đối chiếu. Trang này không thay đổi hồ sơ người chơi.</p>
+  <main>
+    <aside class="asset-panel catalog-panel">
+      <label for="assetSelect">Danh mục tài nguyên</label>
+      <select id="assetSelect" disabled><option>Đang tải danh mục…</option></select>
+      <p id="catalogSummary" class="subtle"></p>
+      <h2 id="assetName">Đang chuẩn bị</h2>
+      <p id="assetCode" class="asset-code"></p>
+      <p id="assetStatus" role="status" aria-live="polite">Đang tải…</p>
+      <button id="retryAsset" type="button" hidden>Thử lại</button>
+      <dl id="assetStats"></dl>
+      <h3>Đối chiếu và giới hạn</h3>
+      <ul id="assetAssumptions"></ul>
+      <div class="test-controls">
+        <button id="testAllAssets" type="button" disabled>Kiểm tra tải toàn bộ GLB</button>
+        <button id="showAssetOverview" type="button" disabled>Bảng tổng quan 3D</button>
+        <p id="testProgress" role="status" aria-live="polite">Kiểm tra cấu trúc, hình học và tài nguyên nhúng; không thay cho xem xét trực quan.</p>
+        <ol id="testResults"></ol>
+      </div>
+    </aside>
+    <section class="model-panel" aria-label="Mô hình và điều khiển xem">
+      <div id="assetViewport"><p id="viewportFallback">Đang khởi tạo WebGL…</p></div>
+      <div class="view-tools">
+        <div class="view-buttons" role="group" aria-label="Góc xem và ảnh tham chiếu">
+          <button type="button" data-view="FRONT" aria-pressed="true">Trước</button>
+          <button type="button" data-view="RIGHT" aria-pressed="false">Phải</button>
+          <button type="button" data-view="LEFT" aria-pressed="false">Trái</button>
+          <button type="button" data-view="BACK" aria-pressed="false">Sau</button>
+          <button type="button" id="resetAssetView">Vừa khung</button>
+        </div>
+        <p class="subtle">Kéo để xoay · cuộn hoặc chụm hai ngón để thu/phóng · phím mũi tên để xoay, +/− để phóng.</p>
+        <div class="motion-controls">
+          <label>Ánh sáng <select id="assetLighting"><option value="day">Ban ngày</option><option value="night">Ban đêm</option></select></label>
+          <label id="genericWindControl">Gió <input id="assetWind" type="range" min="0" max="1" step="0.05" value="0.35" disabled><output id="windValue">35%</output></label>
+          <button type="button" id="calmAsset" disabled>Lặng gió</button>
+          <label id="genericHingeControl">Cửa / nắp <input id="assetHinge" type="range" min="0" max="1" step="0.05" value="0" disabled><output id="hingeValue">Đóng</output></label>
+        </div>
+        <fieldset id="pondControls" hidden>
+          <legend>Ao sen · hoạt ảnh có sẵn trong GLB</legend>
+          <label>Độ chi tiết <select id="pondVariant"><option value="main">Tiêu chuẩn</option><option value="lod1">LOD1 · giảm chi tiết</option></select></label>
+          <label>Gió cây sen <select id="pondWind" disabled><option value="none">Không gió</option><option value="light" selected>Gió nhẹ · WIND_LIGHT</option><option value="strong">Gió mạnh · WIND_STRONG</option></select></label>
+          <label><input id="pondWater" type="checkbox" checked disabled> Gợn nước · WATER_RIPPLE</label>
+          <p id="pondAnimationStatus" class="subtle" role="status">Đang tải hoạt ảnh…</p>
+        </fieldset>
+        <p id="motionNote" class="subtle">Chuyển động cây và bản lề được xử lý ở runtime khi mô hình hỗ trợ.</p>
+      </div>
+    </section>
+    <aside class="asset-panel reference-panel">
+      <h2>Ảnh tham chiếu <span id="referenceAngle">· Trước</span></h2>
+      <figure><img id="referenceImage" alt="" hidden><figcaption id="referenceStatus">Đang tải danh mục…</figcaption></figure>
+      <p class="subtle">Chọn bốn góc ở dưới khung 3D để đổi cả góc xem và ảnh. Những ảnh lỗi hoặc thiếu không được dùng để báo đã đối chiếu.</p>
+    </aside>
+  </main>
+  <section id="assetOverview" class="overview-section" hidden aria-labelledby="overviewTitle">
+    <div class="overview-heading"><div><h2 id="overviewTitle">Tổng quan mô hình 3D thật</h2><p id="overviewProgress" role="status" aria-live="polite"></p></div><button type="button" id="closeAssetOverview">Thu bảng tổng quan</button></div>
+    <p class="subtle">Ảnh nhỏ được dựng từ từng GLB bằng WebGL tại thời điểm bấm nút. Bấm một mô hình để mở lại khung kiểm tra; đây không phải ảnh tham chiếu.</p>
+    <div id="overviewGrid"></div>
+  </section>
+  <script src="../ASSETS/vendor/three.min.js"></script>
+  <script src="js/map-assets.js"></script>
+  <script src="js/pond-animation.js"></script>
+  <script type="module" src="js/lang-viet-assets-viewer.js"></script>
+</body>
+</html>

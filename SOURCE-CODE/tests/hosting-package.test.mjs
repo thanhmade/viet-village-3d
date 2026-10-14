@@ -9,6 +9,7 @@ import {root,publishPath,validateContent,staticDependencies,collectPackage,verif
 test('publication rejects private directories, traversal and delivery archives',()=>{
   for(const p of ['../outside.js','.env','BACKUP/archive.glb','node_modules/a.js','firebase/functions/index.js',
     'DOCUMENTS/report.html','MAP/_ARCHIVE_ZIP/map.zip','private-key.pem','credentials.json','C:/Users/me/a.js',
+    'LEARNING/TV1-HK1/questions.teacher.json','ASSETS/teacher-pack.json','firebase/functions/private/tv1-hk1-v1.questions.teacher.json',
     'MAP/regions/lang-viet/LANG_VIET_NPC_PORTAL_DE_XUAT/DESIGN/design.json'])assert.throws(()=>publishPath(p));
   assert.equal(publishPath('ASSETS/reference/staff/weapon-reference.png'),'ASSETS/reference/staff/weapon-reference.png');
 });
@@ -24,13 +25,25 @@ test('dependency resolution preserves relative folders, strips queries, ignores 
   assert.deepEqual(staticDependencies('ASSETS/vendor/gltf-r160/GLTFLoader.js',"import {a} from './three-global.js'; import('./BufferGeometryUtils.js');"),
     ['ASSETS/vendor/gltf-r160/three-global.js','ASSETS/vendor/gltf-r160/BufferGeometryUtils.js']);
 });
-test('real runtime catalog includes eight GLBs, three regions, atlas and gallery images without source documents',()=>{
+test('real runtime catalog includes eight NPCs, two players, three regions, atlas and only shared public EXP logic',()=>{
   const result=collectPackage(),paths=new Set(result.files.map(f=>f.path));
-  assert.equal(result.models.length,8);
-  assert.equal(result.models.reduce((n,m)=>n+m.images,0),22);
+  assert.equal(result.models.length,59, 'Eight NPCs, both players, 48 map assets and the imported pond LOD1');
+  for(const name of ['LV_AO_SEN_01','LV_AO_SEN_01_LOD1'])assert(paths.has('MAP/models/lang-viet/LV_AO_SEN_01_3D/'+name+'.glb'));
+  assert(!paths.has('MAP/models/lang-viet/LV_AO_SEN_01.glb'),'Old generated pond is retained on disk, not published');
+  assert(paths.has('SOURCE-CODE/lang-viet-assets.html'));
+  assert(paths.has('MAP/models/lang-viet/LV_NHA_DAN_A.glb'));
+  assert(!paths.has('MAP/models/lang-viet/LV_CUM_DA_01.glb'));
+  assert(!paths.has('MAP/models/lang-viet/LV_THUNG_GO_01.glb'));
+  assert.equal(result.models.reduce((n,m)=>n+m.images,0),32);
+  assert(paths.has('firebase/functions/shared/experience-config.js'));
+  assert(paths.has('firebase/functions/shared/experience-core.js'));
+  assert(!paths.has('firebase/functions/index.cjs'));
+  assert.throws(()=>publishPath('firebase/functions/experience-service.cjs'));
   for(const region of ['lang-viet','lang-tan-thu','ngoai-lang-dong-tre'])assert(paths.has('MAP/regions/'+region+'/scene.js'));
   assert([...paths].some(p=>p.endsWith('/04_Xem_Ban_Do.html')));
   assert(paths.has('SOURCE-CODE/js/auth-entry.js'));assert(paths.has('SOURCE-CODE/js/player-profile.js'));
+  assert(paths.has('LEARNING/TV1-HK1/catalog.json'));assert(paths.has('LEARNING/TV1-HK1/questions.public.json'));
+  assert(![...paths].some(p=>/teacher|private\/|\.cache/.test(p)));
   assert(paths.has('ASSETS/reference/axe/skills-reference.png'));
   assert(![...paths].some(p=>/\.zip$|\.pdf$|\.three\.json$|load-order\.json$|README|provenance/.test(p)));
   assert.throws(()=>inspectGLB(Buffer.from('not a real model'),'bad.glb'));

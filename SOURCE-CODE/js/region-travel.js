@@ -73,7 +73,7 @@ function initializeRegionTravel(){
   }
   menu.classList.remove('hidden');menu.showModal?.();$('closeRegionDestinationMenu').focus?.({preventScroll:true});
  }
- function canUsePortals(){return focused&&!document.hidden&&!!window.VietVillageAuth?.isAuthenticated()&&!insideHouse&&!overlays()&&world.visible&&!housePreview.visible&&gateView<0&&houseView<0&&(localWalking||multiplayerWalking||active);}
+ function canUsePortals(){return !window.VietVillagePlayerAvatar?.isJumping&&focused&&!document.hidden&&!!window.VietVillageAuth?.isAuthenticated()&&!insideHouse&&!overlays()&&world.visible&&!housePreview.visible&&gateView<0&&houseView<0&&(localWalking||multiplayerWalking||active);}
  function nearbyInteraction(){return interactionPortalsFor(current).find(p=>Math.hypot(player.position.x-p.x,player.position.z-p.z)<=reach(p)&&Math.abs(player.position.y-current.groundHeight(p.x,p.z))<.4)||null;}
  function showInteraction(portal){
   const button=$('regionInteractBtn');button.style.display=portal?'block':'none';button.disabled=!manualArmed;

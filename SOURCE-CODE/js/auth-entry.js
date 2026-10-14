@@ -1,12 +1,28 @@
 import { firebaseConfig } from './firebase-config.js';
 import { createAuthSession, validateFirebaseConfig } from './auth-session.js';
 import { initializeOnline } from './online-entry.js';
+import {onlineConfig} from './online-config.js';
+import {createCharacterProfileStore} from './character-profile.js';
+import {createCharacterCreation} from './character-creation.js';
+import {createLearningTransport} from './learning-transport.js';
 
 const SDK_VERSION = '13.0.0';
+// Never fall back to client-authored EXP when the online backend is enabled.
+window.VietVillageExperiencePolicy = Object.freeze({localOnly: onlineConfig.enabled === false});
 const $auth = id => document.getElementById(id);
 const status = $auth('authStatus'), login = $auth('googleLoginBtn'), retry = $auth('authRetryBtn');
 const gameElements = [...document.querySelectorAll('#view,#hud,#home,#quiz,#levels,#complete,#referenceGallery,#climatePanel,#roomControls,#entryLayer')];
 let session, online, booting = false, gameReady = false;
+
+const characterStore=createCharacterProfileStore({
+ storage:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},
+ getUid:()=>session?.isAuthenticated()?session.getProfile()?.uid:null,
+ withLock:navigator.locks?.request?(name,operation)=>navigator.locks.request(name,operation):undefined
+});
+const characters=createCharacterCreation({store:characterStore,
+ getUid:()=>session?.isAuthenticated()?session.getProfile()?.uid:null,game:window.VietVillageGame,THREE:window.THREE,
+ onLogout:()=>session?.signOut(),onReady:profile=>{$auth('playerIdentity').textContent='Đã đăng nhập · '+profile.name;$auth('play').disabled=!gameReady||!session?.isAuthenticated();}});
+window.VietVillageCharacter=characters;
 
 const messages = {
   'app/config-invalid': 'Chưa có cấu hình đăng nhập hợp lệ. Vui lòng liên hệ giáo viên.',
@@ -41,13 +57,15 @@ function renderState({ phase, code = '', profile = null }) {
     : phase === 'signing-out' ? 'Đang đăng xuất…'
     : 'Đăng nhập bằng tài khoản Google để vào ngôi làng.';
   $auth('authGate').setAttribute('aria-busy', String(['checking', 'signing-in', 'signing-out'].includes(phase)));
-  $auth('playerIdentity').textContent = authenticated ? 'Đã đăng nhập · ' + profile.nickname : '';
+  $auth('playerIdentity').textContent = authenticated ? 'Đã đăng nhập · ' + (characters.state.character?.name||profile.nickname) : '';
   $auth('homeLogoutBtn').disabled = $auth('logoutBtn').disabled = locked;
   if (authenticated) {
     gameReady = window.VietVillageGame.initialize();
-    $auth('play').disabled = !gameReady;
+    $auth('play').disabled = !gameReady||!characters.isReady();
+    if(gameReady)void characters.onAuthState(true);
   } else {
     gameReady = false;
+    void characters.onAuthState(false);
     window.VietVillageGame?.lock();
     $auth('play').disabled = true;
   }
@@ -59,8 +77,8 @@ window.VietVillageAuth = Object.freeze({
   getProfile: () => session?.getProfile() || null,
   enterGame: async callback => {
     $auth('play').disabled = true;
-    try { if (await session?.verify(true)) { if (gameReady) callback(); } }
-    finally { $auth('play').disabled = !gameReady || !session?.isAuthenticated(); }
+    try { if (await session?.verify(true)) { if (gameReady && characters.isReady() && !characters.isOpen()) callback(); } }
+    finally { $auth('play').disabled = !gameReady || !session?.isAuthenticated() || !characters.isReady(); }
   }
 });
 
@@ -80,6 +98,7 @@ async function boot() {
     const app = appSDK.initializeApp(firebaseConfig);
     const auth = sdk.initializeAuth(app, { persistence: sdk.browserSessionPersistence,
       popupRedirectResolver: sdk.browserPopupRedirectResolver });
+    window.VietVillageLearningTransport=createLearningTransport({app,auth,onlineConfig,sdkVersion:SDK_VERSION});
     const provider = new sdk.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     session = createAuthSession({ sdk, auth, provider, projectId: firebaseConfig.projectId, onState: renderState });

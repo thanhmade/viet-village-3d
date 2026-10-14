@@ -41,7 +41,9 @@ await Promise.all(Array.from({length:4},async()=>{
 }));
 const probes=['.git/config','firebase.json','.firebaserc','package.json','README.md','.env',
   'firebase/database.rules.json','BACKUP/source-history.bundle','SOURCE-CODE/tests/hosting-package.test.mjs',
-  'MAP/_ARCHIVE_ZIP/nonexistent.zip','not-a-real-route'];
+  'MAP/_ARCHIVE_ZIP/nonexistent.zip','not-a-real-route',
+  'firebase/functions/private/tv1-hk1-v1.questions.teacher.json','LEARNING/TV1-HK1/questions.teacher.json',
+  '.cache/learning-preview/state.json'];
 for(const p of probes){
   try{
     const response=await fetch(new URL(p,origin),{signal:AbortSignal.timeout(10000),redirect:'error'});

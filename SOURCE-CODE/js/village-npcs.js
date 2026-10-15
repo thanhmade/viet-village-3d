@@ -1,10 +1,10 @@
 (function(global){
  'use strict';
- global.createVillageNPCController=function({THREE,region,getState,getIdentity,getJourney,healPlayer,onHealed,storage,pause,goTo,notify,loadData,onActivityCompleted=()=>{},onLearningOpen=null,getLesson=definition=>global.resolveVillageLesson(definition)}){
+ global.createVillageNPCController=function({THREE,region,getState,getIdentity,getJourney,healPlayer,onHealed,storage,pause,goTo,notify,loadData,onActivityCompleted=()=>{},onLearningOpen=null,getQuestMarkers=null,getLesson=definition=>global.resolveVillageLesson(definition)}){
   const el=id=>document.getElementById(id),panel=el('npcDialog'),menu=el('npcDirectory'),prompt=el('npcInteractBtn');
   let data=null,actors=null,journal=null,loading=null,opened=null,menuOpen=false,nearest=null,error='',pulse=0,elapsed=0,disposed=false;
   const listeners=[],ambientRemaining=new Map();let animationButtons=[],pendingGreeting=null,lessonSession=null,lessonView=null,lessonIdentity=null,lessonError='',lessonReactions=[];
-  let dialogueVersion=0,healing=false,questReaction=null;
+  let dialogueVersion=0,healing=false,questReaction=null,markerElapsed=1;
   function resetAmbient(id){const a=actors?.npcs.get(id)?.definition.model?.ambient;if(a)ambientRemaining.set(id,a.minDelay+Math.random()*(a.maxDelay-a.minDelay));}
   function listen(node,event,fn){node?.addEventListener(event,fn);listeners.push(()=>node?.removeEventListener?.(event,fn));}
   function hide(node,value){node.classList[value?'add':'remove']('hidden');}
@@ -164,7 +164,7 @@
     const [label,action]=actionMap[id];
     actions.append(button(label,()=>{if(conversationValid(version,npc.id))action();},'npc-action-'+id));
    }
-   if(typeof onLearningOpen==='function')actions.append(button('Nhiệm vụ Tiếng Việt 1',()=>{
+   if(typeof onLearningOpen==='function')actions.append(button('Nhiệm vụ học tập',()=>{
     if(!conversationValid(version,npc.id))return;
     close({focus:false});onLearningOpen(npc.id);
    },'npc-action-learning'));
@@ -250,6 +250,18 @@
     return true;
    }return false;
   }
+  const MARKER_RANK={progress:1,available:2,ready:3};
+  // Per-player quest markers: village journal plus learning quests from their own
+  // service. Can turn in > can accept > in progress; completed quests show nothing.
+  function questMarkers(s){
+   const kinds=new Map(),put=(npc,kind)=>{if(npc&&MARKER_RANK[kind]&&(!kinds.has(npc)||MARKER_RANK[kind]>MARKER_RANK[kinds.get(npc)]))kinds.set(npc,kind);};
+   if(s.authenticated&&journal&&data){
+    for(const q of data.quests.quests.filter(q=>q.enabled)){const state=journal.status(q.id);
+     if(state==='ready')put(q.turnInNpc,'ready');else if(state==='active')put(q.turnInNpc,'progress');else if(state==='available'&&journal.canAccept(q.id,q.giverNpc))put(q.giverNpc,'available');}
+    try{for(const [npc,kind] of getQuestMarkers?.()||[])put(npc,kind);}catch(_){}
+   }
+   return kinds;
+  }
   function update(dt){
    if(disposed)return;const s=getState();
    if((opened||menuOpen)&&(!s.authenticated||!s.inVillage||s.transitioning||getJourney()?.alive!==true||(opened&&!conversationValid(dialogueVersion))))close({focus:false});
@@ -265,6 +277,7 @@
     }
     pulse=Math.max(0,pulse-dt);for(const {root} of actors.props.values())root.rotation.z=pulse?Math.sin(pulse*40)*.045:0;
    }
+   markerElapsed+=dt;if(actors&&markerElapsed>=.5){markerElapsed=0;const kinds=questMarkers(s);for(const id of actors.npcs.keys())actors.setMarker(id,kinds.get(id)||null);}
    elapsed+=dt;if(elapsed<.1)return;elapsed=0;
    if(opened)updateAnimationUI();
    nearest=closest(s);prompt.style.display=nearest?'block':'none';
@@ -286,7 +299,7 @@
   return Object.freeze({load,update,interact,route,onSkillUsed,openDirectory,isOpen:()=>!!opened||menuOpen,
    isNear(id){const actor=actors?.npcs.get(id),s=getState();return !!actor&&s.authenticated&&s.inVillage&&!s.transitioning&&getJourney()?.alive===true&&inRange(actor.definition,s);},
    lock(){close({focus:false});journal?.lock();if(actors)actors.root.visible=false;prompt.style.display='none';},
-   get status(){return {loaded:!!actors,error,count:actors?.npcs.size||0,propCount:actors?.props.size||0,nearest,opened,models:actors?.modelStatuses||[],quests:journal?.snapshot()||{},lesson:lessonSession?{id:lessonSession.lesson.id,...lessonSession.state}:null};},
+   get status(){return {loaded:!!actors,error,count:actors?.npcs.size||0,propCount:actors?.props.size||0,nearest,opened,models:actors?.modelStatuses||[],quests:journal?.snapshot()||{},lesson:lessonSession?{id:lessonSession.lesson.id,...lessonSession.state}:null,markers:actors?.markers||{}};},
    dispose(){disposed=true;close({focus:false});listeners.forEach(remove=>remove());actors?.dispose();actors=null;}
   });
  };

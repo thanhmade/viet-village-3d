@@ -17,7 +17,7 @@
   function build(run){const point=run.position||run.spawn?.position,pointId=run.pointId||run.spawn?.pointId,itemId=run.itemId||run.spawn?.itemId;
    if(!finite(point)||!pointId||!region.canWalk(point.x,point.z)||Math.abs(region.groundHeight(point.x,point.z)-point.y)>.08){error='Điểm đặt thẻ chưa an toàn trên MAP hiện tại; nhiệm vụ thu thập tạm khóa.';return false;}
    const state=getState();if(findPath&&finite(state.position)&&!findPath(state.position,point).length){error='Chưa tìm được đường tới thẻ; hãy trở lại lối đi rồi mở nhiệm vụ.';return false;}
-   const item=client.catalog?.items?.find(item=>item.id===itemId);if(!item){error='Thiếu dữ liệu thẻ học của nhiệm vụ.';return false;}
+   const item=client.getItem?.(itemId)||client.catalog?.items?.find(item=>item.id===itemId);if(!item){error='Thiếu dữ liệu thẻ học của nhiệm vụ.';return false;}
    const group=new THREE.Group();group.name='learning-card-'+run.questId;group.position.set(point.x,point.y,point.z);
    const board=new THREE.Mesh(new THREE.BoxGeometry(1.36,.7,.07),new THREE.MeshStandardMaterial({color:0xe1b971,roughness:.8}));board.position.y=1.0;group.add(board);
    const face=new THREE.Mesh(new THREE.PlaneGeometry(1.30,.65),new THREE.MeshBasicMaterial({map:textTexture(item.appearance?.text||item.name),side:THREE.FrontSide}));face.name='learning-card-front';face.position.set(0,1.0,.04);group.add(face);

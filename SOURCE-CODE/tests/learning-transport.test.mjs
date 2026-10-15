@@ -120,3 +120,26 @@ test('real-Google localhost worker refuses emulator environment before reading c
     assert.equal(child.stdout, '');
   }
 });
+
+test('mode: launcher localhost uses the private quest server; Hosting, emulator or plain servers fall back to practice', async () => {
+  const probe = health => fixture({fetch: async (url, request) => {
+    assert.equal(url, '/__viet_village_launcher__/health'); assert.equal(request.cache, 'no-store');
+    if (health instanceof Error) throw health;
+    return {ok: !!health, json: async () => health};
+  }});
+  assert.equal(await probe({protocol: 'viet-village-local-v1'}).transport.mode(), 'localhost');
+  assert.equal(await probe(null).transport.mode(), 'practice', 'Hosting emulator / http.server have no launcher identity');
+  assert.equal(await probe({protocol: 'something-else'}).transport.mode(), 'practice');
+  assert.equal(await probe(new Error('offline')).transport.mode(), 'practice');
+  const hosted = fixture({location: {protocol: 'https:', hostname: 'viet-village-3d--alpha-g1lx8owy.web.app'}});
+  assert.equal(await hosted.transport.mode(), 'practice'); assert.equal(hosted.calls.length, 0, 'no probe or token outside loopback');
+  const online = fixture({onlineConfig: {enabled: true, functionsRegion: 'asia-southeast1'}});
+  assert.equal(await online.transport.mode(), 'online'); assert.equal(online.calls.length, 0);
+});
+
+test('mode probe runs once and is shared by concurrent callers', async () => {
+  let probes = 0;
+  const f = fixture({fetch: async () => {probes++; return {ok: true, json: async () => ({protocol: 'viet-village-local-v1'})};}});
+  assert.deepEqual(await Promise.all([f.transport.mode(), f.transport.mode(), f.transport.mode()]), ['localhost', 'localhost', 'localhost']);
+  assert.equal(probes, 1);
+});

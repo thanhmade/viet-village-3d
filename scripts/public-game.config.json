@@ -12,8 +12,11 @@
     "MAP/regions/lang-viet/quests.json",
     "CHARACTERS/PLAYER/FEMALE/PLAYER_BASE_FEMALE_GLB.glb",
     "CHARACTERS/PLAYER/MALE/PLAYER_BASE_MALE_GLB.glb",
+    "LEARNING/packs.json",
+    "LEARNING/default-assignments.json",
     "LEARNING/TV1-HK1/catalog.json",
-    "LEARNING/TV1-HK1/questions.public.json"
+    "LEARNING/TV1-HK1/questions.public.json",
+    "LEARNING/TV1-HK1/practice-keys.json"
   ],
   "npcCatalog": "MAP/regions/lang-viet/gameplay.json",
   "atlasCatalog": "MAP/atlas-destinations.js",

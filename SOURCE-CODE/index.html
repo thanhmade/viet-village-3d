@@ -98,7 +98,7 @@
 <script src="./js/player-health-view.js?v=20261012-healer1"></script>
 <script src="../CHARACTERS/player-gltf.js"></script>
 <script src="./js/player-avatar.js"></script>
-<script src="./js/learning-quests.js"></script><script src="./js/learning-collectibles.js"></script><script src="./js/learning-view.js"></script><script src="./js/app.js?v=20261012-female1"></script>
+<script src="./js/learning-quests.js"></script><script src="./js/learning-practice.js"></script><script src="./js/learning-collectibles.js"></script><script src="./js/learning-view.js"></script><script src="./js/app.js?v=20261012-female1"></script>
 <section id="npcDialog" class="npc-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="npcDialogTitle">
  <div class="npc-card"><header><div><small>DÂN LÀNG VIỆT</small><h2 id="npcDialogTitle"></h2></div><button id="closeNpcDialog" type="button" aria-label="Đóng hội thoại">✕</button></header><div id="npcDialogueLines"></div><div id="npcAnimations" class="npc-actions"></div><p id="npcAnimationStatus" role="status" aria-live="polite"></p><p id="npcDemoGuidance"></p><section id="npcLesson" aria-label="Bài học với Thầy đồ"></section><p id="npcServiceStatus" role="status" aria-live="polite"></p><div id="npcQuests"></div><div id="npcActions" class="npc-actions"></div><p id="npcRouteStatus" class="npc-route" role="status" aria-live="polite"></p></div>
 </section>
@@ -145,9 +145,7 @@
 </section>
 <button id="learningCollect" type="button" hidden>Nhặt thẻ học · G</button>
 <section id="learningPanel" class="learning-panel" role="dialog" aria-modal="true" aria-labelledby="learningTitle" hidden>
-<header><h2 id="learningTitle">Tiếng Việt 1 · Học kì 1</h2><button id="learningClose" type="button">Đóng ✕</button></header>
-<p>18 tuần · 87 nhiệm vụ · 5 mức học tập độc lập với LV nhân vật.</p>
-<div class="learning-filters"><label>Môn<select aria-label="Môn học"><option>Tiếng Việt</option></select></label><label>Lớp<select aria-label="Lớp"><option>1</option></select></label><label>Tuần<select id="learningWeek"></select></label><label>Mức học tập<select id="learningLevel"></select></label><label>Chế độ<select id="learningMode"><option value="preview">Xem thử localhost · chưa EXP</option><option value="classroom">Lớp học · bài được giao</option><option value="adventure">Phiêu lưu · LV và bài trước</option></select></label><label class="learning-pick">Nhiệm vụ<select id="learningQuest"></select></label></div>
+<header><h2 id="learningTitle">Nhiệm vụ</h2><button id="learningClose" type="button">Đóng ✕</button></header>
 <p id="learningNotice" role="status" aria-live="polite"></p><button id="learningRetry" type="button">Tải lại tiến trình</button><div id="learningContent"></div>
 </section>
 <section id="roomPanel" class="roomPanel hidden" aria-labelledby="roomPanelTitle">

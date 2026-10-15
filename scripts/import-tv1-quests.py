@@ -37,6 +37,16 @@ PUBLIC_QUESTION_FIELDS = {
     "delivery", "review_status",
 }
 FORBIDDEN_PUBLIC_KEYS = {"assessment", "correct", "answer", "answers", "hint", "explanation", "teacher_label", "rubric"}
+REGISTRY = "LEARNING/packs.json"
+# Registry entry: the game discovers packs from data. Every pack keeps its own
+# packId/version and a unique ID prefix so subjects and grades never share IDs.
+PACK_ENTRY = {
+    "packId": PACK_ID, "version": 1, "title": "Tiếng Việt 1 – Học kì 1",
+    "subject": "tieng-viet", "grade": 1, "semester": 1, "mapId": "lang-viet", "idPrefix": "TV1",
+    "catalog": "TV1-HK1/catalog.json", "questions": "TV1-HK1/questions.public.json",
+    "practiceKeys": "TV1-HK1/practice-keys.json",
+}
+AUTO_TYPES = {"single_choice", "multi_select", "order_tokens", "match_pairs"}
 
 
 def digest_bytes(data: bytes) -> str:
@@ -140,6 +150,59 @@ def assert_public_safe(value):
             assert_public_safe(child)
 
 
+def canonical_answer(question_type: str, correct) -> str:
+    """Same canonical form as canonicalAnswer() in SOURCE-CODE/js/learning-practice.js."""
+    if question_type == "single_choice" and isinstance(correct, str):
+        value = correct
+    elif question_type == "multi_select" and isinstance(correct, list):
+        value = ",".join(sorted(set(correct)))
+    elif question_type == "order_tokens" and isinstance(correct, list):
+        value = ",".join(correct)
+    elif question_type == "match_pairs" and isinstance(correct, dict):
+        value = ",".join(sorted(f"{left}={right}" for left, right in correct.items()))
+    else:
+        raise ValueError("Unsupported auto-graded answer: " + question_type)
+    return question_type + ":" + value
+
+
+def practice_keys(questions: list, archive_hash: str, pack_id: str = PACK_ID) -> dict:
+    """Salted hashes for browser practice feedback only; rubrics and hints stay private.
+
+    A static website cannot hide a grading key: these hashes stop casual reading,
+    not guessing. Practice results are never EXP or proof of completion.
+    """
+    keys = {}
+    for question in questions:
+        if question["assessment"].get("mode") != "deterministic":
+            continue
+        if question["type"] not in AUTO_TYPES:
+            raise ValueError("Deterministic question has an unsupported type: " + question["id"])
+        salt = digest_bytes(f"practice-salt|{archive_hash}|{question['id']}".encode("utf-8"))[:16]
+        answer = canonical_answer(question["type"], question["assessment"]["correct"])
+        keys[question["id"]] = {"type": question["type"], "salt": salt,
+                                "sha256": digest_bytes(f"{pack_id}|{question['id']}|{salt}|{answer}".encode("utf-8"))}
+    return {"schemaVersion": 1, "packId": pack_id, "sourceArchiveSha256": archive_hash,
+            "algorithm": "sha256(packId|questionId|salt|type:canonical)",
+            "purpose": "Practice feedback on static web hosting only; not authoritative and guessable by testing options. No EXP.",
+            "keys": keys}
+
+
+def registry_with(project: Path, entry: dict) -> dict:
+    """Insert or replace one pack by packId; other packs are kept unchanged."""
+    path = project / REGISTRY
+    registry = read_json(path) if path.is_file() else {"schemaVersion": 1, "packs": []}
+    if registry.get("schemaVersion") != 1 or not isinstance(registry.get("packs"), list):
+        raise ValueError("Unsupported pack registry; existing file kept unchanged")
+    packs = [copy.deepcopy(pack) for pack in registry["packs"] if pack.get("packId") != entry["packId"]]
+    if any(pack.get("idPrefix") == entry["idPrefix"] for pack in packs):
+        raise ValueError("Another pack already uses ID prefix " + entry["idPrefix"])
+    packs.append(copy.deepcopy(entry))
+    packs.sort(key=lambda pack: pack["packId"])
+    return {"schemaVersion": 1,
+            "purpose": "Danh mục gói nhiệm vụ học tập công khai; thêm gói mới bằng dữ liệu, không sửa giao diện.",
+            "packs": packs}
+
+
 def spawn_record(source: dict, quest: dict, overlay: list | dict | None = None,
                  evidence: dict | str | None = None) -> dict:
     collect = next(step for step in quest["steps"] if step["id"] == "collect")
@@ -226,13 +289,18 @@ def build_outputs(package: Path, project: Path, archive_hash: str, validation: d
     private = dict(common, quests=quests, questions=teacher_questions, items=items,
                    spawnPoints=spawns, progressionProposal=load("progression-config"),
                    sources=load("sources"), sourceIssues=load("source-issues"))
-    assert_public_safe(public)
-    assert_public_safe(public_questions)
+    keys = practice_keys(teacher_questions, archive_hash)
+    entry = dict(PACK_ENTRY, sourceArchiveSha256=archive_hash, counts=common["counts"])
+    registry = registry_with(project, entry)
+    for value in (public, public_questions, keys, registry):
+        assert_public_safe(value)
     report = {
         "schemaVersion": 1, "packId": PACK_ID, "sourceArchiveSha256": archive_hash,
         "sourceValidator": validation,
         "checkedSpawnCount": sum(p["validated"] for p in spawns),
-        "publicFiles": ["LEARNING/TV1-HK1/catalog.json", "LEARNING/TV1-HK1/questions.public.json"],
+        "publicFiles": ["LEARNING/TV1-HK1/catalog.json", "LEARNING/TV1-HK1/questions.public.json",
+                        "LEARNING/TV1-HK1/practice-keys.json", REGISTRY],
+        "practiceKeyPolicy": "Hashed deterministic answers for static-web practice feedback only; guessable, never EXP.",
         "privateFile": "firebase/functions/private/tv1-hk1-v1.questions.teacher.json",
         "progressionPolicy": "Keep existing shared experience table version 1; proposed table retained server-side for review. No profile migration.",
         "npcBindings": NPC_IDS,
@@ -240,6 +308,8 @@ def build_outputs(package: Path, project: Path, archive_hash: str, validation: d
     }
     return {"LEARNING/TV1-HK1/catalog.json": public,
             "LEARNING/TV1-HK1/questions.public.json": public_questions,
+            "LEARNING/TV1-HK1/practice-keys.json": keys,
+            REGISTRY: registry,
             "firebase/functions/private/tv1-hk1-v1.questions.teacher.json": private,
             "DOCUMENTS/TV1-HK1-IMPORT-AUDIT.json": report}
 

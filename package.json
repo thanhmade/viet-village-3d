@@ -24,7 +24,7 @@
     "test:experience": "node --test SOURCE-CODE/tests/experience-core.test.cjs SOURCE-CODE/tests/player-experience.test.cjs SOURCE-CODE/tests/experience-integration.test.cjs SOURCE-CODE/tests/experience-backend.test.cjs",
     "build:map-assets": "node scripts/build-lang-viet-assets.cjs",
     "test:map-assets": "node --test SOURCE-CODE/tests/lang-viet-assets.test.cjs SOURCE-CODE/tests/pond-asset.test.cjs SOURCE-CODE/tests/pond-integration.test.cjs",
-    "test:learning": "node --test SOURCE-CODE/tests/learning-client.test.cjs SOURCE-CODE/tests/learning-collectibles.test.cjs SOURCE-CODE/tests/quest-backend.test.cjs SOURCE-CODE/tests/learning-transport.test.mjs"
+    "test:learning": "node --test SOURCE-CODE/tests/learning-client.test.cjs SOURCE-CODE/tests/learning-practice.test.cjs SOURCE-CODE/tests/learning-collectibles.test.cjs SOURCE-CODE/tests/quest-backend.test.cjs SOURCE-CODE/tests/learning-transport.test.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "6.0.0",

@@ -45,6 +45,8 @@ Factory cho phép truyền `db` giao dịch, `verifyInteraction` và `allowLocal
 
 Chưa triển khai Functions, chưa áp dụng Rules, chưa cấp vai trò giáo viên, chưa nhập hồ sơ cục bộ lên máy chủ, chưa có dịch vụ chứng nhận vị trí. Không bật onlineConfig hoặc tự triển khai trong lượt tích hợp này.
 
+Trên Firebase Hosting khi `onlineConfig.enabled = false`, client dùng chế độ **luyện tập** (`SOURCE-CODE/js/learning-practice.js`): chấm câu chọn/ghép/xếp trong trình duyệt bằng `LEARNING/TV1-HK1/practice-keys.json` (băm có salt, vẫn dò được), lưu riêng theo UID, không gọi dịch vụ này, không ghi receipt hay EXP và không xác nhận thực hành. Kết quả luyện tập không phải bằng chứng hoàn thành.
+
 ## Kiểm thử
 
 - Unit: `node --test SOURCE-CODE/tests/quest-backend.test.cjs`.

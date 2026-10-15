@@ -72,6 +72,35 @@ class ImportSafetyTests(unittest.TestCase):
             self.assertNotEqual(first, (project / "LEARNING/test.json").read_bytes())
             self.assertEqual(len(importer.read_json(project / "LEARNING/test.json")["quests"]), 1)
 
+    def test_registry_replaces_by_pack_id_and_keeps_other_packs(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as directory:
+            project = Path(directory)
+            other = {"packId": "toan-2-hk1-v1", "version": 1, "idPrefix": "T2", "catalog": "T2/catalog.json"}
+            first = importer.registry_with(project, dict(importer.PACK_ENTRY))
+            importer.write_outputs(project, {importer.REGISTRY: {**first, "packs": first["packs"] + [other]}})
+            updated = importer.registry_with(project, dict(importer.PACK_ENTRY, version=2))
+            self.assertEqual([p["packId"] for p in updated["packs"]], ["toan-2-hk1-v1", "tv1-hk1-v1"])
+            self.assertEqual(next(p for p in updated["packs"] if p["packId"] == "tv1-hk1-v1")["version"], 2)
+            with self.assertRaises(ValueError):
+                importer.registry_with(project, dict(importer.PACK_ENTRY, packId="clash", idPrefix="T2"))
+            (project / importer.REGISTRY).write_text('{"schemaVersion": 9}', encoding="utf-8")
+            with self.assertRaises(ValueError):
+                importer.registry_with(project, dict(importer.PACK_ENTRY))
+
+    def test_practice_keys_skip_rubrics_and_never_publish_answers(self):
+        questions = [
+            {"id": "Q_A", "type": "multi_select", "assessment": {"mode": "deterministic", "correct": ["b", "a"]}},
+            {"id": "Q_B", "type": "oral_response", "assessment": {"mode": "teacher_rubric", "correct": None, "rubric": [{"id": "r"}]}},
+        ]
+        keys = importer.practice_keys(questions, "0" * 64)
+        self.assertEqual(list(keys["keys"]), ["Q_A"])
+        importer.assert_public_safe(keys)
+        self.assertNotIn('"a"', json.dumps(keys))
+        self.assertEqual(importer.canonical_answer("multi_select", ["b", "a", "a"]), "multi_select:a,b")
+        self.assertEqual(importer.canonical_answer("match_pairs", {"L2": "R1", "L1": "R2"}), "match_pairs:L1=R2,L2=R1")
+        with self.assertRaises(ValueError):
+            importer.canonical_answer("single_choice", ["not", "a", "string"])
+
     def test_archive_rejects_windows_case_collision(self):
         with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as directory:
             project = Path(directory)
@@ -110,6 +139,16 @@ class ImportedDataTests(unittest.TestCase):
         self.assertEqual({v["reward_exp"] for v in quest["variants"]}, {230})
         self.assertEqual(quest["reward_policy"]["repeat_exp"], 0)
         self.assertEqual(quest["canonical_quest_id"], quest["id"])
+
+    def test_registry_and_practice_keys_match_the_imported_pack(self):
+        registry = importer.read_json(ROOT / importer.REGISTRY)
+        entry = next(p for p in registry["packs"] if p["packId"] == importer.PACK_ID)
+        self.assertEqual(entry["counts"], self.catalog["counts"])
+        self.assertEqual(entry["sourceArchiveSha256"], self.catalog["sourceArchiveSha256"])
+        keys = importer.read_json(ROOT / "LEARNING/TV1-HK1/practice-keys.json")
+        importer.assert_public_safe(keys)
+        auto = [q for q in self.questions if q["type"] in importer.AUTO_TYPES]
+        self.assertEqual(set(keys["keys"]), {q["id"] for q in auto})
 
     def test_vietnamese_graphemes_and_story_provenance_preserved(self):
         lesson = next(l for l in self.catalog["lessons"] if l["id"] == "TV1_B033")

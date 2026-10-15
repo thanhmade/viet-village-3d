@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Bài được giao khi chưa có giáo viên giao bài qua máy chủ (thử trên máy tính và luyện tập trên web). Không phát EXP. Sửa danh sách này để giao bài khác; không cần sửa giao diện.",
+  "assignments": [
+    {
+      "packId": "tv1-hk1-v1",
+      "difficulty": 1,
+      "questIds": [
+        "QUEST_TV1_B033",
+        "QUEST_TV1_B031",
+        "QUEST_TV1_B032",
+        "QUEST_TV1_B034",
+        "QUEST_TV1_B035"
+      ]
+    }
+  ]
+}

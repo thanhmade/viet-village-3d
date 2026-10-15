@@ -58,6 +58,7 @@
   "CHARACTERS/player-gltf.js",
   "SOURCE-CODE/js/player-avatar.js",
   "SOURCE-CODE/js/learning-quests.js",
+  "SOURCE-CODE/js/learning-practice.js",
   "SOURCE-CODE/js/learning-collectibles.js",
   "SOURCE-CODE/js/learning-view.js",
   "SOURCE-CODE/js/app.js"

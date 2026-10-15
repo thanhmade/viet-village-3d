@@ -1,7 +1,7 @@
 'use strict';
 let multiplayerWalking=false,localWalking=false,villageWeapons=null,playerJourney=null,playerHealthView=null,playerAvatar=null;
 let playerExperience=null,experienceView=null;
-let learningClient=null,learningView=null,learningCollectibles=null;
+let learningClient=null,learningView=null,learningCollectibles=null,learningPractice=null;
 function learningContext(){return {uid:window.VietVillageAuth?.getProfile?.()?.uid,authenticated:!!window.VietVillageAuth?.isAuthenticated(),
  alive:playerJourney?.getState().alive===true,mapId:regionTravel?.currentId,position:{x:player.position.x,y:player.position.y,z:player.position.z},
  transitioning:!!regionTravel?.status.transitioning||!!housePortalSystem?.status?.pending,insideHouse:!!insideHouse,
@@ -9,17 +9,22 @@ function learningContext(){return {uid:window.VietVillageAuth?.getProfile?.()?.u
  canInteract:(localWalking||multiplayerWalking)&&gateView<0&&houseView<0&&!overlays()&&!document.hidden};}
 function initializeLearning(){
  const pause=()=>{clearMotion();resetHouseTravel();regionTravel?.reset();villageWeapons?.suspend();};
- learningClient=window.createLearningQuestClient({getIdentity:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),uid:window.VietVillageAuth?.getProfile?.()?.uid}),storage:localStorage,
- withLock:globalThis.navigator?.locks?.request?(name,operation)=>navigator.locks.request(name,operation):undefined,
- invoke:(method,data)=>{if(!window.VietVillageLearningTransport)throw new Error('Dịch vụ đăng nhập chưa sẵn sàng.');return window.VietVillageLearningTransport.invoke(method,data,learningContext());},
+ const identity=()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),uid:window.VietVillageAuth?.getProfile?.()?.uid});
+ const withLock=globalThis.navigator?.locks?.request?(name,operation)=>navigator.locks.request(name,operation):undefined;
+ // Static hosting has no quest server: answers there are labelled browser practice, never EXP.
+ learningPractice=window.createLearningPracticeService({getIdentity:identity,storage:localStorage,withLock,getClient:()=>learningClient});
+ learningClient=window.createLearningQuestClient({getIdentity:identity,storage:localStorage,withLock,
+ invoke:async(method,data)=>{const transport=window.VietVillageLearningTransport;if(!transport)throw new Error('Dịch vụ đăng nhập chưa sẵn sàng.');
+  return (await transport.mode?.())==='practice'?learningPractice.invoke(method,data,learningContext()):transport.invoke(method,data,learningContext());},
  getContext:learningContext,nearNpc:id=>window.VietVillageNPCs?.isNear(id),onChange:()=>learningView?.render()});
- learningView=window.createLearningQuestView({document,client:learningClient,pause,notify:toast,getExperience:()=>playerExperience.getState(),
+ learningView=window.createLearningQuestView({document,client:learningClient,pause,notify:toast,
  canOpen:()=>gameInitialized&&!!window.VietVillageAuth?.isAuthenticated()&&!!window.VietVillageCharacter?.isReady(),
  guideNpc:id=>window.VietVillageNPCs.route(id),guidePoint:point=>{if(regionTravel.currentId!=='lang-viet'||!startRoaming())return false;waypoints=findPath(player.position,point);target=waypoints.shift()||null;toast(target?'Đang đi tìm thẻ học · Đến gần bấm G hoặc nút Nhặt.':'Chưa có đường tới thẻ học.');return !!target;}});
  window.VietVillageLearningView=learningView;
  learningCollectibles=window.createLearningCollectibles({THREE,region:regionTravel.current,client:learningClient,getState:learningContext,prompt:$('learningCollect'),notify:toast,findPath,
  onOpen:()=>learningView.open()});
- void learningClient.load().catch(error=>toast(error.message));
+ // Load the player's quest state now so NPC markers are right before any menu opens.
+ void learningClient.load().then(()=>learningClient.refresh().catch(()=>{}),error=>toast(error.message));
 }
 const pendingExperienceRewards=new Map();
 let pondView=-1,pondChecks=null;
@@ -154,7 +159,7 @@ window.VietVillageNPCs=window.createVillageNPCController({THREE,region:npcRegion
  healPlayer:()=>playerJourney.healToFull(),onHealed:()=>playerHealthView.healed(),
  getLesson:definition=>window.resolveVillageLesson(definition,{core,advanced}),
  onActivityCompleted:claimActivityExperience,
- onLearningOpen:npcId=>learningView?.open(npcId),
+ onLearningOpen:npcId=>learningView?.open(npcId),getQuestMarkers:()=>learningClient?.markers(),
  getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),
   transitioning:regionTravel.status.transitioning||!!housePortalSystem?.status?.pending,
   inVillage:regionTravel.currentId==='lang-viet'&&!insideHouse&&world.visible&&!housePreview.visible,

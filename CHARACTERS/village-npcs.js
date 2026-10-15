@@ -32,6 +32,15 @@
    const texture=new T.CanvasTexture(canvas);textures.push(texture);const mat=new T.SpriteMaterial({map:texture,depthTest:true});materials.set('label-'+text,mat);
    const sprite=new T.Sprite(mat);sprite.position.y=y;sprite.scale.set(2.35,.49,1);parent.add(sprite);
   }
+  // Quest marker above the name: '!' can accept, bright '?' can turn in, grey '?' in progress.
+  const markerStyles={available:['!','#ffd23f','#7a4d00'],ready:['?','#ffd23f','#7a4d00'],progress:['?','#d6dbd5','#5b625c']};
+  function markerMaterial(kind){
+   const id='marker-'+kind;if(materials.has(id))return materials.get(id);
+   const [text,fill,stroke]=markerStyles[kind],canvas=document.createElement('canvas');canvas.width=canvas.height=128;const c=canvas.getContext('2d');
+   c.font='900 100px sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineWidth=14;c.strokeStyle=stroke;c.strokeText(text,64,70);c.fillStyle=fill;c.fillText(text,64,70);
+   const texture=new T.CanvasTexture(canvas);textures.push(texture);const mat=new T.SpriteMaterial({map:texture,transparent:true,depthTest:true});materials.set(id,mat);return mat;
+  }
+  let markerTime=0;
   for(const n of gameplay.npcs){
    const actor=new T.Group();actor.name=n.id;actor.userData={npcId:n.id,hostile:false,role:n.role};actor.position.set(n.position.x,n.position.y,n.position.z);actor.rotation.y=n.yaw;root.add(actor);
    const placeholder=new T.Group();placeholder.name="npc-procedural-fallback";actor.add(placeholder);
@@ -47,7 +56,7 @@
     shape(new T.ConeGeometry(.53,.32,12),'#c8ad72',0,2.24,0,placeholder);
     box(.09,1.8,.09,'#765031',-.48,1.0,.12,placeholder);
    }else{box(.55,.11,.39,'#dfc477',0,2.08,0,placeholder);box(.56,.06,.39,'#713725',0,2.16,0,placeholder);}
-   label(n.name,actor,2.85);npcs.set(n.id,{definition:n,root:actor,arms,placeholder,visual:null,pending:null,modelState:n.model?"pending":"procedural",modelError:""});
+   label(n.name,actor,2.85);npcs.set(n.id,{definition:n,root:actor,arms,placeholder,visual:null,pending:null,modelState:n.model?"pending":"procedural",modelError:"",marker:null,markerKind:null});
   }
   for(const p of gameplay.props){
    if(p.type!=='training-dummy')throw new Error('Đạo cụ chưa hỗ trợ.');
@@ -75,7 +84,14 @@
   }
   const api={root,npcs,props,
    async loadModels(load=global.loadVillageNPCGLTF){return (await Promise.all([...npcs.values()].filter(n=>n.definition.model).map(n=>loadModel(n,load)))).every(Boolean);},
-   update(dt){if(!disposed&&root.visible)for(const n of npcs.values())n.visual?.update(dt);},
+   update(dt){if(disposed||!root.visible)return;markerTime+=dt;for(const n of npcs.values()){n.visual?.update(dt);if(n.marker?.visible)n.marker.position.y=3.42+Math.sin(markerTime*3)*.07;}},
+   setMarker(id,kind){
+    const n=npcs.get(id);if(!n||disposed)return false;const next=Object.hasOwn(markerStyles,kind)?kind:null;if(n.markerKind===next)return false;
+    if(next&&!n.marker){n.marker=new T.Sprite(markerMaterial(next));n.marker.name='npc-quest-marker';n.marker.scale.set(.62,.62,1);n.marker.position.y=3.42;n.root.add(n.marker);}
+    if(n.marker){n.marker.visible=!!next;if(next)n.marker.material=markerMaterial(next);}
+    n.markerKind=next;return true;
+   },
+   get markers(){return Object.fromEntries([...npcs].map(([id,n])=>[id,n.markerKind]));},
    get modelStatuses(){return [...npcs.values()].filter(n=>n.definition.model).map(n=>({id:n.definition.id,name:n.definition.name,state:n.modelState,error:n.modelError,...n.visual?.stats,animation:n.visual?.animationState}));},
    dispose(){if(disposed)return;disposed=true;region.canWalk=baseWalk;root.removeFromParent();npcs.forEach(n=>n.visual?.dispose());geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());mounted.delete(region.root);}
   };

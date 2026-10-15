@@ -175,10 +175,12 @@ Repository Private hạn chế người xem kho mã; HTML/JavaScript và tài ng
 Three.js giữ giấy phép MIT tại `ASSETS/vendor/LICENSE-THREE.txt`. Chưa đặt giấy phép chung cho mã game, ảnh và tài liệu người dùng. Cần xác nhận quyền sử dụng các nội dung trước khi xuất bản website cho học sinh.
 
 
-## Bộ nhiệm vụ Tiếng Việt 1 – Học kì 1 (local)
+## Nhiệm vụ học tập (gói Tiếng Việt 1 – Học kì 1)
 
-Đã nhập 18 tuần, 87 khung, 435 phiên bản. Chạy `START-GAME.bat --port 8002`, mở URL máy chủ báo (hiện là `http://localhost:8002/SOURCE-CODE/index.html`). Công cụ → Nhiệm vụ học tập → Tuần 8 → B033 → Khởi đầu → Xem thử localhost. Đi tới Tuần đinh, nhận bài, đi tìm thẻ và nhặt bằng G/nút chạm, làm bài. Preview dùng Google thật và máy chủ cục bộ; dừng ở chờ giáo viên, chưa phát EXP. Không đổi tiến độ nhân vật cũ.
+Gói đầu tiên: 18 tuần, 87 khung, 435 phiên bản; đăng ký trong `LEARNING/packs.json`, thêm gói môn/lớp khác bằng dữ liệu. Bảng **Nhiệm vụ** không còn ô chọn môn/lớp/tuần/mức/chế độ; bài và mức lấy từ bài được giao (`LEARNING/default-assignments.json` khi chưa có giáo viên online), lựa chọn đã lưu và lượt đang chạy. NPC có dấu `!` (nhận), `?` vàng (trả), `?` xám (đang làm/chờ giáo viên).
 
-Dùng launcher dự án, **không dùng `python -m http.server` tại root**: root chứa ngân hàng đáp án máy chủ và dữ liệu thử theo tài khoản. Launcher và bản build đã chặn chúng. Giữ `.cache/learning-preview/state.json` nếu muốn giữ tiến trình nhiệm vụ thử. Chưa triển khai backend, Rules hoặc Hosting.
+Thử trên máy tính: `START-GAME.bat --port 8002`, mở URL máy chủ báo (thường `http://localhost:8002/SOURCE-CODE/index.html`), đăng nhập, gặp **Tuần đinh** (dấu `!`) → **Nhiệm vụ học tập** → chọn bài → **Nhận nhiệm vụ** → **Tiếp tục · Đi tìm thẻ học** → nhặt bằng G/nút chạm → làm bài. Máy chủ cục bộ chấm, dừng ở chờ giáo viên, chưa phát EXP. Trên Firebase Hosting, cùng vòng chạy ở chế độ **luyện tập**: trình duyệt tự kiểm tra câu chọn đáp án bằng khóa băm, không cộng EXP; phần đọc/viết/nói luôn chờ giáo viên.
 
-Kiểm thử: `npm run test:learning`, `npm run test:firebase` (demo emulator), `npm test`. Hướng dẫn và kết quả đầy đủ: [DOCUMENTS/TV1-HK1-INTEGRATION.md](DOCUMENTS/TV1-HK1-INTEGRATION.md); [kiến trúc backend](firebase/QUEST-BACKEND.md); [client và điểm đặt](SOURCE-CODE/docs/learning-client.md).
+Dùng launcher dự án, **không dùng `python -m http.server` tại root**: root chứa ngân hàng đáp án máy chủ và dữ liệu thử theo tài khoản. Launcher và bản build đã chặn chúng. Giữ `.cache/learning-preview/state.json` nếu muốn giữ tiến trình nhiệm vụ thử. Chưa triển khai backend hoặc Rules.
+
+Kiểm thử: `npm run test:learning`, `npm run test:firebase` (demo emulator), `npm test`. Chi tiết: [client, chế độ, dấu NPC và cách thêm gói](SOURCE-CODE/docs/learning-client.md); [kiến trúc backend](firebase/QUEST-BACKEND.md); [nhập gói ban đầu](DOCUMENTS/TV1-HK1-INTEGRATION.md).

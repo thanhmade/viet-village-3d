@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Danh mục gói nhiệm vụ học tập công khai; thêm gói mới bằng dữ liệu, không sửa giao diện.",
+  "packs": [
+    {
+      "packId": "tv1-hk1-v1",
+      "version": 1,
+      "title": "Tiếng Việt 1 – Học kì 1",
+      "subject": "tieng-viet",
+      "grade": 1,
+      "semester": 1,
+      "mapId": "lang-viet",
+      "idPrefix": "TV1",
+      "catalog": "TV1-HK1/catalog.json",
+      "questions": "TV1-HK1/questions.public.json",
+      "practiceKeys": "TV1-HK1/practice-keys.json",
+      "sourceArchiveSha256": "392dc45bce576b74f58f666de66cf882d1363f04b36bbdfddf3406399e8da061",
+      "counts": {
+        "weeks": 18,
+        "quests": 87,
+        "variants": 435
+      }
+    }
+  ]
+}

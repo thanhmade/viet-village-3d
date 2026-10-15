@@ -1,38 +1,64 @@
-# Bộ chuyển đổi nhiệm vụ Tiếng Việt 1
+# Nhiệm vụ học tập: gói nội dung, vòng nhiệm vụ và dấu NPC
 
-## Phạm vi
+Cập nhật 15/10/2026. Game không cố định cho một môn: nội dung là các **gói** đăng ký bằng dữ liệu; cơ chế nhiệm vụ, giao diện và tiến trình người chơi tách riêng.
 
-- `js/learning-quests.js`: đọc catalog và câu hỏi học sinh; gọi dịch vụ nhiệm vụ qua `invoke(method, payload)` do bước đăng nhập cung cấp. Không chấm đáp án, tự xác nhận giáo viên hoặc cộng EXP trong trình duyệt.
-- `js/learning-collectibles.js`: thẻ chữ có khối 3D, hai mặt chữ đọc đúng chiều dùng chung CanvasTexture; chỉ tạo thẻ cho nhiệm vụ đang nhận, tại vị trí máy chủ đã chọn. Nhặt bằng nút chạm hoặc phím G trong phạm vi 1,6 m. Đọc danh sách nhiệm vụ tối đa khoảng 10 lần/giây, vẫn chuyển động thẻ mỗi khung hình; tài nguyên dùng chung được giải phóng đúng một lần.
-- `js/village-npcs.js`: giữ nhật ký và hội thoại cũ, thêm callback `onLearningOpen(npcId)` và kiểm tra `isNear(npcId)` để tái sử dụng vị trí thật của NPC.
-- Năm mức Khởi đầu – Cơ bản – Tiến bộ – Thử thách – Chinh phục không liên quan LV nhân vật.
+## Bốn lớp tách biệt
 
-## Dữ liệu và tài khoản
+| Lớp | Nằm ở đâu | Ghi chú |
+|---|---|---|
+| Nội dung kiến thức | `LEARNING/packs.json` → `LEARNING/<gói>/catalog.json`, `questions.public.json` | Môn, lớp, học kì, tuần, bài giữ trong dữ liệu để phân loại và giao bài; không hiện thành bảng chọn khi chơi |
+| Đáp án nội bộ | `firebase/functions/private/<gói>.questions.teacher.json` | Chỉ máy chủ đọc; launcher và Hosting trả 404 |
+| Cơ chế nhiệm vụ | `js/learning-quests.js` (chọn bài, mức, chế độ, dấu NPC), `js/learning-collectibles.js` (thẻ chữ 3D), `js/learning-view.js` (giao diện), `js/learning-practice.js` (luyện tập web) | Không tạo hệ thống nhiệm vụ hoặc EXP song song |
+| Tiến trình người chơi | Máy chủ (Functions/Firestore) hoặc worker localhost; luyện tập web ở `viet-village:learning-practice:v1:<UID>:primary` | Luyện tập không ghi EXP, nhật ký làng hay hồ sơ nhân vật |
 
-ID khung nhiệm vụ giữ nguyên, ví dụ `QUEST_TV1_B033`; câu hỏi chọn một trong `Q_TV1_B033_M1` đến `M5`. Thẻ `ITEM_TV1_B033` tại slot `SP_TV1_B033`. Người giao Tuần đinh, người nhận Thầy đồ, đều dùng ID NPC thực tế của game.
+## Chọn bài, mức và chế độ (không còn ô chọn)
 
-LocalStorage chỉ giữ lựa chọn giao diện dưới `viet-village:learning-selection:v1:<UID>:primary`; không ghi đè hồ sơ nhân vật, EXP, túi đồ hoặc nhiệm vụ cũ. Hồ sơ nhiệm vụ, seed, điểm đặt đã chọn và kết quả phải lấy lại từ dịch vụ sau khi tải trang. Dữ liệu lựa chọn hỏng được giữ nguyên và báo lỗi. Đáp ứng cũ bị loại khi UID/phiên đã đổi. Yêu cầu giống nhau đang xử lý được gộp; backend vẫn phải kiểm tra đồng thời và thưởng nguyên tử.
+Danh sách nhiệm vụ của người chơi gồm, theo thứ tự ưu tiên:
 
-Ôn lại bài đã hoàn thành yêu cầu rõ `begin(questId, difficulty, mode, npcId, true)`; lần nhận bình thường không gửi cờ `repeat`. Lỗi điều kiện từ máy chủ vẫn giữ kết nối để người chơi đổi chế độ/thử lại; lỗi mạng và phiên xác thực đánh dấu mất kết nối.
+1. Lượt đang có (giữ đúng câu, mức, seed, điểm thẻ đã chọn).
+2. **Máy chủ:** bài giáo viên giao (`assignments`). **Localhost / luyện tập web:** lựa chọn đã lưu trước đây (`viet-village:learning-selection:v1:<UID>:primary`, không bị xóa khi bỏ ô chọn) và `LEARNING/default-assignments.json`.
 
-Kết quả giáo viên xem/xác nhận học sinh khác không được đưa vào trạng thái nhiệm vụ hoặc EXP của tài khoản giáo viên.
+Mức học tập: câu của lượt đang chạy → mức trong bài được giao → mức đã lưu → `Khởi đầu`. Mức không suy ra từ LV hoặc thời gian chơi. Năm mức nội bộ 1–5 (Yếu–kém … Giỏi) hiển thị là Khởi đầu, Cơ bản, Tiến bộ, Thử thách, Chinh phục.
 
-## Điểm đặt thẻ
+Chế độ do môi trường quyết định, người chơi không tự chọn:
 
-`LEARNING/TV1-HK1/spawn-placements.json` chứa 20 điểm trong 7 khu vực; 87 khung nhiệm vụ tái sử dụng các nhóm điểm theo khu vực. Điểm Bài 33 ở lối bờ nam ao: `(15, 0.3, 23)`, `(20, 0.3, 23)`, `(10, 0.3, 22.5)`.
+| `transport.mode()` | Khi nào | Chấm bài | EXP |
+|---|---|---|---|
+| `online` | `onlineConfig.enabled = true` (chưa bật) | Functions | Có, giao dịch một lần theo `canonical_quest_id` |
+| `localhost` | Mở qua `START-GAME.bat` (có `/__viet_village_launcher__/health`) | Worker cục bộ, xác minh token Google | Không (xem thử) |
+| `practice` | Firebase Hosting, Hosting emulator, máy chủ tĩnh khác | Trình duyệt, bằng khóa băm | Không |
 
-Đã kiểm tra tự động từng điểm bằng cảnh GLB thực tế và Three.js r160: raycast mặt đất, chênh cao dưới 0,07 m, `canWalk`, đường đi từ `(0,16.5)`, khoảng cách NPC, vòng vào nhà và vòng chuyển MAP. Điểm chưa đạt đã bị loại; không đổi `null` thành tọa độ mặc định. Các kiểm tra này là kiểm tra cảnh/mã, không thay cho thao tác trình duyệt được ghi riêng trong báo cáo triển khai.
+Lớp học (`classroom`) cho phép bài được giao dù LV thấp; phiêu lưu (`adventure`) cần LV tối thiểu và nhiệm vụ trước. Máy chủ kiểm tra lại cả hai.
 
-Thẻ không có collider cản đường, chỉ một thẻ của bài đang chọn hiện cùng lúc. Khi chuyển MAP, root Làng Việt giữ lại nhưng ẩn; không tính đường tới điểm Làng Việt trên MAP khác. Lỗi điểm đặt được báo và thử kiểm tra lại có giới hạn tần suất.
+## Vòng nhiệm vụ
+
+Nhận từ NPC giao → tìm và nhặt thẻ chữ (G hoặc nút chạm, trong 1,6 m) → làm bài → giáo viên quan sát phần đọc/viết/nói và xác nhận → trả cho NPC nhận → máy chủ cộng EXP một lần. Khi chờ giáo viên, nhiệm vụ **chưa** được tính là có thể trả. Một lần thưởng cho mỗi khung nhiệm vụ, dùng chung mọi mức và phiên bản; ôn lại 0 EXP. Mỗi lúc chỉ một thẻ hiện trong làng: thẻ của bài người chơi chọn "Tiếp tục · Đi tìm thẻ học" hoặc bài vừa nhận.
+
+## Dấu trên đầu NPC
+
+`!` vàng: có nhiệm vụ đủ điều kiện nhận. `?` vàng: có nhiệm vụ đủ điều kiện trả. `?` xám: đang làm hoặc chờ giáo viên. Nhiệm vụ đã xong và không lặp thì không báo. Cùng NPC: có thể trả > có thể nhận > đang làm. Dấu tính theo tài khoản đang đăng nhập, gộp nhật ký làng (`QUEST_LV_*`) và nhiệm vụ học tập, cập nhật 2 lần/giây.
+
+## Luyện tập trên web tĩnh
+
+Không có máy chủ thì không giấu được đáp án. `LEARNING/<gói>/practice-keys.json` chứa SHA-256 có salt của đáp án câu chọn/ghép/xếp (259 câu của gói TV1), **không** có tiêu chí, gợi ý, giải thích hay câu đọc/viết/nói. Người chơi vẫn có thể dò bằng cách thử các lựa chọn, nên kết quả luyện tập không phải bằng chứng hoàn thành và không cộng EXP. Phần đọc/viết/nói luôn chờ giáo viên. Cần HTTPS hoặc localhost (Web Crypto). "Luyện lại từ đầu" chỉ xóa lượt luyện tập trên web.
+
+## Thêm gói môn học khác
+
+1. Chuẩn bị gói theo cùng lược đồ (`lessons`, `quests`, `questions.teacher/public`, `items`, `spawn-points`), mỗi ID chứa tiền tố riêng của gói (ví dụ `QUEST_T2_...`, `Q_T2_...`).
+2. Viết bộ nhập theo mẫu `scripts/import-tv1-quests.py` (đổi `PACK_ID`, `PACK_DIRECTORY`, `PACK_ENTRY`, ánh xạ NPC, đường dẫn đầu ra). Bộ nhập ghi gói vào `LEARNING/packs.json` theo `packId`, giữ các gói khác, từ chối trùng tiền tố; nhập lại cùng gói không đổi byte.
+3. Kiểm tra điểm đặt thẻ trên MAP thật (`spawn-placements.json` của gói); điểm chưa kiểm tra giữ `null`, nhiệm vụ đó không bật thu thập.
+4. Thêm bài vào `LEARNING/default-assignments.json` (bản thử) hoặc giao qua máy chủ; thêm đường dẫn mới vào `scripts/public-game.config.json` nếu cần Hosting.
+5. Chạy `npm run test:learning`, `npm test`, `npm run test:hosting` và `py -3 -B -m unittest discover -s scripts/tests`.
+
+Client từ chối gói trùng `packId`, ID nhiệm vụ/câu trùng giữa các gói, ID không mang tiền tố của gói và đường dẫn có `..`.
+
+Chưa có công cụ phân tích tài liệu thô (PDF/DOCX/PPTX/ảnh) hoặc dịch vụ AI để tạo gói mới; game không có nút phân tích.
 
 ## Kiểm tra
 
-Chạy từ gốc CAP-NHAT với Node hiện có:
-
 ```powershell
-& '.\.local-tools\node-22\node-v22.23.3-win-x64\node.exe' --test SOURCE-CODE/tests/learning-client.test.cjs SOURCE-CODE/tests/learning-collectibles.test.cjs
+npm run test:learning
+npm test
 ```
 
-Các test dùng tài khoản giả lập cô lập trong bộ kiểm thử, không đưa dữ liệu đó vào hồ sơ Google thật và không báo chúng là lần đăng nhập thành công. Kiểm thử bao gồm tải đúng catalog, giữ lựa chọn sau tải lại, đổi UID, dữ liệu hỏng, mất backend, kết quả đến muộn, gần NPC, nhặt thẻ, nhấn lặp, chuyển MAP và kiểm tra 20 điểm bằng mô hình thật.
-
-Quyền giáo viên, đáp án và thưởng nằm ở dịch vụ máy chủ. Nếu bản localhost chỉ cho phép xem thử, phần thực hành/EXP vẫn bị chặn rõ ràng; không biến lựa chọn giao diện thành quyền hoặc thành tích.
+`learning-client.test.cjs` (sổ gói, bài được giao, giữ lựa chọn cũ, dấu NPC, lớp học/phiêu lưu, nhiều gói), `learning-practice.test.cjs` (khớp băm với bộ nhập cho 259 câu, vòng luyện tập, đọc/viết không tự chấm, tải lại, làm lại, thiếu Web Crypto), `learning-transport.test.mjs` (phát hiện chế độ), `village-npcs.test.cjs` (dấu NPC trong game), `quest-backend.test.cjs` và `quest-emulator.test.mjs` (máy chủ: quyền giáo viên, thưởng một lần, đồng thời). Kiểm thử dùng tài khoản giả lập; không thay cho đăng nhập Google thật hoặc thử trên thiết bị học sinh.

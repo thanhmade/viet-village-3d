@@ -225,3 +225,15 @@ test('an unavailable player animation adapter never breaks existing NPC journal 
  stand(h,7.6,21.6);assert(n.interact('NPC_LANG_VIET_TUAN_DINH'));questControl(h,'accept-QUEST_LV_01').onclick();
  assert.equal(n.status.quests.QUEST_LV_01,'active');n.lock();assert(!n.isOpen());assert.equal(warnings,3);
 });
+
+test('NPC quest markers follow the signed-in player and rank turn-in over accept over in-progress',async()=>{
+ const h=await game(),markers=()=>{h.run('VietVillageNPCs.update(.6)');return JSON.parse(JSON.stringify(h.run('VietVillageNPCs.status.markers')));};
+ const mark=phase=>h.run(`localStorage.setItem('viet-village:quests:lang-viet:v1:npc-test-one:QUEST_LV_01:${phase}','1')`);
+ let m=markers();assert.equal(m.NPC_LANG_VIET_TUAN_DINH,'available');assert.equal(m.NPC_LANG_VIET_VO_SU,null,'second quest waits for its prerequisite');
+ mark('active');m=markers();assert.equal(m.NPC_LANG_VIET_TUAN_DINH,null);assert.equal(m.NPC_LANG_VIET_LY_TRUONG,'progress');
+ mark('ready');assert.equal(markers().NPC_LANG_VIET_LY_TRUONG,'ready');
+ h.run("learningClient={markers:()=>new Map([['NPC_LANG_VIET_LY_TRUONG','available'],['NPC_LANG_VIET_THAY_DO','progress']])}");
+ m=markers();assert.equal(m.NPC_LANG_VIET_LY_TRUONG,'ready','turn-in outranks a learning quest to accept');assert.equal(m.NPC_LANG_VIET_THAY_DO,'progress');
+ mark('completed');m=markers();assert.equal(m.NPC_LANG_VIET_LY_TRUONG,'available');assert.equal(m.NPC_LANG_VIET_VO_SU,'available');
+ h.context.VietVillageAuth.isAuthenticated=()=>false;assert.deepEqual(Object.values(markers()).filter(Boolean),[],'no markers without a signed-in player');
+});

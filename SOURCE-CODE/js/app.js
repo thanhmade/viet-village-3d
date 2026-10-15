@@ -1,7 +1,7 @@
 'use strict';
 let multiplayerWalking=false,localWalking=false,villageWeapons=null,playerJourney=null,playerHealthView=null,playerAvatar=null;
 let playerExperience=null,experienceView=null;
-let learningClient=null,learningView=null,learningCollectibles=null,learningPractice=null;
+let learningClient=null,learningView=null,learningCollectibles=null,learningPractice=null,gameHud=null;
 function learningContext(){return {uid:window.VietVillageAuth?.getProfile?.()?.uid,authenticated:!!window.VietVillageAuth?.isAuthenticated(),
  alive:playerJourney?.getState().alive===true,mapId:regionTravel?.currentId,position:{x:player.position.x,y:player.position.y,z:player.position.z},
  transitioning:!!regionTravel?.status.transitioning||!!housePortalSystem?.status?.pending,insideHouse:!!insideHouse,
@@ -16,7 +16,7 @@ function initializeLearning(){
  learningClient=window.createLearningQuestClient({getIdentity:identity,storage:localStorage,withLock,
  invoke:async(method,data)=>{const transport=window.VietVillageLearningTransport;if(!transport)throw new Error('Dịch vụ đăng nhập chưa sẵn sàng.');
   return (await transport.mode?.())==='practice'?learningPractice.invoke(method,data,learningContext()):transport.invoke(method,data,learningContext());},
- getContext:learningContext,nearNpc:id=>window.VietVillageNPCs?.isNear(id),onChange:()=>learningView?.render()});
+ getContext:learningContext,nearNpc:id=>window.VietVillageNPCs?.isNear(id),onChange:()=>{learningView?.render();window.VietVillageNPCs?.invalidateQuests?.();}});
  learningView=window.createLearningQuestView({document,client:learningClient,pause,notify:toast,
  canOpen:()=>gameInitialized&&!!window.VietVillageAuth?.isAuthenticated()&&!!window.VietVillageCharacter?.isReady(),
  guideNpc:id=>window.VietVillageNPCs.route(id),guidePoint:point=>{if(regionTravel.currentId!=='lang-viet'||!startRoaming())return false;waypoints=findPath(player.position,point);target=waypoints.shift()||null;toast(target?'Đang đi tìm thẻ học · Đến gần bấm G hoặc nút Nhặt.':'Chưa có đường tới thẻ học.');return !!target;}});
@@ -25,6 +25,18 @@ function initializeLearning(){
  onOpen:()=>learningView.open()});
  // Load the player's quest state now so NPC markers are right before any menu opens.
  void learningClient.load().then(()=>learningClient.refresh().catch(()=>{}),error=>toast(error.message));
+}
+// Tracker "Đi tới": normal pathfinding only, never a teleport or a remote accept/turn-in.
+function questGoTo(entry){
+ if(!entry||!gameInitialized||!window.VietVillageAuth?.isAuthenticated())return false;
+ if(regionTravel?.currentId!=='lang-viet'||insideHouse){toast('Nhiệm vụ này ở ngoài trời Làng Việt. Hãy quay về làng.');return false;}
+ if(entry.source==='learning'){
+  const point=entry.objective?.spawn;
+  if(entry.learning?.status==='accepted'&&point){if(!startRoaming())return false;waypoints=findPath(player.position,point);target=waypoints.shift()||null;toast(target?'Đang đi tìm thẻ học · Đến gần bấm G hoặc nút Nhặt.':'Chưa có đường tới thẻ học.');return !!target;}
+  if(['collected','practice_pending'].includes(entry.learning?.status)){learningView?.open(null,entry.id);return true;}
+ }
+ const id=entry.state==='available'?entry.giverNpc:entry.state==='ready'?entry.turnInNpc:entry.objective?.targetNpc||entry.objective?.targetProp||entry.turnInNpc;
+ return id?!!window.VietVillageNPCs?.route(id):false;
 }
 const pendingExperienceRewards=new Map();
 let pondView=-1,pondChecks=null;
@@ -113,7 +125,7 @@ if(insideHouse){updateInterior(dt);}else if(gateView>=0){let positions=[[0,4.6,3
 climateElapsed+=dt;uiElapsed+=dt;
 if(climateElapsed>=1/30){updateClimate(climateElapsed);window.VietVillageMapAssets?.update(clockT,climate,world.visible&&!insideHouse&&regionTravel?.currentId==='lang-viet');climateElapsed=0;}
 playerHealthView?.update(dt);
-if(uiElapsed>=.1){if(!contentWatchUntil)contentWatchUntil=ms+60000;contentLoading=ms<contentWatchUntil&&!!window.isVillageContentLoading?.();updatePondChecks();updateEntrances();if($('minimap').offsetParent!==null)minimap();uiElapsed=0;}
+if(uiElapsed>=.1){if(!contentWatchUntil)contentWatchUntil=ms+60000;contentLoading=ms<contentWatchUntil&&!!window.isVillageContentLoading?.();updatePondChecks();updateEntrances();if($('minimap').offsetParent!==null)minimap();gameHud?.update();window.VietVillageLandscape?.schedule();uiElapsed=0;}
 if(playerAvatar?.isGLTF)body.position.y=0;playerAvatar?.update(dt,avatarSpeed);
 regionTravel?.update(portalDt);window.VietVillageNPCs?.update(dt);learningCollectibles?.update(dt);housePortalSystem?.update(portalDt);villageWeapons?.update(dt);window.VietVillageOnline?.tick(dt);window.VillagePerformance?.beforeRender(ms);renderer.render(scene,camera);window.VillagePerformance?.sample(ms,!overlays()&&!contentLoading);
 }
@@ -127,7 +139,7 @@ playerExperience=window.createVillageExperience({getIdentity:()=>({authenticated
  getMode:()=>window.VietVillageExperiencePolicy?.localOnly===false?'online-unavailable':'local',
  storage:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},
  withLock:globalThis.navigator?.locks?.request?(name,operation)=>navigator.locks.request(name,operation):null,
- onChange:()=>experienceView?.update(),onReward:result=>experienceView?.reward(result)});
+ onChange:()=>{experienceView?.update();window.VietVillageNPCs?.invalidateQuests?.();},onReward:result=>experienceView?.reward(result)});
 experienceView=window.createVillageExperienceView({document,getState:()=>playerExperience.getState(),retry:()=>playerExperience.refresh()});
 window.VietVillageExperience=playerExperience;
 addEventListener('storage',event=>{if(event.key===null||event.key?.startsWith(playerExperience.storagePrefix))playerExperience.refresh();});
@@ -159,7 +171,8 @@ window.VietVillageNPCs=window.createVillageNPCController({THREE,region:npcRegion
  healPlayer:()=>playerJourney.healToFull(),onHealed:()=>playerHealthView.healed(),
  getLesson:definition=>window.resolveVillageLesson(definition,{core,advanced}),
  onActivityCompleted:claimActivityExperience,
- onLearningOpen:npcId=>learningView?.open(npcId),getQuestMarkers:()=>learningClient?.markers(),
+ onLearningOpen:(npcId,questId)=>learningView?.open(npcId,questId),getLearningEntries:({level})=>learningClient?.questEntries?.({level})||[],
+ getLevel:()=>{const s=playerExperience?.getState();return s?.status==='ready'?s.level:null;},getCamera:()=>camera,onQuestBoardChange:board=>gameHud?.render(board),
  getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),
   transitioning:regionTravel.status.transitioning||!!housePortalSystem?.status?.pending,
   inVillage:regionTravel.currentId==='lang-viet'&&!insideHouse&&world.visible&&!housePreview.visible,
@@ -176,6 +189,15 @@ window.VietVillageNPCs=window.createVillageNPCController({THREE,region:npcRegion
  }
 });
 if(typeof fetch==='function')window.VietVillageNPCs.load();
+gameHud=window.createVillageGameHud?.({document,storage:localStorage,
+ getCharacter:()=>window.VietVillageCharacter?.state?.character||null,getExperience:()=>playerExperience?.getState(),
+ getRegionName:()=>regionTravel?.currentId||'',getBoard:()=>window.VietVillageNPCs?.questBoard,track:id=>window.VietVillageNPCs?.track(id),
+ nameOf:id=>window.VietVillageNPCs?.nameOf?.(id),goTo:questGoTo,
+ openDetail:entry=>{if(entry?.source==='learning')learningView?.open(null,entry.id);else window.VietVillageNPCs?.openDirectory();}})||null;
+window.VietVillageLandscape=window.createVillageLandscape?.({document,win:window,
+ getPhase:()=>!window.VietVillageAuth?.isAuthenticated()?'auth':window.VietVillageCharacter?.isOpen()?'character':gameInitialized&&window.VietVillageCharacter?.isReady()?'game':'none',
+ releaseInputs:()=>{releaseGameInputs();villageWeapons?.suspend();resetHouseTravel();regionTravel?.reset();},
+ openCharacter:()=>window.VietVillageCharacter?.openProfile?.(),logout:()=>$('logoutBtn')?.click()})||null;
 initializeLearning();
 installPondChecks();$('home').classList.remove('hidden');return true;
 }catch(e){$('loading').classList.add('hidden');$('fatal').style.display='block';$('fatal').textContent='Chưa khởi động được đồ họa 3D. Hãy mở bằng Chrome/Edge/Safari mới và bật tăng tốc phần cứng. Chi tiết: '+e.message;$('play').disabled=true;$('homeLevels').disabled=true;console.error(e);}
@@ -202,7 +224,7 @@ function startRoomWalk(){
  clearMotion();$('home').classList.add('hidden');$('hud').style.display='block';player.visible=true;sceneryRadius=11;pitch=.6;regionTravel?.refreshUI();
 }
 function lockVillageGame(){
- learningView?.lock();learningClient?.lock();learningCollectibles?.lock();
+ learningView?.lock();learningClient?.lock();learningCollectibles?.lock();gameHud?.lock();
  playerExperience?.lock();pendingExperienceRewards.clear();if($('experienceRewardRetry'))$('experienceRewardRetry').hidden=true;
  playerAvatar?.lock();
  window.VietVillageRegions?.closeMenu({restoreFocus:false});
@@ -214,7 +236,8 @@ function lockVillageGame(){
  $('hud').style.display='none';$('home').classList.remove('hidden');
 }
 window.VietVillageGame=Object.freeze({
- pauseCharacterSetup(){clearMotion();resetHouseTravel();regionTravel?.reset();villageWeapons?.suspend();},
+ pauseCharacterSetup(){releaseGameInputs();resetHouseTravel();regionTravel?.reset();villageWeapons?.suspend();},
+ releaseInputs:()=>releaseGameInputs(),setPortrait:url=>gameHud?.setPortrait(url),
  canOpenCharacter:()=>gameInitialized&&!overlays(),
  applyCharacter:record=>{const model=window.VietVillageCharacterModels?.find(item=>item.id===record?.modelId&&item.available);return model?playerAvatar.select(model.avatarId):Promise.resolve(false);},
  enterCharacter({newCharacter=false}={}){

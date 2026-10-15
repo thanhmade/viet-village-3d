@@ -11,7 +11,9 @@ export function createCharacterPreview({
  }
  const doc = container.ownerDocument || document;
  const win = doc.defaultView || window;
- const renderer = new T.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'low-power' });
+ // Transparent canvas: the Làng Việt backdrop of the screen shows behind the model.
+ const renderer = new T.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+ renderer.setClearColor?.(0x000000, 0);
  const canvas = renderer.domElement;
  renderer.setPixelRatio(Math.min(win.devicePixelRatio || 1, 1.5));
  renderer.outputColorSpace = T.SRGBColorSpace;
@@ -24,7 +26,7 @@ export function createCharacterPreview({
  container.append(canvas);
 
  const scene = new T.Scene();
- scene.background = new T.Color('#eaf0df');
+ scene.background = null;
  const camera = new T.PerspectiveCamera(40, 1, .05, 40);
  const target = new T.Vector3(0, 1.16, 0);
  scene.add(new T.HemisphereLight('#fffdf2', '#597a6d', 2.7));
@@ -32,7 +34,7 @@ export function createCharacterPreview({
  keyLight.position.set(3.5, 5, 4); scene.add(keyLight);
  const fillLight = new T.DirectionalLight('#cdeaf1', 1.8);
  fillLight.position.set(-3, 2.2, -3); scene.add(fillLight);
- const floor = new T.Mesh(new T.CircleGeometry(1.35, 64), new T.MeshStandardMaterial({ color: '#ccd7be', roughness: 1 }));
+ const floor = new T.Mesh(new T.CircleGeometry(1.35, 64), new T.MeshStandardMaterial({ color: '#c9b98f', roughness: 1, transparent: true, opacity: .82 }));
  floor.rotation.x = -Math.PI / 2; floor.position.y = -.018; scene.add(floor);
  const ring = new T.Mesh(new T.RingGeometry(1.36, 1.39, 64), new T.MeshBasicMaterial({ color: '#91ac92', side: T.DoubleSide }));
  ring.rotation.x = -Math.PI / 2; ring.position.y = -.012; scene.add(ring);
@@ -104,6 +106,23 @@ export function createCharacterPreview({
   return { stats: visual.stats, clips: visual.clips };
  }
 
+ // Head-and-shoulders snapshot of the shown model for the in-game portrait.
+ // Rendered once from a temporary close camera; the view is restored at once.
+ function capturePortrait(size = 160) {
+  if (!visual || disposed || contextLost || width <= 0 || height <= 0) return null;
+  const saved = camera.position.clone(), head = new T.Vector3(0, modelHeight * .86, 0);
+  camera.position.set(Math.sin(.35) * modelHeight * .5, modelHeight * .9, Math.cos(.35) * modelHeight * .5); camera.lookAt(head);
+  renderer.render(scene, camera);
+  let url = null;
+  try {
+   const out = doc.createElement('canvas'); out.width = out.height = size;
+   const cw = canvas.width, ch = canvas.height, side = Math.min(cw, ch);
+   out.getContext('2d').drawImage(canvas, (cw - side) / 2, (ch - side) / 2, side, side, 0, 0, size, size);
+   url = out.toDataURL('image/png');
+  } catch { url = null; }
+  camera.position.copy(saved); updateCamera(); draw();
+  return url;
+ }
  function zoom(factor) { const scale = modelHeight / 2.35; distance = Math.max(2.8 * scale, Math.min(7.8 * scale, distance * factor)); updateCamera(); draw(); }
  function measurePinch() {
   if (pointers.size < 2) return null;
@@ -163,7 +182,7 @@ export function createCharacterPreview({
  if (observer) observer.observe(container); else listen(win, 'resize', resize);
  updateCamera(); resize();
  return Object.freeze({
-  showModel, resetView, start, stop,
+  showModel, resetView, start, stop, capturePortrait,
   dispose() {
    if (disposed) return;
    disposed = true; ++epoch; stop(); observer?.disconnect(); bindings.forEach(remove => remove()); clearModel();

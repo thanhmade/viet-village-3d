@@ -1,7 +1,9 @@
 (function(global){
  'use strict';
  // Narrative progress; EXP reconciles only after durable completion. No Firebase writes.
- global.createVillageQuestJournal=function({quests,getIdentity,storage,onSaveError=()=>{}}){
+ // canStart(id,phases) adds the shared requirement check (LV, any-of); the
+ // default keeps the original rule: every dependsOn quest is turned in.
+ global.createVillageQuestJournal=function({quests,getIdentity,storage,onSaveError=()=>{},canStart=null}){
   const definitions=new Map(quests.filter(q=>q.enabled).map(q=>[q.id,q]));
   const phases=['active','ready','completed'];
   const base=()=> 'viet-village:quests:lang-viet:v1:'+encodeURIComponent(uid);
@@ -34,10 +36,14 @@
    return true;
   }catch(_){sync();onSaveError();return false;}}
   function status(id){sync();return states[id]||'available';}
-  function allowed(id){const q=definitions.get(id);return !readFailed&&!!uid&&!!q&&q.dependsOn.every(dep=>states[dep]==='completed');}
+  function allowed(id){const q=definitions.get(id);if(readFailed||!uid||!q)return false;
+  try{return typeof canStart==='function'?canStart(id,Object.freeze({...states}))===true:q.dependsOn.every(dep=>states[dep]==='completed');}catch(_){return false;}}
   return Object.freeze({
    status,
    snapshot(){sync();return Object.freeze({...states});},
+   // undefined = not started, null = unreadable (never treated as "not started").
+   phaseOf(id){sync();return readFailed||!uid?null:states[id];},
+   get readable(){sync();return !!uid&&!readFailed;},
    canAccept(id,npc){sync();return allowed(id)&&definitions.get(id).giverNpc===npc&&!states[id];},
    accept(id,npc){sync();if(!allowed(id)||definitions.get(id).giverNpc!==npc||states[id])return false;states[id]='active';return save();},
    record(type,target){sync();if(!uid)return false;let changed=false;

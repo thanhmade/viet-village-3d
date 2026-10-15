@@ -46,7 +46,8 @@ function fakeDocument() {
   const ids = ['characterCreation', 'characterName', 'characterStatus', 'createCharacterBtn', 'resetCharacterBtn',
     'characterRetryBtn', 'characterCreationClose', 'characterProfileBack', 'characterAnimationTestBtn',
     'characterCreationTitle', 'characterCreationIntro', 'characterPreview', 'view', 'characterModelChoices',
-    'characterAppearanceGroups', 'characterForm', 'characterFrontBtn', 'characterLogoutBtn', 'playerAvatarBtn'];
+    'characterAppearanceGroups', 'characterForm', 'characterFrontBtn', 'characterLogoutBtn', 'playerAvatarBtn',
+    'characterEnterBtn', 'characterPreviewState'];
   for (const id of ids) {
     const node = doc.createElement(id === 'characterName' ? 'input' : /Btn$|Close$|Back$/.test(id) ? 'button' : 'div');
     node.id = id;
@@ -58,7 +59,7 @@ function fakeDocument() {
 
 function fixture(options = {}) {
   const document = fakeDocument(); let uid = 'unit-account';
-  const calls = {load: 0, create: [], apply: [], applyModels: [], enter: [], previews: [], previewOptions: [], disposed: 0, pause: 0, clear: 0, ready: [], reset: 0, logout: 0};
+  const calls = {load: 0, create: [], apply: [], applyModels: [], enter: [], previews: [], previewOptions: [], disposed: 0, pause: 0, clear: 0, ready: [], reset: 0, logout: 0, starts: 0, screens: []};
   const handlers = {
     load: options.load || (async () => ({status: 'missing', character: null})),
     create: options.create || (async input => saved(input.name.trim(), input.modelId)),
@@ -76,7 +77,8 @@ function fixture(options = {}) {
     },
     createPreview: () => ({start() {}, stop() {}, showModel(url, options) { calls.previews.push(url); calls.previewOptions.push(options); return handlers.showModel(url, options); },
       dispose() { calls.disposed++; }, resetView() { calls.reset++; }}),
-    onReady: value => calls.ready.push(value), onLogout: () => { calls.logout++; }
+    onReady: value => calls.ready.push(value), onLogout: () => { calls.logout++; },
+    onStart: () => { calls.starts++; }, onScreenChange: open => calls.screens.push(open)
   });
   return {controller, document, calls, handlers, el: id => document.getElementById(id), setUid: value => { uid = value; }};
 }
@@ -99,23 +101,50 @@ test('missing/legacy profiles require explicit creation after the model is ready
   }
 });
 
-test('existing characters load/apply automatically and profile viewing never creates or resets them', async () => {
-  const character = saved(), f = fixture({load: async () => ({status: 'ready', character})});
-  assert.equal(await f.controller.onAuthState(true), true);
+test('existing characters open the select screen; Vào làng applies once and profile viewing never creates or resets them', async () => {
+  const character = saved(), model = deferred(), f = fixture({load: async () => ({status: 'ready', character}), showModel: () => model.promise});
+  const loading = f.controller.onAuthState(true); await flush();
+  assert.equal(f.controller.state.mode, 'select'); assert.equal(f.controller.state.phase, 'select');
+  assert.equal(f.el('characterName').value, character.name); assert.equal(f.el('characterName').disabled, true);
+  assert.equal(f.el('characterEnterBtn').hidden, false); assert.equal(f.el('characterEnterBtn').disabled, true, 'no entry before the saved model is shown');
+  assert.equal(f.el('createCharacterBtn').hidden, true); assert.equal(f.el('characterPreviewState').textContent, 'Đang tải mô hình…');
+  assert.equal(await f.controller.enter(), false); assert.equal(f.calls.starts, 0);
+  model.resolve(); assert.equal(await loading, false, 'a saved character is not entered without the player');
+  assert.equal(f.calls.apply.length, 0); assert.equal(f.calls.enter.length, 0); assert.equal(f.calls.create.length, 0);
+  assert.equal(await f.controller.selectModel('male-base'), false, 'the saved Female model cannot be swapped on the select screen');
+  assert.equal(f.el('characterEnterBtn').disabled, false); assert.equal(f.controller.isBlocking(), true);
+  const first = f.controller.enter(), second = f.controller.enter();
+  assert.equal(f.calls.starts, 1, 'fullscreen/orientation hook runs synchronously inside the tap, once');
+  assert.equal(await first, true); assert.equal(await second, false);
   assert.deepEqual(f.calls.apply, [character]); assert.deepEqual(f.calls.enter, [{newCharacter: false}]);
-  assert.equal(f.calls.create.length, 0); assert.equal(f.controller.isBlocking(), false);
+  assert.equal(f.calls.create.length, 0); assert.equal(f.controller.isBlocking(), false); assert.deepEqual(f.calls.screens.slice(-1), [false]);
   assert.equal(await f.controller.onAuthState(true), true); assert.equal(f.calls.load, 1, 'token refresh does not reload/reset ready character');
   assert.equal(await f.controller.openProfile(), true); assert.equal(f.controller.state.mode, 'profile');
   assert.equal(f.controller.isBlocking(), true); assert.equal(f.el('characterName').value, character.name);
   assert.equal(f.el('characterName').disabled, true); assert.equal(f.el('resetCharacterBtn').disabled, true);
   assert.equal(await f.controller.selectModel('male-base'), false, 'read-only Female profile cannot preview a replacement model');
   assert.equal(f.controller.state.selected, 'female-base');
-  assert.equal(await f.controller.submit(), false);
+  assert.equal(await f.controller.submit(), false); assert.equal(await f.controller.enter(), false);
   f.el('resetCharacterBtn').emit('click'); await flush();
   assert.equal(f.el('characterName').value, character.name); assert.equal(f.calls.create.length, 0);
   assert.equal(f.el('characterCreationClose').hidden, false);
   f.controller.close(); assert.equal(f.controller.isBlocking(), false); assert.equal(f.document.activeElement, f.el('view'));
   assert.equal(f.calls.enter.length, 1); assert.equal(f.calls.apply.length, 1);
+});
+
+test('a failed entry keeps the saved profile, shows the error and can be retried without creating anything', async () => {
+  const character = saved(), f = fixture({load: async () => ({status: 'ready', character}), enter: () => false});
+  await f.controller.onAuthState(true); assert.equal(await f.controller.enter(), false);
+  assert.equal(f.controller.state.mode, 'select'); assert.match(f.el('characterStatus').textContent, /Chưa vào làng/);
+  assert.equal(f.controller.isReady(), false); assert.equal(f.calls.create.length, 0);
+  f.handlers.enter = () => true; await f.controller.retry(); assert.equal(await f.controller.enter(), true);
+  assert.equal(f.calls.enter.length, 2); assert.equal(f.calls.create.length, 0);
+});
+
+test('creating a character also runs the start hook synchronously, once per accepted tap', async () => {
+  const f = fixture(); await f.controller.onAuthState(true); f.el('characterName').value = 'Bắt đầu';
+  const first = f.controller.submit(); assert.equal(f.calls.starts, 1); assert.equal(await f.controller.submit(), false);
+  assert.equal(await first, true); assert.equal(f.calls.starts, 1); assert.equal(f.calls.create.length, 1);
 });
 
 test('profile read failures disable creation until successful retry and are never treated as missing', async () => {
@@ -188,7 +217,8 @@ test('logout during model/apply work cannot complete entry for the old UID', asy
     const pending = deferred(), f = fixture(stage === 'preview'
       ? {showModel: () => pending.promise}
       : {load: async () => ({status: 'ready', character: saved()}), apply: () => pending.promise});
-    const request = f.controller.onAuthState(true); await flush();
+    let request = f.controller.onAuthState(true); await flush();
+    if (stage === 'apply') { assert.equal(await request, false); request = f.controller.enter(); await flush(); assert.equal(f.calls.apply.length, 1); }
     f.setUid(null); await f.controller.onAuthState(false); pending.resolve(true);
     assert.equal(await request, false); assert.equal(f.controller.isReady(), false); assert.equal(f.controller.isOpen(), false);
     assert.equal(f.calls.enter.length, 0); assert.equal(f.calls.ready.length, 0);
@@ -284,10 +314,11 @@ test('Male identity survives a fresh controller and sign-in without writing over
   await f.controller.onAuthState(true); await f.controller.selectModel('male-base');
   f.el('characterName').value = 'Nam đã lưu'; assert.equal(await f.controller.submit(), true);
   const serialized = entries.get(characterStoragePrefix + 'unit-account');
-  await f.controller.onAuthState(false); assert.equal(await f.controller.onAuthState(true), true);
+  await f.controller.onAuthState(false); assert.equal(await f.controller.onAuthState(true), false);
+  assert.equal(f.controller.state.mode, 'select'); assert.equal(await f.controller.enter(), true);
   assert.equal(f.calls.apply.at(-1).modelId, 'male-base');
   const reloaded = fixture({load: store.load, create: store.create});
-  assert.equal(await reloaded.controller.onAuthState(true), true);
+  assert.equal(await reloaded.controller.onAuthState(true), false); assert.equal(await reloaded.controller.enter(), true);
   assert.equal(reloaded.calls.apply[0].modelId, 'male-base'); assert.equal(reloaded.calls.apply[0].name, 'Nam đã lưu');
   assert.equal(reloaded.calls.create.length, 0); assert.deepEqual(reloaded.calls.enter, [{newCharacter: false}]);
   assert.equal(entries.get(characterStoragePrefix + 'unit-account'), serialized);

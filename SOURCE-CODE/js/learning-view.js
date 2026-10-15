@@ -18,9 +18,9 @@
   async function act(action){if(running)return;running=true;message='Đang xử lý…';render();try{const value=await action();message=value?.message||(value?.correct===false?'Chưa đúng. Em thử lại nhé.':'');}catch(e){message=e.message;notify(message);}finally{running=false;render();}}
   function relevant(){const list=client.offered().filter(o=>!focusNpc||o.giverNpc===focusNpc||o.returnNpc===focusNpc);
    return list.map((o,i)=>({o,i})).sort((a,b)=>(priority[b.o.status]||0)-(priority[a.o.status]||0)||a.i-b.i).map(x=>x.o);}
-  async function open(npcId){
+  async function open(npcId,questId=null){
    if(!canOpen())return;returnFocus=document.activeElement;opened=true;panel.hidden=false;pause();document.getElementById('learningBtn').setAttribute('aria-expanded','true');
-   document.getElementById('learningClose').focus();focusNpc=npcId||null;selected=null;message='Đang tải nhiệm vụ…';render();
+   document.getElementById('learningClose').focus();focusNpc=npcId||null;selected=typeof questId==='string'?questId:null;message='Đang tải nhiệm vụ…';render();
    try{await client.load();message='';try{await client.refresh();}catch(e){message=e.message;}}catch(e){message=e.message;}render();
   }
   function steps(q,run,entry,question,parent){

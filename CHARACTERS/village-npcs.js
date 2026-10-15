@@ -32,14 +32,28 @@
    const texture=new T.CanvasTexture(canvas);textures.push(texture);const mat=new T.SpriteMaterial({map:texture,depthTest:true});materials.set('label-'+text,mat);
    const sprite=new T.Sprite(mat);sprite.position.y=y;sprite.scale.set(2.35,.49,1);parent.add(sprite);
   }
-  // Quest marker above the name: '!' can accept, bright '?' can turn in, grey '?' in progress.
-  const markerStyles={available:['!','#ffd23f','#7a4d00'],ready:['?','#ffd23f','#7a4d00'],progress:['?','#d6dbd5','#5b625c']};
-  function markerMaterial(kind){
-   const id='marker-'+kind;if(materials.has(id))return materials.get(id);
-   const [text,fill,stroke]=markerStyles[kind],canvas=document.createElement('canvas');canvas.width=canvas.height=128;const c=canvas.getContext('2d');
-   c.font='900 100px sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineWidth=14;c.strokeStyle=stroke;c.strokeText(text,64,70);c.fillStyle=fill;c.fillText(text,64,70);
-   const texture=new T.CanvasTexture(canvas);textures.push(texture);const mat=new T.SpriteMaterial({map:texture,transparent:true,depthTest:true});materials.set(id,mat);return mat;
+  // Quest marker above the name: yellow '!' can accept, yellow '?' can turn in,
+  // grey '?' in progress, small muted lock = known but not open yet. The frame
+  // shape (not only colour) tells main (diamond), side (circle) and learning
+  // (rounded square) quests apart. One cached texture per kind+frame.
+  const markerStyles={available:['!','#ffd23f','#6b4300'],ready:['?','#ffd23f','#6b4300'],progress:['?','#dfe3dc','#4f5650'],locked:['lock','#c9cdc2','#525a52']};
+  const frameStyles={main:['#f0c24a','#3d2a0fe0'],side:['#a9cfd6','#173a42e0'],learning:['#8fd6a6','#163c2ee0']};
+  const MARKER_RANGE=48;
+  function markerMaterial(kind,category='main'){
+   const frame=Object.hasOwn(frameStyles,category)?category:'side',id='marker-'+kind+'-'+frame;if(materials.has(id))return materials.get(id);
+   const [text,fill,stroke]=markerStyles[kind],[ring,back]=frameStyles[frame],canvas=document.createElement('canvas');canvas.width=canvas.height=128;const c=canvas.getContext('2d');
+   const muted=kind==='locked';c.globalAlpha=muted?.78:1;c.lineWidth=8;c.strokeStyle=muted?'#9aa196':ring;c.fillStyle=back;c.beginPath();
+   if(frame==='main'){c.moveTo(64,6);c.lineTo(122,64);c.lineTo(64,122);c.lineTo(6,64);c.closePath();}
+   else if(frame==='learning'){const r=22;c.moveTo(14+r,12);c.arcTo(116,12,116,116,r);c.arcTo(116,116,12,116,r);c.arcTo(12,116,12,12,r);c.arcTo(12,12,116,12,r);c.closePath();}
+   else c.arc(64,64,54,0,Math.PI*2);
+   c.fill();c.stroke();
+   if(text==='lock'){c.lineWidth=9;c.strokeStyle=fill;c.beginPath();c.arc(64,55,15,Math.PI,0);c.stroke();c.fillStyle=fill;c.fillRect(42,55,44,34);c.fillStyle=back;c.fillRect(61,64,6,14);}
+   else{c.font='900 78px sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineWidth=10;c.strokeStyle=stroke;c.strokeText(text,64,68);c.fillStyle=fill;c.fillText(text,64,68);}
+   const texture=new T.CanvasTexture(canvas);textures.push(texture);const mat=new T.SpriteMaterial({map:texture,transparent:true,depthTest:true,depthWrite:false});materials.set(id,mat);return mat;
   }
+  // Name and marker sit above the model's real height (model height + ground offset).
+  const topOf=n=>Number.isFinite(n.model?.height)?n.model.height+(n.model.groundOffset||0):2.4;
+  const cameraPosition=new T.Vector3(),markerPosition=new T.Vector3();
   let markerTime=0;
   for(const n of gameplay.npcs){
    const actor=new T.Group();actor.name=n.id;actor.userData={npcId:n.id,hostile:false,role:n.role};actor.position.set(n.position.x,n.position.y,n.position.z);actor.rotation.y=n.yaw;root.add(actor);
@@ -56,7 +70,8 @@
     shape(new T.ConeGeometry(.53,.32,12),'#c8ad72',0,2.24,0,placeholder);
     box(.09,1.8,.09,'#765031',-.48,1.0,.12,placeholder);
    }else{box(.55,.11,.39,'#dfc477',0,2.08,0,placeholder);box(.56,.06,.39,'#713725',0,2.16,0,placeholder);}
-   label(n.name,actor,2.85);npcs.set(n.id,{definition:n,root:actor,arms,placeholder,visual:null,pending:null,modelState:n.model?"pending":"procedural",modelError:"",marker:null,markerKind:null});
+   const labelY=Math.max(2.85,topOf(n)+.45);label(n.name,actor,labelY);
+   npcs.set(n.id,{definition:n,root:actor,arms,placeholder,visual:null,pending:null,modelState:n.model?"pending":"procedural",modelError:"",marker:null,markerKind:null,markerCategory:null,markerQuest:null,markerY:labelY+.57});
   }
   for(const p of gameplay.props){
    if(p.type!=='training-dummy')throw new Error('Đạo cụ chưa hỗ trợ.');
@@ -84,14 +99,24 @@
   }
   const api={root,npcs,props,
    async loadModels(load=global.loadVillageNPCGLTF){return (await Promise.all([...npcs.values()].filter(n=>n.definition.model).map(n=>loadModel(n,load)))).every(Boolean);},
-   update(dt){if(disposed||!root.visible)return;markerTime+=dt;for(const n of npcs.values()){n.visual?.update(dt);if(n.marker?.visible)n.marker.position.y=3.42+Math.sin(markerTime*3)*.07;}},
-   setMarker(id,kind){
-    const n=npcs.get(id);if(!n||disposed)return false;const next=Object.hasOwn(markerStyles,kind)?kind:null;if(n.markerKind===next)return false;
-    if(next&&!n.marker){n.marker=new T.Sprite(markerMaterial(next));n.marker.name='npc-quest-marker';n.marker.scale.set(.62,.62,1);n.marker.position.y=3.42;n.root.add(n.marker);}
-    if(n.marker){n.marker.visible=!!next;if(next)n.marker.material=markerMaterial(next);}
-    n.markerKind=next;return true;
+   // Per frame only animation and on-screen size; quest conditions are evaluated elsewhere on change.
+   update(dt,camera=null){if(disposed||!root.visible)return;markerTime+=dt;if(camera)camera.getWorldPosition(cameraPosition);
+    for(const n of npcs.values()){n.visual?.update(dt);if(!n.marker||!n.markerKind)continue;
+     n.marker.position.y=n.markerY+Math.sin(markerTime*3)*.07;
+     let size=n.markerKind==='locked'?.44:.62;
+     if(camera){n.marker.getWorldPosition(markerPosition);const d=markerPosition.distanceTo(cameraPosition);
+      // Readable from afar, never covering the face up close; hidden past the range.
+      n.marker.visible=d<=MARKER_RANGE;size*=Math.min(1.8,Math.max(.7,d/16));}
+     n.marker.scale.set(size,size,1);}},
+   setMarker(id,kind,category='main',questId=null){
+    const n=npcs.get(id);if(!n||disposed)return false;const next=Object.hasOwn(markerStyles,kind)?kind:null,frame=next?(Object.hasOwn(frameStyles,category)?category:'side'):null;
+    if(n.markerKind===next&&n.markerCategory===frame){n.markerQuest=questId;return false;}
+    if(next&&!n.marker){n.marker=new T.Sprite(markerMaterial(next,frame));n.marker.name='npc-quest-marker';n.marker.renderOrder=2;n.marker.scale.set(.62,.62,1);n.marker.position.y=n.markerY;n.root.add(n.marker);}
+    if(n.marker){n.marker.visible=!!next;if(next)n.marker.material=markerMaterial(next,frame);}
+    n.markerKind=next;n.markerCategory=frame;n.markerQuest=next?questId:null;return true;
    },
    get markers(){return Object.fromEntries([...npcs].map(([id,n])=>[id,n.markerKind]));},
+   get markerDetails(){return Object.fromEntries([...npcs].map(([id,n])=>[id,n.markerKind?{kind:n.markerKind,category:n.markerCategory,questId:n.markerQuest,y:n.markerY}:null]));},
    get modelStatuses(){return [...npcs.values()].filter(n=>n.definition.model).map(n=>({id:n.definition.id,name:n.definition.name,state:n.modelState,error:n.modelError,...n.visual?.stats,animation:n.visual?.animationState}));},
    dispose(){if(disposed)return;disposed=true;region.canWalk=baseWalk;root.removeFromParent();npcs.forEach(n=>n.visual?.dispose());geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());mounted.delete(region.root);}
   };

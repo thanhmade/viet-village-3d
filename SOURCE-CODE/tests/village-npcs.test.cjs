@@ -226,14 +226,63 @@ test('an unavailable player animation adapter never breaks existing NPC journal 
  assert.equal(n.status.quests.QUEST_LV_01,'active');n.lock();assert(!n.isOpen());assert.equal(warnings,3);
 });
 
-test('NPC quest markers follow the signed-in player and rank turn-in over accept over in-progress',async()=>{
+// Storage written by another tab arrives as a 'storage' event; markers are re-evaluated on events, not per frame.
+function fireStorage(h,key){for(const listener of h.listeners.get('storage')||[])listener({key});}
+function learningEntry(id,state,giverNpc,turnInNpc,order){return {id,source:'learning',name:id,category:'learning',categoryLabel:'Học tập',state,revealed:true,giverNpc,turnInNpc,order,
+ objective:{text:'Bước',done:state==='active'?1:0,total:5},requirements:{met:state!=='locked',items:[]},reward:{exp:25},learning:{status:state==='active'?'accepted':'available'}};}
+
+test('NPC quest markers follow the signed-in player: turn-in > accept > in progress > locked, and reaching the goal is not turning in',async()=>{
  const h=await game(),markers=()=>{h.run('VietVillageNPCs.update(.6)');return JSON.parse(JSON.stringify(h.run('VietVillageNPCs.status.markers')));};
- const mark=phase=>h.run(`localStorage.setItem('viet-village:quests:lang-viet:v1:npc-test-one:QUEST_LV_01:${phase}','1')`);
- let m=markers();assert.equal(m.NPC_LANG_VIET_TUAN_DINH,'available');assert.equal(m.NPC_LANG_VIET_VO_SU,null,'second quest waits for its prerequisite');
- mark('active');m=markers();assert.equal(m.NPC_LANG_VIET_TUAN_DINH,null);assert.equal(m.NPC_LANG_VIET_LY_TRUONG,'progress');
- mark('ready');assert.equal(markers().NPC_LANG_VIET_LY_TRUONG,'ready');
- h.run("learningClient={markers:()=>new Map([['NPC_LANG_VIET_LY_TRUONG','available'],['NPC_LANG_VIET_THAY_DO','progress']])}");
- m=markers();assert.equal(m.NPC_LANG_VIET_LY_TRUONG,'ready','turn-in outranks a learning quest to accept');assert.equal(m.NPC_LANG_VIET_THAY_DO,'progress');
+ const mark=phase=>{const key=`viet-village:quests:lang-viet:v1:npc-test-one:QUEST_LV_01:${phase}`;h.run(`localStorage.setItem('${key}','1')`);fireStorage(h,key);};
+ let m=markers();assert.equal(m.NPC_LANG_VIET_TUAN_DINH,'available');
+ assert.equal(m.NPC_LANG_VIET_VO_SU,'locked','the known second quest shows a muted lock while Chào làng is not turned in');
+ const details=h.run('VietVillageNPCs.status.markerDetails');assert.equal(details.NPC_LANG_VIET_TUAN_DINH.category,'main');assert.equal(details.NPC_LANG_VIET_TUAN_DINH.questId,'QUEST_LV_01');
+ assert(details.NPC_LANG_VIET_TUAN_DINH.y>2.85,'marker sits above the name label');
+ assert.equal(m.NPC_LANG_VIET_NONG_DAN,null,'disabled/unbuilt quests never show a marker');
+ mark('active');m=markers();assert.equal(m.NPC_LANG_VIET_TUAN_DINH,null);assert.equal(m.NPC_LANG_VIET_LY_TRUONG,'progress');assert.equal(m.NPC_LANG_VIET_VO_SU,'locked');
+ mark('ready');m=markers();assert.equal(m.NPC_LANG_VIET_LY_TRUONG,'ready');assert.equal(m.NPC_LANG_VIET_VO_SU,'locked','objective reached but not turned in keeps the next quest closed');
+ h.run(`learningClient={questEntries:()=>${JSON.stringify([learningEntry('QUEST_TV1_A','available','NPC_LANG_VIET_LY_TRUONG','NPC_LANG_VIET_THAY_DO',1000),learningEntry('QUEST_TV1_B','active','NPC_LANG_VIET_TUAN_DINH','NPC_LANG_VIET_THAY_DO',1001)])}}`);
+ h.run('VietVillageNPCs.invalidateQuests()');m=markers();
+ assert.equal(m.NPC_LANG_VIET_LY_TRUONG,'ready','turn-in outranks a learning quest to accept');assert.equal(m.NPC_LANG_VIET_THAY_DO,'progress');
  mark('completed');m=markers();assert.equal(m.NPC_LANG_VIET_LY_TRUONG,'available');assert.equal(m.NPC_LANG_VIET_VO_SU,'available');
  h.context.VietVillageAuth.isAuthenticated=()=>false;assert.deepEqual(Object.values(markers()).filter(Boolean),[],'no markers without a signed-in player');
+});
+
+test('two characters see their own markers, and a locked quest lists exact missing conditions without an accept action',async()=>{
+ const h=await game(),n=h.context.VietVillageNPCs,markers=()=>{h.run('VietVillageNPCs.update(.6)');return JSON.parse(JSON.stringify(n.status.markers));};
+ for(const phase of ['active','ready','completed'])h.run(`localStorage.setItem('viet-village:quests:lang-viet:v1:npc-test-one:QUEST_LV_01:${phase}','1')`);
+ n.invalidateQuests();let m=markers();assert.equal(m.NPC_LANG_VIET_TUAN_DINH,null);assert.equal(m.NPC_LANG_VIET_VO_SU,'available');
+ h.context.VietVillageAuth.getProfile=()=>({uid:'npc-test-two'});m=markers();
+ assert.equal(m.NPC_LANG_VIET_TUAN_DINH,'available','second character has not started');assert.equal(m.NPC_LANG_VIET_VO_SU,'locked');
+ stand(h,8.1,-14.6);assert(n.interact('NPC_LANG_VIET_VO_SU'));
+ const row=h.run(`$('npcQuests').children[0]`),texts=JSON.stringify(row.children.map(c=>[c.textContent,...(c.children||[]).map(x=>x.textContent)]));
+ assert.match(texts,/Làm quen chiến đấu/);assert.match(texts,/Chính tuyến/);assert.match(texts,/Hoàn thành và trả “Chào làng” — chưa đạt/);
+ assert(!row.children.some(b=>b.id==='accept-QUEST_LV_02'),'locked quests cannot be accepted from the dialogue');
+ assert(row.children.some(b=>b.id==='prereq-QUEST_LV_02'));
+ assert.equal(n.status.questBoard.states.QUEST_LV_02,'locked');assert.equal(n.status.quests.QUEST_LV_02,undefined);
+ h.context.VietVillageAuth.getProfile=()=>({uid:'npc-test-one'});n.lock();m=markers();assert.equal(m.NPC_LANG_VIET_VO_SU,'available','switching back restores the first character’s own progress');
+});
+
+test('one NPC with several quests lists them all (village first), shows one main marker and keeps turn-in explicit',async()=>{
+ const h=await game(),n=h.context.VietVillageNPCs;
+ for(const phase of ['active','ready'])h.run(`localStorage.setItem('viet-village:quests:lang-viet:v1:npc-test-one:QUEST_LV_01:${phase}','1')`);
+ h.run(`learningClient={questEntries:()=>${JSON.stringify([learningEntry('QUEST_TV1_A','available','NPC_LANG_VIET_LY_TRUONG','NPC_LANG_VIET_THAY_DO',1000),learningEntry('QUEST_TV1_C','locked','NPC_LANG_VIET_LY_TRUONG','NPC_LANG_VIET_THAY_DO',1002)])}}`);
+ n.invalidateQuests();h.run('VietVillageNPCs.update(.6)');assert.equal(n.status.markers.NPC_LANG_VIET_LY_TRUONG,'ready');
+ assert.equal(n.status.markerDetails.NPC_LANG_VIET_LY_TRUONG.questId,'QUEST_LV_01');
+ stand(h,2,-10.9);assert(n.interact('NPC_LANG_VIET_LY_TRUONG'));
+ const ids=h.run(`$('npcQuests').children.map(row=>row.children.map(c=>c.id).filter(Boolean).join(','))`);
+ assert.equal(ids.length,3,'village quest plus both learning quests are listed');
+ assert.match(ids[0],/finish-QUEST_LV_01/);assert.match(ids[1],/learning-QUEST_TV1_A/);assert.match(ids[2],/learning-QUEST_TV1_C/);
+ h.run(`$('npcQuests').children[0].children.find(b=>b.id==='finish-QUEST_LV_01').onclick()`);assert.equal(n.status.quests.QUEST_LV_01,'completed');
+ h.run('VietVillageNPCs.update(.6)');assert.equal(n.status.markers.NPC_LANG_VIET_LY_TRUONG,'available','after turn-in the learning quest to accept is the main marker');
+ assert.equal(n.status.markers.NPC_LANG_VIET_VO_SU,'available','next main quest opens only after a successful turn-in');
+});
+
+test('tracking is stored per character, survives reload and is not rewritten for repeated clicks',async()=>{
+ const h=await game(),n=h.context.VietVillageNPCs;let writes=0;const save=h.context.localStorage.setItem;h.context.localStorage.setItem=(k,v)=>{if(k.startsWith('viet-village:quest-tracking:'))writes++;save(k,v);};
+ h.run('VietVillageNPCs.update(.6)');assert.equal(n.status.questBoard.tracked,'QUEST_LV_01','default tracks the open main quest');
+ assert.equal(n.track('QUEST_LV_02'),false,'a locked quest cannot be tracked');assert.equal(writes,0);
+ assert.equal(n.track('QUEST_LV_01'),true);assert.equal(n.track('QUEST_LV_01'),true);assert.equal(writes,1);
+ assert.match(h.context.localStorage.getItem('viet-village:quest-tracking:v1:npc-test-one'),/QUEST_LV_01/);
+ h.context.VietVillageAuth.getProfile=()=>({uid:'npc-test-two'});h.run('VietVillageNPCs.update(.6)');assert.equal(h.context.localStorage.getItem('viet-village:quest-tracking:v1:npc-test-two'),null);
 });

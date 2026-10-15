@@ -106,6 +106,10 @@
     else if(run&&run.status!=='completed')put(o.returnNpc,'progress');
     else if(!run&&o.eligible)put(o.giverNpc,'available');}
    return out;}
+  // Shared quest-board entries (NPC markers, dialogue, journal, tracker). Same
+  // offered list and runs as markers(); LV is only used for adventure gates.
+  function questEntries({level=null}={}){sync();ensureState();const QS=global.VietVillageQuestStatus;if(!QS)return [];
+   return QS.evaluateLearning({offered:offered(),getQuest,getRun,getLesson,level,state:getState(),nameOf:id=>({NPC_LANG_VIET_THAY_DO:'Thầy đồ',NPC_LANG_VIET_TUAN_DINH:'Tuần đinh',NPC_LANG_VIET_LY_TRUONG:'Lý trưởng'})[id]||null});}
   async function select(value){sync();const id=owner;requireOwner(id);if(selectionError)throw fault('stored-selection',selectionError);
    const q=getQuest(value.questId),difficulty=Number(value.difficulty);if(!q||!q.variants.some(v=>v.difficulty===difficulty)||!['classroom','adventure','preview','practice'].includes(value.mode))throw fault('selection','Bài hoặc mức học tập chưa hợp lệ.');
    const next={questId:q.id,difficulty,mode:value.mode};
@@ -134,7 +138,7 @@
   function assign(value){return request('assign',value);}
   function review(value){return request('review',value);}
   function lock(){owner=null;revision++;runs=new Map();assignments=[];progression=null;selection=null;connected=false;error=null;emit();}
-  return Object.freeze({load,refresh,getState,getQuest,getQuestion,getLesson,getItem,getPack,getRun,offered,markers,select,begin,collect,answer,turnIn,restart,approve,assign,review,lock,
+  return Object.freeze({load,refresh,getState,getQuest,getQuestion,getLesson,getItem,getPack,getRun,offered,markers,questEntries,select,begin,collect,answer,turnIn,restart,approve,assign,review,lock,
    get catalog(){return packs[0]?.catalog||null;},get packs(){return packs.map(p=>copy(p.entry));},storagePrefix:PREFIX});
  };
 })(typeof window==='undefined'?globalThis:window);

@@ -41,6 +41,14 @@ Kiểm thử launcher: `py -3 -B -m unittest discover -s scripts/tests -v`; ki�
 
 ## Phần thử nghiệm trên cap-nhat
 
+### Dấu nhiệm vụ NPC, chọn nhân vật, HUD và màn hình ngang (Claude, 15/10/2026)
+
+- **Dấu trên đầu NPC** theo tiến độ riêng của từng nhân vật: `!` vàng có thể nhận, `?` xám đang làm, `?` vàng đủ điều kiện trả đúng NPC nhận, khóa nhỏ màu dịu cho nhiệm vụ đã được phép biết nhưng chưa mở. Khung kim cương = chính tuyến, tròn = phụ tuyến, vuông bo = học tập. Dấu, hội thoại, nhật ký **Dân làng**, bảng theo dõi và minimap dùng chung một kết quả (`SOURCE-CODE/js/quest-status.js`), chỉ tính lại khi có sự kiện. Điều kiện LV, nhiệm vụ trước (đủ tất cả / một trong các) được kiểm tra lại khi nhận; trả nhiệm vụ vẫn kiểm tra đúng NPC và lưu một lần (EXP theo biên nhận).
+- **Màn nhân vật:** nhân vật mới tạo bằng mô hình Nam/Nữ thật trên nền cổng làng; nhân vật đã có hiện màn **Chọn nhân vật** và chỉ vào game khi bấm **Vào làng** (không tạo lại, không ghi hồ sơ khi xem). Chân dung trên HUD chụp từ chính mô hình.
+- **HUD:** chân dung/tên/LV/HP góc trên trái, bảng theo dõi nhiệm vụ thu gọn được (Đi tới · Chi tiết · Đổi), minimap và menu **Công cụ** góc trên phải, joystick góc dưới trái và nút hành động góc dưới phải trên màn hình cảm ứng.
+- **Điện thoại:** khi bấm Tạo/Vào làng, game thử toàn màn hình và khóa ngang; trình duyệt từ chối thì vẫn vào game. Cầm dọc trong lúc chơi sẽ hiện lớp **“Vui lòng xoay ngang điện thoại để tiếp tục”**, nhả joystick/phím và chặn thao tác phía sau; không chặn đăng nhập Google hay ô nhập tên. Không xoay giao diện bằng CSS và không tải lại trang.
+- Báo cáo, ảnh và giới hạn (chưa thử điện thoại thật): `DOCUMENTS/CLAUDE-REVIEW.md` mục 14 (chỉ lưu trên máy).
+
 ### Kiểm tra và tối ưu ánh sáng theo giờ (Claude, 14/10/2026)
 
 Đo trên Chrome: lần đầu chuyển ngày ↔ đêm (bình minh, hoàng hôn hoặc nút giờ trong **Thời gian & thời tiết**) game đứng hình tới ~2 giây vì phải biên dịch lại shader, và chế độ chất lượng **Tự động** hiểu nhầm cú khựng đó (cùng lúc nạp GLB) là máy yếu nên tắt bóng đổ. Nay bộ chất lượng bỏ qua khung khựng đơn lẻ và chờ mô hình làng/NPC/nhân vật nạp xong; đèn trăng, ánh sao và đèn nhà bật/tắt theo giờ đích; các cấu hình đèn còn lại được biên dịch nền sau khi tải. Khi bấm nút đổi giờ, cửa sổ phát sáng và đèn trăng đổi ngay thay vì mờ dần; độ sáng chung vẫn chuyển dần. Báo cáo, số đo trước/sau và cách khôi phục: `DOCUMENTS/CLAUDE-REVIEW.md` (chỉ lưu trên máy).
@@ -132,7 +140,7 @@ Mở **http://localhost:5005/** (tự chuyển đến `SOURCE-CODE/index.html`).
 | `DOCUMENTS/` | Git giữ báo cáo giới hạn nguồn và phạm vi kiểm tra; bài giảng, kiểm kê, ngữ cảnh và báo cáo kết nối chỉ lưu trên máy |
 | `BACKUP/` | Chỉ lưu trên máy: bundle lịch sử Git, bản v8, HTML cũ, upload và helper phát triển; không có trong bản clone GitHub |
 
-Trang CAP-NHAT tải **62 script theo `SOURCE-CODE/load-order.json`**, cùng các script giao diện và module đăng nhập. Các script toàn cục dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
+Trang CAP-NHAT tải **66 script theo `SOURCE-CODE/load-order.json`**, cùng các script giao diện và module đăng nhập. Các script toàn cục dùng chung trạng thái; không đổi thứ tự hoặc tự thêm `async`. Các đường dẫn `../ASSETS`, `../MAP`, `../BUILDINGS` và các thư mục tương ứng phải còn hợp lệ. Không lấy riêng `SOURCE-CODE` làm toàn bộ thư mục website.
 
 ## Tài nguyên 3D và giới hạn hiện tại
 
@@ -151,6 +159,14 @@ Không cần Node.js để chơi. Máy đã có Node.js để chạy bộ kiểm
 ```powershell
 node SOURCE-CODE/tests/run-checks.cjs
 ```
+
+Kiểm tra giao diện trên trình duyệt không cần đăng nhập Google (chỉ dành cho người phát triển, UID giả, không Firebase, không vào bản Hosting):
+
+```powershell
+py -3 -B scripts/ui-check-server.py --port 8014
+```
+
+Mở `http://localhost:8014/SOURCE-CODE/tests/ui-check/index.html?player=a` (đổi `player=` để có nhân vật khác). Tiến độ của trang này lưu riêng ở origin `localhost:8014`. Người chơi vẫn dùng `START-GAME.bat`; launcher không phục vụ thư mục `tests`.
 
 Bộ kiểm tra dùng Three.js thật với renderer/DOM mô phỏng; cần thử thêm trình duyệt để xác nhận WebGL, shader, bóng, thao tác và tốc độ trên thiết bị thật. Sau mỗi thay đổi tài nguyên, kiểm tra Network/Console và đường dẫn phân biệt chữ hoa/thường của máy chủ online.
 

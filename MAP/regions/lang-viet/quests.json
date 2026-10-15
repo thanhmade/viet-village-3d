@@ -7,6 +7,7 @@
     {
       "id": "QUEST_LV_01",
       "name": "Chào làng",
+      "category": "main",
       "giverNpc": "NPC_LANG_VIET_TUAN_DINH",
       "turnInNpc": "NPC_LANG_VIET_LY_TRUONG",
       "goal": "Nhận lời Tuần đinh, đến trò chuyện rồi báo hoàn thành với Lý trưởng.",
@@ -20,6 +21,7 @@
     {
       "id": "QUEST_LV_02",
       "name": "Làm quen chiến đấu",
+      "category": "main",
       "giverNpc": "NPC_LANG_VIET_VO_SU",
       "turnInNpc": "NPC_LANG_VIET_VO_SU",
       "goal": "Đứng trong phạm vi 3 m, hướng về bia tập và dùng một chiêu thành công; quay lại báo Võ sư.",
@@ -31,11 +33,13 @@
         "propId": "BIA_TAP_LANG_VIET_01"
       },
       "enabled": true,
-      "repeatReward": false
+      "repeatReward": false,
+      "lockedVisibility": "listed"
     },
     {
       "id": "QUEST_LV_03",
       "name": "Giúp việc vườn",
+      "category": "side",
       "giverNpc": "NPC_LANG_VIET_NONG_DAN",
       "turnInNpc": "NPC_LANG_VIET_NONG_DAN",
       "goal": "Thu thập vật dụng chăm vườn tại các điểm đã đánh dấu.",
@@ -49,6 +53,7 @@
     {
       "id": "QUEST_LV_04",
       "name": "Một câu hỏi của thầy đồ",
+      "category": "side",
       "enabled": false,
       "reason": "Thầy đồ đã có bài học thưởng EXP local; chuỗi nhiệm vụ riêng chưa bật.",
       "blocksMainProgress": false
@@ -56,11 +61,13 @@
     {
       "id": "QUEST_LV_05",
       "name": "Chuyến đi đầu tiên",
+      "category": "main",
       "enabled": false,
       "reason": "Đồng Tre đã mở theo chính sách hiện có; nhiệm vụ tại vùng đích và phần thưởng chưa được thiết kế."
     }
   ],
   "rewardScope": "local-character-exp",
   "itemRewardsEnabled": false,
-  "currencyRewardsEnabled": false
+  "currencyRewardsEnabled": false,
+  "categorySource": "LANG_VIET_NPC_PORTAL_DE_XUAT (PDF 11/10/2026, trang 2 và 5): Lý trưởng giao/trả nhiệm vụ chính và mở chuỗi hướng dẫn; QUEST_LV_04 tùy chọn, không khóa tuyến chính; QUEST_LV_03 là hoạt động thu thập trong làng."
 }

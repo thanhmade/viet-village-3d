@@ -36,7 +36,13 @@ Nhận từ NPC giao → tìm và nhặt thẻ chữ (G hoặc nút chạm, tron
 
 ## Dấu trên đầu NPC
 
-`!` vàng: có nhiệm vụ đủ điều kiện nhận. `?` vàng: có nhiệm vụ đủ điều kiện trả. `?` xám: đang làm hoặc chờ giáo viên. Nhiệm vụ đã xong và không lặp thì không báo. Cùng NPC: có thể trả > có thể nhận > đang làm. Dấu tính theo tài khoản đang đăng nhập, gộp nhật ký làng (`QUEST_LV_*`) và nhiệm vụ học tập, cập nhật 2 lần/giây.
+`!` vàng: có nhiệm vụ đủ điều kiện nhận (tại NPC giao). `?` vàng: đủ điều kiện trả (tại đúng NPC nhận trả). `?` xám: đang làm hoặc chờ giáo viên (tại NPC nhận trả và NPC của bước đang làm). Khóa nhỏ màu dịu: nhiệm vụ được phép biết (`lockedVisibility: "listed"`) nhưng chưa đủ điều kiện. Không dấu: nhiệm vụ tương lai chưa khám phá, đã xong, hoặc chưa mở trong bản thử nghiệm (`enabled: false`).
+
+Một NPC chỉ hiện một dấu: có thể trả > có thể nhận > đang làm > khóa; cùng mức thì nhiệm vụ đang theo dõi, rồi chính tuyến > phụ tuyến > học tập, rồi thứ tự dữ liệu. Khung khác nhau theo loại (kim cương = chính tuyến, tròn = phụ tuyến, vuông bo = học tập); hội thoại ghi rõ nhãn loại. Hội thoại vẫn liệt kê mọi nhiệm vụ liên quan đã được khám phá, kèm mục tiêu/tiến độ, phần thưởng thật và điều kiện còn thiếu (ví dụ “Hoàn thành và trả “Chào làng” — đã đạt mục tiêu, chưa trả nhiệm vụ”).
+
+Đánh giá dùng chung ở `js/quest-status.js` cho dấu, hội thoại, nhật ký **Dân làng**, bảng theo dõi trên HUD và minimap; tính theo tài khoản đang đăng nhập, gộp nhật ký làng (`QUEST_LV_*`) và nhiệm vụ học tập. Chỉ tính lại khi có sự kiện (nhận, đạt mục tiêu, trả, lên LV, trạng thái học tập, đổi tài khoản/MAP, sự kiện `storage` từ tab khác) và một lần an toàn mỗi 5 giây; không quét mỗi khung hình. Đang tải hoặc lỗi đọc dữ liệu thì không kết luận là đủ điều kiện.
+
+Điều kiện trong `MAP/regions/<map>/quests.json`: `dependsOn` (mọi nhiệm vụ trước phải **đã trả**), `minLevel`, hoặc `requirements` dạng cây `{all:[…]}` / `{any:[…]}` với lá `{level:n}` và `{quest:id,state:"completed"|"ready"|"active"}`. ID trùng, tham chiếu thiếu, vòng lặp hoặc dạng chưa hỗ trợ làm nhiệm vụ đó ở trạng thái lỗi (đóng), không mở hàng loạt. Nhiệm vụ đang theo dõi lưu ở `viet-village:quest-tracking:v1:<UID>` (chỉ là lựa chọn hiển thị).
 
 ## Luyện tập trên web tĩnh
 

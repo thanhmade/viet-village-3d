@@ -51,6 +51,7 @@
   "SOURCE-CODE/js/world-atlas.js",
   "CHARACTERS/npc-gltf.js",
   "CHARACTERS/village-npcs.js",
+  "SOURCE-CODE/js/quest-status.js",
   "SOURCE-CODE/js/village-quests.js",
   "SOURCE-CODE/js/npc-lesson.js",
   "SOURCE-CODE/js/village-npcs.js",
@@ -61,5 +62,7 @@
   "SOURCE-CODE/js/learning-practice.js",
   "SOURCE-CODE/js/learning-collectibles.js",
   "SOURCE-CODE/js/learning-view.js",
+  "SOURCE-CODE/js/game-hud.js",
+  "SOURCE-CODE/js/mobile-landscape.js",
   "SOURCE-CODE/js/app.js"
 ]

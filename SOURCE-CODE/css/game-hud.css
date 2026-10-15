@@ -1,0 +1,144 @@
+/* RPG HUD layer, loaded last. Only positions/looks change; every existing ID and
+   handler is kept. Corners: character + quest tracker (top-left), minimap +
+   region + menu (top-right), joystick (bottom-left, touch), actions/skills
+   (bottom-right). The centre of the view stays clear. */
+body{--hud-edge:14px;--hud-map:148px;--hud-left:max(var(--hud-edge),env(safe-area-inset-left));--hud-right:max(var(--hud-edge),env(safe-area-inset-right));
+ --hud-top:max(12px,env(safe-area-inset-top));--hud-bottom:max(14px,env(safe-area-inset-bottom));--hud-paper:#fffbeeeb;--hud-line:#d9c690;--hud-ink:#21463b}
+/* ---- Character card ---- */
+#playerCard{position:absolute;left:var(--hud-left);top:var(--hud-top);display:flex;gap:10px;align-items:center;width:min(290px,calc(100vw - 2 * var(--hud-edge)));
+ padding:7px 12px 7px 7px;border:1px solid var(--hud-line);border-radius:40px 16px 16px 40px;background:var(--hud-paper);color:var(--hud-ink);pointer-events:auto;box-shadow:0 4px 18px #092f3b33}
+.player-portrait{position:relative;flex:none;width:58px;height:58px;border-radius:50%;border:3px solid #c9a24a;background:radial-gradient(circle at 40% 35%,#fff1c9,#c99d4d);
+ display:grid;place-items:center;overflow:hidden;font:800 25px system-ui;color:#4a3410;box-shadow:inset 0 0 0 2px #fff6d6}
+.player-portrait img{width:100%;height:100%;object-fit:cover}.player-portrait [hidden]{display:none}
+.player-card-body{flex:1;min-width:0}
+.player-card-title{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.player-card-title strong{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-level{flex:none;font-size:12px;color:#6b4300;background:linear-gradient(180deg,#ffe9a8,#f3cd62);border:1px solid #d9a93a;border-radius:9px;padding:1px 8px}
+#playerCard .health-hud{position:static;width:auto;margin:3px 0 0;padding:0;border:0;background:none;box-shadow:none;font-size:11px;color:#8a2d1f}
+#playerCard .health-hud progress{height:8px;margin-top:2px;accent-color:#c8402c}
+#playerCard .health-hud progress::-webkit-progress-value{background:linear-gradient(90deg,#d6452f,#ef7a4d)}
+#playerCard .health-hud progress::-moz-progress-bar{background:#d6452f}
+#playerCard .experience-hud{position:static;width:auto;margin:3px 0 0;padding:0;border:0;background:none;box-shadow:none;font-size:10px;color:#3d5b44}
+#playerCard .experience-hud b{font-weight:650}
+#playerCard .experience-hud small{display:none}
+#playerCard .experience-track{height:5px;margin-top:2px}
+#playerCard #experienceNotice{position:absolute;left:0;top:calc(100% + 6px);margin:0;padding:6px 10px;border-radius:10px;background:#164d3ef2;color:#fff4cb;font-size:12px;white-space:nowrap}
+#playerCard #experienceRetry,#playerCard #experienceRewardRetry{margin-top:4px;min-height:32px;padding:4px 10px;border-radius:8px;background:#ffe6c4;color:#6b3a10;font-size:11px}
+/* ---- Quest tracker ---- */
+#questTracker{position:absolute;left:var(--hud-left);top:calc(var(--hud-top) + 86px);width:min(290px,calc(100vw - 2 * var(--hud-edge)));padding:6px 10px 8px;
+ border:1px solid var(--hud-line);border-left:4px solid #d9a93a;border-radius:12px;background:#fffbeee0;color:var(--hud-ink);pointer-events:auto;font-size:12px;box-shadow:0 4px 14px #092f3b26}
+#questTracker header{display:flex;justify-content:space-between;align-items:center;gap:6px}
+#questTracker button{min-height:34px;padding:5px 10px;border-radius:9px;background:#efe6c9;color:#3d3420;font-weight:700;font-size:12px}
+#questTracker #questTrackerToggle{background:none;padding-left:0;font-size:13px;color:#5a3d0a}
+#questTracker strong{display:block;font-size:14px;margin-top:3px;line-height:1.3}
+#questTracker p{margin:2px 0;line-height:1.4}
+#questTracker p:empty{display:none}
+#questTrackerWhere{color:#5b6b58}
+#questTracker [hidden]{display:none!important}
+#questTracker.is-collapsed{width:auto;padding-bottom:6px}
+.quest-tracker-tag{display:inline-block;margin-top:4px;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:.02em;background:#efe3c0}
+.quest-tracker-tag:empty{display:none}
+.quest-tag-main{background:#ffe7a3;color:#6b4300}.quest-tag-side{background:#dcecef;color:#173a42}.quest-tag-learning{background:#dff2e4;color:#163c2e}
+.quest-tracker-actions{display:flex;gap:6px;margin-top:6px}
+.quest-tracker-actions #questTrackerGo{background:linear-gradient(180deg,#1f8a73,#126451);color:#fffdf2}
+#questTracker button:disabled{opacity:.5;cursor:default}
+/* ---- Minimap, region name, climate (top-right) ---- */
+body.walking:not(.inside) #hud .compass{display:block!important}
+#hud .compass{position:absolute;right:var(--hud-right);top:var(--hud-top);bottom:auto;width:var(--hud-map);height:var(--hud-map);border:4px solid #e2c47a;background:#f2fff1;pointer-events:none}
+#hud .compass canvas{width:100%;height:100%}
+#hud .top{position:absolute;right:var(--hud-right);top:calc(var(--hud-top) + var(--hud-map) + 6px);display:block;pointer-events:none}
+#hud .top .brand{padding:4px 12px;border-radius:12px;background:#1d3a33d9;border-color:#e2c47a80;color:#fff4cf;box-shadow:none;text-align:center;min-width:var(--hud-map)}
+#hud .top .brand .eyebrow{display:none}
+#hud .top .brand strong{margin:0;font-size:14px}
+body:not(.auth-locked) .climateStatus{left:auto;right:var(--hud-right);top:calc(var(--hud-top) + var(--hud-map) + 38px);max-width:min(240px,40vw);padding:4px 10px;font-size:11px;text-align:right;background:#f3f6e8d9}
+/* ---- Menu: compact dropdown left of the minimap ---- */
+#gameTools.tools,#gameTools.is-collapsed{top:var(--hud-top);right:calc(var(--hud-right) + var(--hud-map) + 10px);left:auto;padding:4px;gap:0;border-radius:14px;max-width:none;flex-direction:column;align-items:flex-end}
+#gameTools .tools-toggle{order:0;min-height:42px;font-size:13px}
+#gameTools .tools-panel{position:absolute;right:0;top:calc(100% + 8px);width:min(380px,calc(100vw - 28px));height:auto;border:1px solid #ffffffaa;border-radius:16px;
+ background:rgba(255,251,240,.97);box-shadow:0 8px 32px #052b3a33}
+#gameTools .tools-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:min-content;align-content:start;width:100%;padding:6px;gap:4px;max-height:min(var(--tools-limit-height,70dvh),calc(100dvh - 90px))}
+#gameTools .tools-items button{width:100%;text-align:left;white-space:normal;line-height:1.25}
+#gameTools.is-collapsed .tools-panel{width:min(380px,calc(100vw - 28px))}
+/* ---- Help line (PC) ---- */
+.walking .help,.help{left:var(--hud-left);bottom:var(--hud-bottom);max-width:max(240px,min(560px,calc(100vw - 420px)));padding:7px 12px;font-size:11px;line-height:1.5;border-radius:12px;background:#fffbeed0}
+/* ---- Contextual actions (PC: above the centre bottom; touch: right column) ---- */
+.npc-interact{bottom:calc(var(--hud-bottom) + 92px)}
+.regionInteract{bottom:calc(var(--hud-bottom) + 40px)}
+#learningCollect{bottom:calc(var(--hud-bottom) + 144px)}
+#regionTravelStatus{bottom:calc(var(--hud-bottom) + 196px)}
+.player-jump{left:auto;right:calc(var(--hud-right) + 6px);bottom:calc(var(--hud-bottom) + 6px);border-radius:999px;background:#fffbeeeb;font-weight:700}
+.weapons-roaming .player-jump{bottom:calc(var(--hud-bottom) + 150px)}
+.weaponSkillBar{right:var(--hud-right);bottom:var(--hud-bottom)}
+/* ---- Touch layout ---- */
+.touch #stick{left:calc(var(--hud-left) + 10px);bottom:calc(var(--hud-bottom) + 10px);width:126px;height:126px;border:3px solid #fff5d6cc;background:radial-gradient(circle,#ffffff30,#0b2f3326)}
+.touch #knob{left:40px;top:40px;width:46px;height:46px;background:#fff6dbe6;border:2px solid #d9a93a}
+.touch .npc-interact,.touch .regionInteract,.touch #learningCollect{left:auto;right:calc(var(--hud-right) + 4px);transform:none;max-width:min(260px,45vw);min-height:52px;border-radius:26px;font-size:14px}
+.touch .npc-interact{bottom:calc(var(--hud-bottom) + 132px)}
+.touch .regionInteract{bottom:calc(var(--hud-bottom) + 192px)}
+.touch #learningCollect{bottom:calc(var(--hud-bottom) + 252px)}
+.touch #regionTravelStatus{bottom:calc(var(--hud-bottom) + 8px)}
+.touch .player-jump{min-width:64px;min-height:64px;padding:8px;bottom:calc(var(--hud-bottom) + 60px);font-size:13px}
+.touch.weapons-roaming .player-jump{bottom:calc(var(--hud-bottom) + 170px)}
+.touch .weaponSkillBar{padding:8px;border-radius:16px;max-width:min(420px,calc(100vw - 220px))}
+.touch .weaponSkillBar small{display:none}
+.touch .weaponSkillButtons button{min-height:56px;border-radius:28px}
+.touch.weapons-roaming .npc-interact{bottom:calc(var(--hud-bottom) + 238px)}
+/* ---- Low-height landscape (phones) ---- */
+@media(max-height:520px){
+ body{--hud-edge:10px;--hud-map:96px;--hud-top:max(8px,env(safe-area-inset-top));--hud-bottom:max(8px,env(safe-area-inset-bottom))}
+ #playerCard{width:min(236px,40vw);padding:4px 10px 4px 4px;gap:7px}
+ .player-portrait{width:42px;height:42px;font-size:19px;border-width:2px}
+ .player-card-title strong{font-size:13px}
+ #playerCard .experience-hud{display:none}
+ #questTracker{top:calc(var(--hud-top) + 60px);width:min(236px,40vw);padding:4px 8px 6px;font-size:11px}
+ #questTracker strong{font-size:12px}
+ #questTrackerWhere{display:none}
+ #questTracker button{min-height:32px;padding:4px 8px;font-size:11px}
+ #hud .top .brand{padding:2px 8px}#hud .top .brand strong{font-size:12px}
+ body:not(.auth-locked) .climateStatus{display:none}
+ #gameTools .tools-toggle{min-height:38px;padding:6px 10px}
+ #gameTools .tools-items{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #gameTools .tools-panel{width:min(480px,calc(100vw - 20px))}
+ .touch #stick{width:108px;height:108px}.touch #knob{left:31px;top:31px}
+ .touch .npc-interact,.touch .regionInteract,.touch #learningCollect{min-height:44px;font-size:12px;padding:8px 14px}
+ .touch .npc-interact{bottom:calc(var(--hud-bottom) + 110px)}
+ .touch .regionInteract{bottom:calc(var(--hud-bottom) + 160px)}
+ .touch #learningCollect{bottom:calc(var(--hud-bottom) + 210px)}
+ .touch .player-jump{min-width:54px;min-height:54px;bottom:calc(var(--hud-bottom) + 50px)}
+ .touch .weaponSkillBar{max-width:min(360px,calc(100vw - 200px))}
+ .touch .weaponSkillBar header{margin-bottom:4px}
+ .touch .weaponSkillButtons button{min-height:46px}
+ .help{display:none}
+}
+/* Narrow portrait windows (PC or tablet): keep the corners readable. */
+@media(max-width:700px){
+ body{--hud-map:104px}
+ #playerCard,#questTracker{width:min(240px,calc(100vw - var(--hud-map) - 34px))}
+ #gameTools.tools,#gameTools.is-collapsed{right:var(--hud-right);top:calc(var(--hud-top) + var(--hud-map) + 44px)}
+ .walking .help,.help{max-width:calc(100vw - 28px)}
+ body:not(.auth-locked) .climateStatus{top:calc(var(--hud-top) + var(--hud-map) + 96px);max-width:calc(100vw - 28px)}
+}
+.inside #questTracker,.inside .compass,.inside .top{display:none!important}
+/* ---- Dialog quest rows ---- */
+.npc-quest-tag{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:8px;font-size:11px;font-weight:700;background:#efe3c0;vertical-align:2px}
+.npc-quest-main{border-left:5px solid #e0b33c}.npc-quest-side{border-left:5px solid #8fbcc4}.npc-quest-learning{border-left:5px solid #7fc596}
+.npc-quest-main .npc-quest-tag{background:#ffe7a3;color:#6b4300}.npc-quest-side .npc-quest-tag{background:#dcecef;color:#173a42}.npc-quest-learning .npc-quest-tag{background:#dff2e4;color:#163c2e}
+.npc-quest-state-locked{opacity:.92;background:#efebe0}
+.npc-quest-objective{font-weight:650}
+.npc-quest>button{margin:6px 6px 0 0}
+.npc-quest-requirements{margin:4px 0;padding-left:18px}.npc-quest-requirements .unmet{color:#8b471b}.npc-quest-requirements .met{color:#2e7d5b}
+.npc-journal-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0 4px 8px;margin:4px 0;border-radius:8px}
+.npc-journal-row p{margin:0}
+/* ---- Portrait guide (phones) ---- */
+.rotate-overlay{position:fixed;inset:0;z-index:97;display:grid;place-items:center;padding:max(20px,env(safe-area-inset-top)) 20px;background:radial-gradient(ellipse at 50% 30%,#1c4a44,#0b2522 70%);color:#fff8df;touch-action:none;overscroll-behavior:contain}
+.rotate-overlay[hidden],.rotate-banner[hidden]{display:none!important}
+.rotate-card{max-width:420px;text-align:center}.rotate-card h2{font-size:22px;line-height:1.35;margin:8px 0}.rotate-card p{font-size:14px;line-height:1.5}
+#rotateStatus{min-height:1.5em;color:#ffe2a0}
+.rotate-actions{display:grid;gap:8px;margin-top:12px}.rotate-actions button{min-height:48px;border-radius:12px;background:#fff4cf;color:#24483f;font-weight:700;border:0}
+.rotate-actions #rotateTryBtn{background:linear-gradient(180deg,#d5a63a,#a8761d);color:#fffdf2}
+.rotate-phone{width:58px;height:96px;margin:0 auto 10px;border:4px solid #ffe9a8;border-radius:14px;position:relative;animation:rotate-hint 2.4s ease-in-out infinite}
+.rotate-phone span{position:absolute;left:50%;bottom:6px;width:12px;height:4px;margin-left:-6px;border-radius:2px;background:#ffe9a8}
+@keyframes rotate-hint{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media(prefers-reduced-motion:reduce){.rotate-phone{animation:none;transform:rotate(-90deg)}}
+.rotate-banner{position:fixed;z-index:96;left:50%;top:max(6px,env(safe-area-inset-top));transform:translateX(-50%);margin:0;padding:7px 14px;border-radius:12px;background:#163f36f2;color:#fff4cb;font:700 13px system-ui;pointer-events:none;white-space:nowrap}
+.portrait-blocked #toast{z-index:98}

@@ -1,10 +1,53 @@
 (function(global){
  'use strict';
- global.createVillageNPCController=function({THREE,region,getState,getIdentity,getJourney,healPlayer,onHealed,storage,pause,goTo,notify,loadData,onActivityCompleted=()=>{},onLearningOpen=null,getQuestMarkers=null,getLesson=definition=>global.resolveVillageLesson(definition)}){
+ global.createVillageNPCController=function({THREE,region,getState,getIdentity,getJourney,healPlayer,onHealed,storage,pause,goTo,notify,loadData,onActivityCompleted=()=>{},onLearningOpen=null,getLearningEntries=null,getLevel=null,getCamera=null,onQuestBoardChange=null,getLesson=definition=>global.resolveVillageLesson(definition)}){
   const el=id=>document.getElementById(id),panel=el('npcDialog'),menu=el('npcDirectory'),prompt=el('npcInteractBtn');
   let data=null,actors=null,journal=null,loading=null,opened=null,menuOpen=false,nearest=null,error='',pulse=0,elapsed=0,disposed=false;
   const listeners=[],ambientRemaining=new Map();let animationButtons=[],pendingGreeting=null,lessonSession=null,lessonView=null,lessonIdentity=null,lessonError='',lessonReactions=[];
-  let dialogueVersion=0,healing=false,questReaction=null,markerElapsed=1;
+  let dialogueVersion=0,healing=false,questReaction=null;
+  // Shared quest evaluation for markers, dialogue, journal, tracker and minimap.
+  // Re-evaluated after events (accept, objective, turn-in, LV, learning state,
+  // account, map, storage) plus a slow safety refresh; never every frame.
+  const QS=global.VietVillageQuestStatus,TRACK_PREFIX='viet-village:quest-tracking:v1:';
+  let board={status:'signed-out',entries:[],markers:new Map(),tracked:null,uid:null,errors:[],revision:0},boardSignature='',boardDirty=true,boardWait=0,boardSafety=0,boardUid,boardInVillage,validation=null;
+  function invalidateQuests(){boardDirty=true;}
+  function currentUid(){try{const i=getIdentity();return i?.authenticated&&typeof i.uid==='string'&&i.uid.length&&i.uid.length<=128?i.uid:null;}catch(_){return null;}}
+  function readTracked(uid){try{const r=JSON.parse(storage?.getItem(TRACK_PREFIX+encodeURIComponent(uid))||'null');return r?.schemaVersion===1&&r.uid===uid&&typeof r.questId==='string'?r.questId:null;}catch(_){return null;}}
+  function levelNow(){try{const v=getLevel?.();return Number.isInteger(v)&&v>=1?v:null;}catch(_){return null;}}
+  function npcName(id){return actors?.npcs.get(id)?.definition.name||actors?.props.get(id)?.definition.name||null;}
+  function canStart(id,phases){
+   const q=data?.quests.quests.find(q=>q.id===id);if(!q||!QS||validation?.invalid.has(id))return false;
+   return QS.evaluateCondition(QS.requirementsOf(q),{level:levelNow(),phaseOf:x=>phases[x],nameOf:()=>null}).met===true;
+  }
+  function computeBoard(){
+   const uid=currentUid(),s=getState();
+   if(!uid||!s.authenticated||!QS)return {status:'signed-out',entries:[],markers:new Map(),tracked:null,uid:null,errors:[]};
+   if(!data||!journal)return {status:error?'error':'loading',entries:[],markers:new Map(),tracked:null,uid,errors:[]};
+   const readable=journal.readable,phases=readable?journal.snapshot():{};
+   const village=QS.evaluateVillage({quests:data.quests.quests,readable,phaseOf:id=>readable?phases[id]:null,level:levelNow(),nameOf:npcName,
+    rewardOf:id=>global.VillageExperienceConfig?.rewards.quests[id]??null,validation});
+   let learning=[];try{learning=getLearningEntries?.({level:levelNow()})||[];}catch(_){learning=[];}
+   const entries=[...village,...learning],tracked=QS.pickTracked(entries,readTracked(uid));
+   return {status:readable?'ready':'error',entries,markers:QS.markers(entries,{tracked}),tracked,uid,errors:validation?.errors||[]};
+  }
+  function refreshBoard(){
+   const next=computeBoard();boardDirty=false;boardSafety=0;
+   const signature=JSON.stringify([next.status,next.uid,next.tracked,next.entries.map(e=>[e.id,e.state,e.objective?.done,e.objective?.text,e.requirements?.met]),[...next.markers]]);
+   if(signature===boardSignature)return board;
+   boardSignature=signature;board=Object.freeze({...next,revision:board.revision+1});
+   if(actors)for(const id of actors.npcs.keys()){const m=board.markers.get(id);actors.setMarker(id,m?.kind||null,m?.category,m?.questId);}
+   if(opened&&actors?.npcs.has(opened))questLines(actors.npcs.get(opened).definition);
+   if(menuOpen)renderJournal();
+   try{onQuestBoardChange?.(board);}catch(_){}
+   return board;
+  }
+  function track(questId){
+   const uid=currentUid(),entry=board.entries.find(e=>e.id===questId);
+   if(!uid||!entry||!['available','active','ready'].includes(entry.state))return false;
+   if(readTracked(uid)===questId){invalidateQuests();refreshBoard();return true;}
+   try{storage.setItem(TRACK_PREFIX+encodeURIComponent(uid),JSON.stringify({schemaVersion:1,uid,questId}));}catch(_){notify('Chưa lưu được nhiệm vụ theo dõi trên trình duyệt này.');return false;}
+   invalidateQuests();refreshBoard();return true;
+  }
   function resetAmbient(id){const a=actors?.npcs.get(id)?.definition.model?.ambient;if(a)ambientRemaining.set(id,a.minDelay+Math.random()*(a.maxDelay-a.minDelay));}
   function listen(node,event,fn){node?.addEventListener(event,fn);listeners.push(()=>node?.removeEventListener?.(event,fn));}
   function hide(node,value){node.classList[value?'add':'remove']('hidden');}
@@ -77,26 +120,71 @@
    const state={available:'Chưa nhận',active:'Đang thực hiện',ready:'Đủ điều kiện trả nhiệm vụ',completed:'Đã hoàn thành'}[journal.status(q.id)];
    return q.name+' · '+state+'. '+q.goal;
   }
+  function stateText(entry,npcId){
+   if(entry.source==='learning')return {available:'Có thể nhận',accepted:'Đang làm · Tìm thẻ học',collected:'Đang làm · Làm bài',practice_pending:'Chờ thầy cô xác nhận',ready_to_turn_in:'Có thể trả nhiệm vụ',completed:'Đã hoàn thành'}[entry.learning?.status]||QS.stateLabel(entry.state);
+   if(entry.state==='ready')return entry.turnInNpc===npcId?'Đã đạt mục tiêu · Trả nhiệm vụ tại đây':'Đã đạt mục tiêu · Trả cho '+(npcName(entry.turnInNpc)||'người nhận');
+   if(entry.state==='active'&&entry.turnInNpc===npcId&&entry.objective?.targetNpc!==npcId)return 'Đang thực hiện · Chưa đủ điều kiện trả';
+   return QS.stateLabel(entry.state);
+  }
+  function requirementList(items,parent){
+   const list=document.createElement('ul');list.className='npc-quest-requirements';parent.append(list);
+   for(const item of items){const li=document.createElement('li');li.textContent=(item.met===true?'✓ ':item.met===null?'… ':'✗ ')+item.label;li.className=item.met===true?'met':'unmet';list.append(li);
+    if(item.type==='any')requirementList(item.options,li);}
+  }
+  function showPrerequisite(entry,version,npcId){
+   if(!conversationValid(version,npcId))return;
+   const box=el('npcServiceStatus'),missing=entry.requirements.items.flatMap(i=>i.type==='any'?i.options:[i]).filter(i=>i.met!==true);
+   const questItem=missing.find(i=>i.type==='quest'),prior=questItem&&board.entries.find(e=>e.id===questItem.quest);
+   box.replaceChildren();
+   if(!missing.length){box.textContent='Đã đủ điều kiện. Hãy mở lại hội thoại để nhận nhiệm vụ.';return;}
+   if(!prior||!prior.revealed&&prior.state!=='completed'){box.textContent=missing.map(i=>i.label).join(' · ')+'. Hãy tiếp tục hành trình chính để mở nhiệm vụ này.';return;}
+   const where=prior.state==='available'?prior.giverNpc:prior.state==='ready'?prior.turnInNpc:prior.state==='active'?prior.objective?.targetNpc||prior.turnInNpc:null;
+   box.textContent='Nhiệm vụ trước: “'+prior.name+'” ('+prior.categoryLabel+') · '+QS.stateLabel(prior.state)+'. Nhận tại '+(npcName(prior.giverNpc)||'—')+', trả cho '+(npcName(prior.turnInNpc)||'—')+'.';
+   if(where&&actors?.npcs.has(where))box.append(button('Đi tới '+npcName(where),()=>{if(conversationValid(version,npcId))route(where);},'npc-route-prereq'));
+  }
+  function questRow(entry,npc,d,version,tracked){
+   const row=document.createElement('div');row.className='npc-quest npc-quest-'+entry.category+' npc-quest-state-'+entry.state;
+   const title=document.createElement('strong');title.textContent=entry.name;row.append(title);
+   const tag=document.createElement('span');tag.className='npc-quest-tag';tag.textContent=entry.categoryLabel+(entry.id===tracked?' · Đang theo dõi':'');row.append(tag);
+   const label=document.createElement('p');label.className='npc-quest-status';label.textContent=stateText(entry,npc.id);row.append(label);
+   if(entry.state==='locked'){const p=document.createElement('p');p.textContent='Điều kiện mở:';row.append(p);requirementList(entry.requirements.items,row);}
+   else{
+    if(entry.source==='village'&&entry.goal&&entry.state!=='completed'){const p=document.createElement('p');p.textContent=entry.goal;row.append(p);}
+    if(entry.objective&&entry.state!=='completed'){const p=document.createElement('p');p.className='npc-quest-objective';p.textContent='Mục tiêu: '+entry.objective.text+' · '+entry.objective.done+'/'+entry.objective.total;row.append(p);}
+   }
+   const exp=entry.reward?.exp,reward=document.createElement('small');
+   reward.textContent=exp?'Phần thưởng: '+exp+' EXP'+(entry.source==='village'?' Alpha · nhận một lần cho nhân vật':' lần đầu · ôn lại 0 EXP'):'Phần thưởng: chưa cấu hình';row.append(reward);
+   if(entry.source==='learning'){
+    const text={available:'Xem & nhận nhiệm vụ',active:'Tiếp tục nhiệm vụ',ready:'Trả nhiệm vụ',locked:'Xem điều kiện',completed:'Xem lại'}[entry.state]||'Xem nhiệm vụ';
+    if(typeof onLearningOpen==='function')row.append(button(text,()=>{if(!conversationValid(version,npc.id))return;close({focus:false});onLearningOpen(npc.id,entry.id);},'learning-'+entry.id));
+    return row;
+   }
+   if(journal.canAccept(entry.id,npc.id))row.append(button('Nhận nhiệm vụ',()=>{
+    if(!conversationValid(version,npc.id)||!journal.accept(entry.id,npc.id))return;
+    questReaction=d.questReactionClip||null;playerReaction('npc-agree',{activityId:entry.id});
+    // A newly accepted quest becomes the tracked one unless another one is in progress.
+    invalidateQuests();refreshBoard();
+    // Only an explicit, different stored choice needs a write; the default already picks it.
+    if(board.tracked!==entry.id&&!board.entries.some(e=>e.id===board.tracked&&['active','ready'].includes(e.state)))track(entry.id);
+    renderDialogue();
+   },'accept-'+entry.id));
+   else if(entry.state==='ready'&&entry.turnInNpc===npc.id)row.append(button(d.turnInLabel||'Trả nhiệm vụ',()=>{
+    // turnIn re-checks phase, NPC and saved state; the EXP receipt keeps the reward one-time.
+    if(conversationValid(version,npc.id)&&journal.turnIn(entry.id,npc.id)){questReaction=d.questReactionClip||null;playerReaction('activity-complete',{clip:'cheer',activityId:entry.id});notify('Hoàn thành: '+entry.name);invalidateQuests();renderDialogue();}
+   },'finish-'+entry.id));
+   if(entry.state==='locked')row.append(button('Xem nhiệm vụ trước',()=>showPrerequisite(entry,version,npc.id),'prereq-'+entry.id));
+   const goal=entry.state==='ready'?entry.turnInNpc:entry.state==='active'?(entry.objective?.targetNpc||entry.objective?.targetProp):null;
+   if(goal&&goal!==npc.id&&(actors?.npcs.has(goal)||actors?.props.has(goal)))row.append(button('Tiếp tục · Đi tới '+npcName(goal),()=>{if(conversationValid(version,npc.id)){track(entry.id);route(goal);}},'continue-'+entry.id));
+   if(['available','active','ready'].includes(entry.state)){const b=button(entry.id===tracked?'Đang theo dõi':'Theo dõi',()=>{if(conversationValid(version,npc.id)&&track(entry.id))renderDialogue();},'track-'+entry.id);b.disabled=entry.id===tracked;row.append(b);}
+   return row;
+  }
   function questLines(npc){
-   const version=dialogueVersion,d=data.dialogues.dialogues[npc.dialogueId];
-   const box=el('npcQuests');box.replaceChildren();
-   for(const q of data.quests.quests.filter(q=>q.enabled&&(q.giverNpc===npc.id||q.turnInNpc===npc.id))){
-    const state=journal.status(q.id),row=document.createElement('div');row.className='npc-quest';
+   const version=dialogueVersion,d=data.dialogues.dialogues[npc.dialogueId],box=el('npcQuests');box.replaceChildren();
+   if(board.status==='loading'||board.status==='error'){const p=document.createElement('p');p.textContent=board.status==='error'?'Chưa đọc được tiến độ nhiệm vụ. Dữ liệu cũ được giữ nguyên; hãy tải lại trang.':'Đang tải tiến độ nhiệm vụ…';box.append(p);return;}
+   for(const entry of QS.relatedTo(board.entries,npc.id,{tracked:board.tracked})){
     // Reconcile completed old journals and retry an interrupted EXP save, once per receipt.
-    if(state==='completed')onActivityCompleted('quests',q.id);
-    const title=document.createElement('strong');title.textContent=q.name;row.append(title);
-    const text=document.createElement('p');text.textContent=q.goal;
-    const questExp=global.VillageExperienceConfig?.rewards.quests[q.id];if(questExp)text.textContent+=' Thưởng lần đầu: '+questExp+' EXP Alpha.';row.append(text);
-    const label=document.createElement('p');label.className='npc-quest-status';label.textContent={available:'Chưa nhận',active:'Đang thực hiện',ready:'Đã đạt mục tiêu · Hãy báo hoàn thành',completed:'Đã hoàn thành'}[state];row.append(label);
-    if(journal.canAccept(q.id,npc.id))row.append(button('Nhận nhiệm vụ',()=>{
-     if(!conversationValid(version,npc.id)||!journal.accept(q.id,npc.id))return;
-     questReaction=d.questReactionClip||null;playerReaction('npc-agree',{activityId:q.id});renderDialogue();
-    },'accept-'+q.id));
-    else if(state==='ready'&&q.turnInNpc===npc.id)row.append(button(d.turnInLabel||'Báo hoàn thành',()=>{
-     if(conversationValid(version,npc.id)&&journal.turnIn(q.id,npc.id)){questReaction=d.questReactionClip||null;playerReaction('activity-complete',{clip:'cheer',activityId:q.id});notify('Hoàn thành: '+q.name);renderDialogue();}
-    },'finish-'+q.id));
-    else if(state==='available'&&q.dependsOn.length){const reason=document.createElement('small');reason.textContent='Hoàn thành “Chào làng” trước khi nhận.';row.append(reason);}
-    box.append(row);
+    if(entry.source==='village'&&entry.state==='completed')onActivityCompleted('quests',entry.id);
+    box.append(questRow(entry,npc,d,version,board.tracked));
    }
   }
   function renderDialogue(){
@@ -142,7 +230,7 @@
    if(d.animationActions?.length||d.lesson||d.healing||d.questHelp||d.unavailableServices?.length)demos.append(button('Kết thúc',()=>{if(version===dialogueVersion)close();},'npc-end-conversation'));
    renderLesson();
    el('npcDemoGuidance').textContent='';updateAnimationUI();
-   questLines(npc);const actions=el('npcActions');actions.replaceChildren();el('npcRouteStatus').textContent='';
+   refreshBoard();questLines(npc);const actions=el('npcActions');actions.replaceChildren();el('npcRouteStatus').textContent='';
    const actionMap={
     'elder-location':['Gặp Lý trưởng ở đâu?',()=>{
      const elder=actors.npcs.get('NPC_LANG_VIET_LY_TRUONG'),box=el('npcRouteStatus');
@@ -207,7 +295,7 @@
    const definition=data.dialogues.dialogues[npc.definition.dialogueId].lesson;
    lessonSession=null;lessonReactions=[];questReaction=null;lessonView=null;lessonError='';lessonIdentity=getIdentity()?.uid;
    if(definition)try{lessonSession=global.createVillageLessonSession(getLesson(definition));}catch(e){lessonError='Chưa mở được bài học: '+e.message;}
-   journal.record('talk',id);renderDialogue();
+   if(journal.record('talk',id))invalidateQuests();renderDialogue();
    playerReaction('npc-greeting',{clip:['elder','trainer','teacher','healer'].includes(npc.definition.role)?'bow':'greet_01'});
    el('closeNpcDialog').focus?.();return true;
   }
@@ -217,7 +305,18 @@
    el('npcRetryBtn').hidden=!error&&!failed;el('npcList').replaceChildren();el('npcJournal').replaceChildren();
    if(!actors)return;
    for(const {definition:n} of actors.npcs.values())el('npcList').append(button('Đi tới '+n.name,()=>route(n.id),'go-'+n.id));
-   for(const q of data.quests.quests){const row=document.createElement('p');row.textContent=q.name+' · '+(q.enabled?({available:'Chưa nhận',active:'Đang thực hiện',ready:'Chờ báo hoàn thành',completed:'Đã hoàn thành'}[journal.status(q.id)]):'Chưa mở: '+q.reason);el('npcJournal').append(row);}
+   renderJournal();
+  }
+  // Journal from the shared board: undiscovered quests stay hidden.
+  function renderJournal(){
+   const box=el('npcJournal');box.replaceChildren();if(!actors)return;
+   if(board.status!=='ready'){box.textContent=board.status==='error'?'Chưa đọc được tiến độ nhiệm vụ; dữ liệu cũ được giữ nguyên.':'Đang tải tiến độ nhiệm vụ…';return;}
+   const rank={ready:0,active:1,available:2,locked:3,completed:4},list=board.entries.filter(e=>e.revealed||e.state==='completed').sort((a,b)=>rank[a.state]-rank[b.state]||QS.CATEGORY_RANK[a.category]-QS.CATEGORY_RANK[b.category]||a.order-b.order);
+   if(!list.length){box.textContent='Chưa có nhiệm vụ nào được mở.';return;}
+   for(const e of list){const row=document.createElement('div');row.className='npc-journal-row npc-quest-'+e.category;
+    const p=document.createElement('p');p.textContent=e.name+' · '+e.categoryLabel+' · '+(e.source==='learning'?stateText(e,null):QS.stateLabel(e.state))+(e.objective&&['active','ready'].includes(e.state)?' · '+e.objective.text+' '+e.objective.done+'/'+e.objective.total:'')+(e.id===board.tracked?' · Đang theo dõi':'');row.append(p);
+    if(['available','active','ready'].includes(e.state)&&e.id!==board.tracked)row.append(button('Theo dõi',()=>{track(e.id);},'journal-track-'+e.id));
+    box.append(row);}
   }
   function openDirectory(){const s=getState();if(!s.authenticated||s.transitioning||getJourney()?.alive!==true)return;if(!s.inVillage){notify('Dân làng ở Làng Việt. Hãy quay về để trò chuyện.');return;}close({focus:false});menuOpen=true;hide(menu,false);prompt.style.display='none';renderDirectory();el('closeNpcDirectory').focus?.();}
   async function load(){
@@ -229,8 +328,10 @@
     const npcIds=new Set(value.gameplay.npcs.map(n=>n.id));
     for(const npc of value.gameplay.npcs)if(!value.dialogues.dialogues[npc.dialogueId]?.lines?.length)throw new Error('Thiếu hội thoại '+npc.name);
     for(const q of value.quests.quests.filter(q=>q.enabled))if(!npcIds.has(q.giverNpc)||!npcIds.has(q.turnInNpc)||!Array.isArray(q.dependsOn)||!q.objective)throw new Error('Nhiệm vụ thiếu NPC hoặc mục tiêu.');
+    validation=QS?.validate(value.quests.quests)||{errors:[],invalid:new Set()};
+    for(const problem of validation.errors)console.warn('Nhiệm vụ làng:',problem.message);
     actors=global.mountVillageNPCs({THREE,region,gameplay:value.gameplay});data=value;
-    journal=global.createVillageQuestJournal({quests:data.quests.quests,getIdentity,storage,onSaveError:()=>notify('Chưa lưu được tiến độ nhiệm vụ trên trình duyệt này.')});
+    journal=global.createVillageQuestJournal({quests:data.quests.quests,getIdentity,storage,canStart,onSaveError:()=>notify('Chưa lưu được tiến độ nhiệm vụ trên trình duyệt này.')});invalidateQuests();
     const modelLoading=actors.loadModels();renderDirectory();await modelLoading;
     if(disposed)return false;
     const failed=actors.modelStatuses.filter(m=>m.state==='error');
@@ -246,27 +347,23 @@
     if(distance>p.practiceRadius||distance<.01||Math.abs(p.position.y-state.position.y)>.6)continue;
     if((dx*Math.sin(state.yaw)+dz*Math.cos(state.yaw))/distance<p.facingDot)continue;
     pulse=.35;root.rotation.z=.05;
-    if(journal.record('practice-skill',p.id))notify('Đã luyện chiêu hướng vào bia · Quay lại báo Võ sư.');
+    if(journal.record('practice-skill',p.id)){invalidateQuests();notify('Đã luyện chiêu hướng vào bia · Quay lại báo Võ sư.');}
     return true;
    }return false;
   }
-  const MARKER_RANK={progress:1,available:2,ready:3};
-  // Per-player quest markers: village journal plus learning quests from their own
-  // service. Can turn in > can accept > in progress; completed quests show nothing.
-  function questMarkers(s){
-   const kinds=new Map(),put=(npc,kind)=>{if(npc&&MARKER_RANK[kind]&&(!kinds.has(npc)||MARKER_RANK[kind]>MARKER_RANK[kinds.get(npc)]))kinds.set(npc,kind);};
-   if(s.authenticated&&journal&&data){
-    for(const q of data.quests.quests.filter(q=>q.enabled)){const state=journal.status(q.id);
-     if(state==='ready')put(q.turnInNpc,'ready');else if(state==='active')put(q.turnInNpc,'progress');else if(state==='available'&&journal.canAccept(q.id,q.giverNpc))put(q.giverNpc,'available');}
-    try{for(const [npc,kind] of getQuestMarkers?.()||[])put(npc,kind);}catch(_){}
-   }
-   return kinds;
+  // Minimap shares the board: the same marker per NPC as above its head.
+  function drawMinimapMarkers(ctx,point){
+   if(!actors||!ctx||!point||board.status!=='ready')return;
+   for(const [id,m] of board.markers){const n=actors.npcs.get(id);if(!n)continue;const [x,y]=point(n.definition.position.x,n.definition.position.z);
+    ctx.save();ctx.translate(x,y);ctx.globalAlpha=m.kind==='locked'?.65:1;ctx.fillStyle=m.category==='main'?'#3d2a0f':m.category==='learning'?'#163c2e':'#173a42';ctx.strokeStyle=m.kind==='locked'?'#9aa196':m.category==='main'?'#f0c24a':m.category==='learning'?'#8fd6a6':'#a9cfd6';ctx.lineWidth=1.5;ctx.beginPath();
+    if(m.category==='main'){ctx.moveTo(0,-7);ctx.lineTo(7,0);ctx.lineTo(0,7);ctx.lineTo(-7,0);ctx.closePath();}else if(m.category==='learning')ctx.rect(-6,-6,12,12);else ctx.arc(0,0,6.5,0,Math.PI*2);
+    ctx.fill();ctx.stroke();ctx.fillStyle=m.kind==='progress'?'#dfe3dc':m.kind==='locked'?'#c9cdc2':'#ffd23f';ctx.font='900 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(m.kind==='available'?'!':m.kind==='locked'?'·':'?',0,.5);ctx.restore();}
   }
   function update(dt){
    if(disposed)return;const s=getState();
    if((opened||menuOpen)&&(!s.authenticated||!s.inVillage||s.transitioning||getJourney()?.alive!==true||(opened&&!conversationValid(dialogueVersion))))close({focus:false});
    if(actors){actors.root.visible=s.authenticated&&s.inVillage;
-    actors.update(dt);
+    actors.update(dt,getCamera?.()||null);
     if(!opened&&!menuOpen&&usable(s))for(const [id,npc] of actors.npcs){
      const ambient=npc.definition.model?.ambient;
      if(!ambient||!npc.visual||npc.visual.animationState.busy)continue;
@@ -277,14 +374,17 @@
     }
     pulse=Math.max(0,pulse-dt);for(const {root} of actors.props.values())root.rotation.z=pulse?Math.sin(pulse*40)*.045:0;
    }
-   markerElapsed+=dt;if(actors&&markerElapsed>=.5){markerElapsed=0;const kinds=questMarkers(s);for(const id of actors.npcs.keys())actors.setMarker(id,kinds.get(id)||null);}
+   const uidNow=currentUid();if(uidNow!==boardUid||s.inVillage!==boardInVillage){boardUid=uidNow;boardInVillage=s.inVillage;boardDirty=true;}
+   boardWait+=dt;boardSafety+=dt;
+   if((boardDirty&&boardWait>=.2)||boardSafety>=5){boardWait=0;refreshBoard();}
    elapsed+=dt;if(elapsed<.1)return;elapsed=0;
    if(opened)updateAnimationUI();
    nearest=closest(s);prompt.style.display=nearest?'block':'none';
    if(nearest)prompt.textContent='Nói chuyện · '+actors.npcs.get(nearest).definition.name+' (F)';
   }
   listen(el('npcDirectoryBtn'),'click',openDirectory);listen(el('closeNpcDirectory'),'click',()=>close());listen(el('closeNpcDialog'),'click',()=>close());
-  listen(el('npcRetryBtn'),'click',()=>{load();});listen(prompt,'click',()=>interact());
+  listen(el('npcRetryBtn'),'click',()=>{load();});
+  listen(global,'storage',e=>{const key=e?.key;if(key===null||key===undefined||String(key).startsWith('viet-village:quests:')||String(key).startsWith(TRACK_PREFIX))invalidateQuests();});listen(prompt,'click',()=>interact());
   for(const node of [panel,menu,prompt])for(const name of ['pointerdown','pointerup','pointermove','touchstart','touchend','wheel','click'])listen(node,name,e=>e.stopPropagation());
   for(const node of [panel,menu])listen(node,'keydown',e=>{
    e.stopPropagation();if(e.key==='Escape'){e.preventDefault();close();}
@@ -298,8 +398,9 @@
   close({focus:false});
   return Object.freeze({load,update,interact,route,onSkillUsed,openDirectory,isOpen:()=>!!opened||menuOpen,
    isNear(id){const actor=actors?.npcs.get(id),s=getState();return !!actor&&s.authenticated&&s.inVillage&&!s.transitioning&&getJourney()?.alive===true&&inRange(actor.definition,s);},
-   lock(){close({focus:false});journal?.lock();if(actors)actors.root.visible=false;prompt.style.display='none';},
-   get status(){return {loaded:!!actors,error,count:actors?.npcs.size||0,propCount:actors?.props.size||0,nearest,opened,models:actors?.modelStatuses||[],quests:journal?.snapshot()||{},lesson:lessonSession?{id:lessonSession.lesson.id,...lessonSession.state}:null,markers:actors?.markers||{}};},
+   lock(){close({focus:false});journal?.lock();if(actors)actors.root.visible=false;prompt.style.display='none';invalidateQuests();refreshBoard();},
+   invalidateQuests,refreshQuests:()=>refreshBoard(),track,drawMinimapMarkers,nameOf:npcName,get questBoard(){return board;},
+   get status(){return {loaded:!!actors,error,count:actors?.npcs.size||0,propCount:actors?.props.size||0,nearest,opened,models:actors?.modelStatuses||[],quests:journal?.snapshot()||{},lesson:lessonSession?{id:lessonSession.lesson.id,...lessonSession.state}:null,markers:actors?.markers||{},markerDetails:actors?.markerDetails||{},questBoard:{status:board.status,tracked:board.tracked,states:Object.fromEntries(board.entries.map(e=>[e.id,e.state])),errors:board.errors.map(e=>e.message)}};},
    dispose(){disposed=true;close({focus:false});listeners.forEach(remove=>remove());actors?.dispose();actors=null;}
   });
  };

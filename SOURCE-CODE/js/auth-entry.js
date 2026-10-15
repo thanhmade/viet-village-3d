@@ -21,7 +21,10 @@ const characterStore=createCharacterProfileStore({
 });
 const characters=createCharacterCreation({store:characterStore,
  getUid:()=>session?.isAuthenticated()?session.getProfile()?.uid:null,game:window.VietVillageGame,THREE:window.THREE,
- onLogout:()=>session?.signOut(),onReady:profile=>{$auth('playerIdentity').textContent='Đã đăng nhập · '+profile.name;$auth('play').disabled=!gameReady||!session?.isAuthenticated();}});
+ onLogout:()=>session?.signOut(),
+ // Runs inside the player's Create/Vào làng tap: phones try fullscreen + landscape lock there.
+ onStart:()=>window.VietVillageLandscape?.requestOnStart(),onScreenChange:()=>window.VietVillageLandscape?.schedule(),
+ onReady:profile=>{$auth('playerIdentity').textContent='Đã đăng nhập · '+profile.name;$auth('play').disabled=!gameReady||!session?.isAuthenticated();}});
 window.VietVillageCharacter=characters;
 
 const messages = {
@@ -70,6 +73,7 @@ function renderState({ phase, code = '', profile = null }) {
     $auth('play').disabled = true;
   }
   online?.onAuthState(authenticated);
+  window.VietVillageLandscape?.schedule();
 }
 
 window.VietVillageAuth = Object.freeze({

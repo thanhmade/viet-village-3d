@@ -5,6 +5,24 @@ const createHarness = require('./harness.cjs');
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-6, `${actual} ≈ ${expected}`);
 // Advance at least 17 ms between rendered frames; the village caps rendering at 60 Hz.
 
+test('putting away every weapon preserves the actor, walking, map, camera and cooldowns',()=>{
+ const {run,context}=createHarness(),weapons=context.VietVillageWeapons;
+ for(const id of ['staff','sword','spear','bow','axe']){
+  weapons.equip(id);weapons.cast(1);
+  const actor=run('player'),pose=actor.position.clone(),yaw=run('yaw'),region=context.VietVillageRegions.currentId;
+  const remaining=weapons.skills()[0].remaining;
+  weapons.deactivate();weapons.deactivate();
+  assert.equal(run('localWalking&&player.visible'),true);
+  assert(actor.position.equals(pose));assert.equal(run('yaw'),yaw);assert.equal(context.VietVillageRegions.currentId,region);
+  assert.equal(actor.getObjectByName('village-local-weapon').visible,false);
+  assert.equal(weapons.state.enabled,false);assert.equal(weapons.skills()[0].remaining,remaining);
+  run('yaw=0;keys.KeyW=true;tick((last||0)+40);');assert(actor.position.distanceTo(pose)>0);
+  run('clearMotion();');
+ }
+ run('multiplayerWalking=true;');weapons.equip('sword');weapons.deactivate();assert.equal(run('multiplayerWalking&&player.visible'),true);
+ context.VietVillageGame.lock();assert.equal(run('localWalking||multiplayerWalking||player.visible'),false);
+});
+
 test('local weapons use the original player, scene and walking without an online room', () => {
   const {run, context} = createHarness();
   const scene = context.VietVillageGame.scene(), player = context.VietVillageGame.avatarTemplate();

@@ -42,9 +42,9 @@
   asset('DONG_ROM_01',-18.5,.3,10,{size:[2.3,2.1,2.3],collider:{w:1.2,d:1.2},role:'Nông dân'}),
   asset('XE_KEO_GO_01',18,.3,10,{size:[2,1.4,2.6],collider:{w:1.05,d:1.4},role:'Tạp hóa'}),
   asset('COI_GIA_GAO_01',-18,.3,2,{size:[1.4,1.3,1.4],collider:{w:.8,d:.8},role:'Nhà dân'}),
-  asset('GANH_TRE_01',-7.4,.3,20.9,{size:[1.5,.7,.7],collider:{w:.85,d:.45},role:'Nông dân'}),
+  asset('GANH_TRE_01',-7.4,.3,20.9,{size:[1.5,.7,.7],collider:{w:.85,d:.45,jumpable:true},role:'Nông dân'}),
   asset('NIA_TRE_01',-13.4,.57,14,{size:[.9,.14,.9],role:'Thợ rèn, sân cạnh nhà'}),
-  asset('GIO_TRE_01',14.15,.36,14.2,{size:[.5,.5,.5],collider:{w:.28,d:.28},role:'Tạp hóa'}),
+  asset('GIO_TRE_01',14.15,.36,14.2,{size:[.5,.5,.5],collider:{w:.28,d:.28,jumpable:true},role:'Tạp hóa'}),
   
   asset('SAN_GACH_01',8.1,.25,-16.6,{size:[4.5,.05,4],role:'Sân tập Võ sư'}),
   asset('DEN_LONG_01',-3,3.3,-15.7,{size:[.5,.8,.5],role:'Hiên đình'})

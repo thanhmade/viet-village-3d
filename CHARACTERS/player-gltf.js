@@ -78,21 +78,34 @@
     socket.scale.set(1/rootScale.x,1/rootScale.y,1/rootScale.z);socket.updateMatrixWorld(true);
    }
   }
+  let controllerJump=false;
   function pose(){
    hips.position.x=hipAnchor.x;hips.position.z=hipAnchor.z;facing.position.y=baseGroundY;sync();
    root.getWorldPosition(groundPoint);let lowest=Infinity;
    for(const sole of soles){sole.mesh.getVertexPosition(sole.index,point).applyMatrix4(sole.mesh.matrixWorld);lowest=Math.min(lowest,point.y);}
-   if(lowest<groundPoint.y){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-lowest)/rootScale.y;sync();}
+   // During gameplay the collider supplies jump height, never add the GLB's
+   // authored elevation a second time. Preview still retains authored motion.
+   if(lowest<groundPoint.y||(controllerJump&&Number.isFinite(lowest))){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-lowest)/rootScale.y;sync();}
    updateSockets();
   }
   let mode='locomotion',speed=0,outgoing=null,fadeEnd=0,returningUntil=0,pendingFinished=null,pausedPreview=false,disposed=false,defeatClip=null;
   const reviewedDefeats=new Set();
-  const locomotion=()=>speed<=.08?'idle':speed>=5.5?'run':'walk';
+  let gait='idle';
+  function locomotion(){
+   if(speed<.08)gait='idle';
+   else if(gait==='run'&&speed>5.1)gait='run';
+   else if(speed>=5.7)gait='run';
+   else if(speed>.16)gait='walk';
+   return gait;
+  }
   function transition(name,nextMode){
    const next=actionFor(name);if(current===next&&mode===nextMode&&nextMode==='locomotion')return true;
    if(outgoing){outgoing.stop();outgoing=null;}
    const previous=current;previous.stopFading().setEffectiveWeight(1);previous.paused=false;
+   const matchStride=mode==='locomotion'&&nextMode==='locomotion'&&['walk','run'].includes(previous.getClip().name)&&['walk','run'].includes(name);
+   const phase=previous.time/previous.getClip().duration;
    next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).setLoop(nextMode==='locomotion'?T.LoopRepeat:T.LoopOnce,nextMode==='locomotion'?Infinity:1);
+   if(matchStride)next.time=(phase%1)*next.getClip().duration;
    next.clampWhenFinished=nextMode!=='locomotion';next.play();
    if(previous!==next){previous.crossFadeTo(next,fadeDuration,false);outgoing=previous;fadeEnd=mixer.time+fadeDuration;}
    current=next;mode=nextMode;pausedPreview=false;pendingFinished=null;return true;
@@ -104,7 +117,13 @@
   return {
    root,mixer,clips:Object.freeze(animations.map(clip=>Object.freeze({name:clip.name,duration:clip.duration}))),hands,sockets,
    stats:Object.freeze({modelId,height,sourceHeight,scale:height/sourceHeight,vertices,triangles,texturedMeshes,bones:new Set([...skeletons].flatMap(s=>s.bones)).size,footProbes:soles.length,forward:'+Z',forwardYaw,rootMotion:'Hips X/Z locked to idle; authored Y retained',handNames:{right:hands.right.name,left:hands.left.name},socketCalibration:'source-skeleton-idle'}),
-   setLocomotion(value){if(disposed)return false;speed=Number.isFinite(value)?Math.max(0,value):0;if(mode==='locomotion')transition(locomotion(),'locomotion');return true;},
+   setLocomotion(value){if(disposed)return false;speed=Number.isFinite(value)?Math.max(0,value):0;if(mode==='locomotion'){
+    transition(locomotion(),'locomotion');const name=current.getClip().name;
+    current.setEffectiveTimeScale(name==='idle'?1:Math.max(.45,Math.min(1.35,speed/(name==='run'?6.5:4.5))));
+   }return true;},
+   startJump(duration){if(disposed||mode!=='locomotion'||mixer.time<returningUntil)return false;
+    controllerJump=true;transition('jump','once');current.setEffectiveTimeScale(current.getClip().duration/Math.max(.2,duration));return true;},
+   endJump(){if(disposed)return;controllerJump=false;if(mode==='once'&&current.getClip().name==='jump'){transition(locomotion(),'locomotion');returningUntil=mixer.time+fadeDuration;}},
    playOnce(name){if(disposed||mode!=='locomotion'||mixer.time<returningUntil||!clipMap.has(name))return false;return transition(name,'once');},
    preview(name){if(disposed||!clipMap.has(name))return false;return transition(name,'preview');},
    pausePreview(){if(disposed||mode!=='preview')return false;pausedPreview=true;return true;},

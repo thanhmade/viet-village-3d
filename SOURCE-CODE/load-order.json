@@ -16,6 +16,7 @@
   "SOURCE-CODE/js/performance.js",
   "SOURCE-CODE/js/legacy-game-controls.js",
   "MAP/navigation.js",
+  "SOURCE-CODE/js/player-motion.js",
   "INTERIORS/house-interior.js",
   "INTERIORS/portal-destinations.js",
   "ENVIRONMENT/climate-state.js",

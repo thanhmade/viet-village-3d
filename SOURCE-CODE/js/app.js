@@ -4,6 +4,7 @@ let playerExperience=null,experienceView=null;
 let learningClient=null,learningView=null,learningCollectibles=null,learningPractice=null,gameHud=null;
 // Walking/running speed (m/s): one source for movement and the character sheet.
 const MOVE_SPEED=Object.freeze({walk:4.5,run:6.5});
+let playerMotion=null,proceduralStride=0;
 // Skill aiming. Mouse: the ground point under the cursor. Touch: the drag from
 // the skill button, turned by the camera yaw (screen up = away from the camera).
 const aimRay=new THREE.Raycaster(),aimPointer=new THREE.Vector2(),aimPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
@@ -126,19 +127,22 @@ for(let i=0;i<gems.length;i++){let g=gems[i];if(g.userData.taken)continue;g.posi
 if((active||multiplayerWalking||localWalking)&&world.visible&&!insideHouse&&!overlays()&&gateView<0&&houseView<0){
  let dx=0,dz=0;let ix=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joystick.x;let iz=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0)+joystick.y;
  const manualMovement=Math.abs(ix)+Math.abs(iz)>.08;
- if(manualMovement){target=null;waypoints=[];dx=ix*Math.cos(yaw)+iz*Math.sin(yaw);dz=-ix*Math.sin(yaw)+iz*Math.cos(yaw);}else if(target){dx=target.x-player.position.x;dz=target.z-player.position.z;if(Math.hypot(dx,dz)<.2){target=waypoints.shift()||null;dx=dz=0;}}
- let len=Math.hypot(dx,dz);if(len>.01){let speed=(keys.ShiftLeft||keys.ShiftRight?MOVE_SPEED.run:MOVE_SPEED.walk);const oldX=player.position.x,oldZ=player.position.z;player.position.x+=dx/len*speed*dt;player.position.z+=dz/len*speed*dt;if(!canWalk(player.position.x,player.position.z)){
- if(canWalk(player.position.x,oldZ))player.position.z=oldZ;
- else if(canWalk(oldX,player.position.z))player.position.x=oldX;
- else {player.position.x=oldX;player.position.z=oldZ;target=null;waypoints=[];}
-}player.position.y=bridgeHeight(player.position.x,player.position.z);
-avatarSpeed=Math.hypot(player.position.x-oldX,player.position.z-oldZ)/Math.max(dt,.001);
-if(manualMovement)playerJourney?.recordMovement(Math.hypot(player.position.x-oldX,player.position.z-oldZ));
-let desired=Math.atan2(dx,dz);body.rotation.y+=Math.atan2(Math.sin(desired-body.rotation.y),Math.cos(desired-body.rotation.y))*Math.min(1,dt*12);if(!playerAvatar?.isGLTF){leftLeg.rotation.x=Math.sin(t*11)*.5;rightLeg.rotation.x=-leftLeg.rotation.x;leftArm.rotation.x=-leftLeg.rotation.x*.65;rightArm.rotation.x=leftLeg.rotation.x*.65;body.position.y=Math.sin(t*22)*.045;}}else if(!playerAvatar?.isGLTF){leftLeg.rotation.x*=.8;rightLeg.rotation.x*=.8;leftArm.rotation.x*=.8;rightArm.rotation.x*=.8;body.position.y=Math.sin(t*2)*.015;}
+ if(manualMovement){target=null;waypoints=[];dx=ix*Math.cos(yaw)+iz*Math.sin(yaw);dz=-ix*Math.sin(yaw)+iz*Math.cos(yaw);}else if(target){while(target&&Math.hypot(target.x-player.position.x,target.z-player.position.z)<.2)target=waypoints.shift()||null;if(target){dx=target.x-player.position.x;dz=target.z-player.position.z;const distance=Math.hypot(dx,dz);dx/=distance;dz/=distance;}}
+ const movement=playerMotion.step(dt,{x:dx,z:dz,speed:keys.ShiftLeft||keys.ShiftRight?MOVE_SPEED.run:MOVE_SPEED.walk});
+ avatarSpeed=movement.speed;
+ if(manualMovement)playerJourney?.recordMovement(movement.distance);
+ if(!playerAvatar?.isGLTF){
+  proceduralStride+=movement.distance*2.5;const weight=Math.min(1,avatarSpeed/MOVE_SPEED.walk),blend=1-Math.exp(-16*dt);
+  const stride=Math.sin(proceduralStride)*.5*weight;
+  leftLeg.rotation.x+=(stride-leftLeg.rotation.x)*blend;rightLeg.rotation.x+=(-stride-rightLeg.rotation.x)*blend;
+  leftArm.rotation.x+=(-stride*.65-leftArm.rotation.x)*blend;rightArm.rotation.x+=(stride*.65-rightArm.rotation.x)*blend;
+  body.position.y=0;
+ }
+
  for(let g of (active?gems:[])){if(!g.userData.taken&&Math.hypot(player.position.x-g.position.x,player.position.z-g.position.z)<1.15){g.userData.taken=true;g.visible=false;collected++;hud();beep(500+collected*160);toast(collected===3?'Đủ 3 tinh thể! Đến điểm sáng vàng trên bản đồ.':'Tinh thể '+collected+'/3 ✦');}}
  let near=Math.hypot(player.position.x-portal.position.x,player.position.z-portal.position.z)<3;$('interact').style.display=active&&near?'block':'none';$('interact').disabled=collected<3;$('interact').textContent=collected<3?'Cần đủ 3 tinh thể để mở cổng':'E · Giải câu đố';
-}else $('interact').style.display='none';
-if(insideHouse){updateInterior(dt);}else if(gateView>=0){let positions=[[0,4.6,35],[0,4.6,13],[-11,4.6,24],[11,4.6,24]];camera.position.lerp(cameraDestination.set(...positions[gateView]),1-Math.exp(-dt*5));camera.lookAt(0,3.0,24);}else{if((multiplayerWalking||localWalking)&&world.visible)sceneryFocus.copy(player.position).add(cameraOffset.set(0,1,0));const look=sceneryFocus;let desired=cameraDestination.copy(look).add(cameraOffset.set(Math.sin(yaw)*Math.cos(pitch)*sceneryRadius,Math.sin(pitch)*sceneryRadius,Math.cos(yaw)*Math.cos(pitch)*sceneryRadius));if((localWalking||multiplayerWalking)&&world.visible)desired=villageWalkingCameraTarget(look);camera.position.lerp(desired,1-Math.exp(-dt*5));if((localWalking||multiplayerWalking)&&world.visible)constrainVillageCamera(camera.position,look);camera.lookAt(look);}
+}else {playerMotion?.step(dt,{enabled:false});$('interact').style.display='none';}
+if(insideHouse){updateInterior(dt);}else if(gateView>=0){let positions=[[0,4.6,35],[0,4.6,13],[-11,4.6,24],[11,4.6,24]];camera.position.lerp(cameraDestination.set(...positions[gateView]),1-Math.exp(-dt*5));camera.lookAt(0,3.0,24);}else{if((multiplayerWalking||localWalking)&&world.visible)sceneryFocus.lerp(cameraOffset.set(player.position.x,player.position.y+1,player.position.z),1-Math.exp(-10*dt));const look=sceneryFocus;let desired=cameraDestination.copy(look).add(cameraOffset.set(Math.sin(yaw)*Math.cos(pitch)*sceneryRadius,Math.sin(pitch)*sceneryRadius,Math.cos(yaw)*Math.cos(pitch)*sceneryRadius));if((localWalking||multiplayerWalking)&&world.visible)desired=villageWalkingCameraTarget(look);camera.position.lerp(desired,1-Math.exp(-dt*5));if((localWalking||multiplayerWalking)&&world.visible)constrainVillageCamera(camera.position,look);camera.lookAt(look);}
 climateElapsed+=dt;uiElapsed+=dt;
 if(climateElapsed>=1/30){updateClimate(climateElapsed);window.VietVillageMapAssets?.update(clockT,climate,world.visible&&!insideHouse&&regionTravel?.currentId==='lang-viet');climateElapsed=0;}
 playerHealthView?.update(dt);
@@ -171,13 +175,15 @@ addEventListener('keydown',e=>{if(e.code!=='KeyC'||e.repeat||e.ctrlKey||e.altKey
  if(window.VietVillageCharacter?.isOpen()){if(window.VietVillageCharacter.state.mode==='profile'){e.preventDefault();window.VietVillageCharacter.close();}return;}
  if(!overlays()){e.preventDefault();void openCharacterSheet();}});
 $('playerPortraitBtn')?.addEventListener('click',e=>{e.stopPropagation?.();void openCharacterSheet();});window.VillagePerformance=window.createVillagePerformance({renderer,getSun:()=>sun,getSize:()=>({width:innerWidth,height:innerHeight,dpr:devicePixelRatio,mobile:innerWidth<800||matchMedia('(pointer:coarse)').matches}),readout:$('performanceReadout'),storage:localStorage});$('quality').value=window.VillagePerformance.mode;quality();createWorld();bind();bindScenery();bindInterior();initClimate();initializeHouseTravel();initializeRegionTravel();void window.VietVillageMapAssets?.initialize({region:regionTravel.current,interior:interiorRoot,preview:housePreview,notify:toast});$('loading').classList.add('hidden');requestAnimationFrame(tick);renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();toast('Đồ họa bị gián đoạn. Hãy tải lại trang để tiếp tục.');});gameInitialized=true;
-villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,clearMotion,startRoaming,stopRoaming,aim:{fromScreen:aimFromScreen,fromDrag:aimFromDrag},notify:toast,
+playerMotion=window.createVillagePlayerMotion({position:player.position,body,surfaceAt:villageMovementSurface,contextKey:()=>regionTravel?.currentId+':'+insideHouse});
+window.VietVillagePlayerMotion=playerMotion;
+villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,clearMotion,startRoaming,aim:{fromScreen:aimFromScreen,fromDrag:aimFromDrag},notify:toast,
  onSkillUsed:skill=>{playerJourney?.recordSkillUse();window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
  getGroundY:point=>bridgeHeight(point.x,point.z),
  getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),
  canCast:gameInitialized&&!!window.VietVillageAuth?.isAuthenticated()&&(localWalking||multiplayerWalking)&&world.visible&&!insideHouse&&!overlays()&&gateView<0&&houseView<0})});
 window.VietVillageWeapons=villageWeapons;
-playerAvatar=window.createVillagePlayerAvatar({THREE,body,proceduralParts:body.children.filter(part=>part.userData.proceduralAvatarPart),
+playerAvatar=window.createVillagePlayerAvatar({THREE,body,proceduralParts:body.children.filter(part=>part.userData.proceduralAvatarPart),motion:playerMotion,
  getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),hp:playerJourney?.getState().hp,
   visible:player.visible&&world.visible&&!insideHouse,
   canOpen:gameInitialized&&(localWalking||multiplayerWalking)&&world.visible&&!insideHouse&&!overlays()&&gateView<0&&houseView<0}),
@@ -229,17 +235,17 @@ installPondChecks();$('home').classList.remove('hidden');return true;
 return false;
 }
 function stopRoomWalk(){multiplayerWalking=false;if(gameInitialized){clearMotion();if(!localWalking)player.visible=false;}}
-function stopVillageWalk(){resetHouseTravel();regionTravel?.reset();document.body.classList.remove('walking');localWalking=false;stopRoomWalk();villageWeapons?.suspend();document.body.classList.remove('weapons-roaming');}
-function stopRoaming(){resetHouseTravel();regionTravel?.reset();document.body.classList.remove('walking');localWalking=false;clearMotion();if(!multiplayerWalking)player.visible=false;}
+function stopVillageWalk(){playerMotion?.reset();resetHouseTravel();regionTravel?.reset();document.body.classList.remove('walking');localWalking=false;stopRoomWalk();villageWeapons?.suspend();document.body.classList.remove('weapons-roaming');}
+function stopRoaming(){playerMotion?.reset();resetHouseTravel();regionTravel?.reset();document.body.classList.remove('walking');localWalking=false;clearMotion();if(!multiplayerWalking)player.visible=false;}
 function startRoaming(){
  if(!gameInitialized||!window.VietVillageAuth?.isAuthenticated()||(window.VietVillageCharacter&&!window.VietVillageCharacter.isReady()))return false;
  if(insideHouse)leaveHouse();world.visible=true;housePreview.visible=false;gateView=-1;houseView=-1;
- if(!canWalk(player.position.x,player.position.z)){
+ if(!Number.isFinite(villageMovementSurface(player.position.x,player.position.z))){
   const point=regionTravel?.current.spawn;const spawn=[...(point?[[point.x,point.z]]:[]),[0,21],[0,18],[-3,18]].find(([x,z])=>canWalk(x,z));
   if(!spawn)return false;player.position.set(spawn[0],bridgeHeight(...spawn),spawn[1]);
  }
  localWalking=true;clearMotion();$('home').classList.add('hidden');$('hud').style.display='block';player.visible=true;sceneryFocus.copy(player.position);sceneryRadius=8.5;pitch=.57;yaw=0;document.body.classList.add('walking');resetHouseTravel();regionTravel?.reset();
- $('helpText').textContent='WASD / mũi tên / cần điều khiển: đi bộ · Chạm đường để đi tới · Đứng trong vòng xanh 0,8 giây để vào nhà';
+ $('helpText').textContent='WASD / cần điều khiển: đi · Shift: chạy · Space / Nhảy: vượt vật cản thấp · Đứng trong vòng xanh để vào nhà';
  regionTravel?.refreshUI();return true;
 }
 function startRoomWalk(){

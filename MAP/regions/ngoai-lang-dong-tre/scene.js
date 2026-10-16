@@ -51,7 +51,7 @@
     instance(cylinderGeo,m,(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2,r,direction.length(),r,e.x,e.y,e.z);
    }
    const rect=(x,z,w,d)=>colliders.push({type:'rect',x,z,w:w/2+.28,d:d/2+.28});
-   const circle=(x,z,r)=>colliders.push({type:'circle',x,z,r:r+.28});
+   const circle=(x,z,r,top=null)=>colliders.push({type:'circle',x,z,r:r+.28,top});
    function cameraBox(x,y,z,w,h,d){cameraBounds.push(new THREE.Box3(new THREE.Vector3(x-w/2,y-h/2,z-d/2),new THREE.Vector3(x+w/2,y+h/2,z+d/2)));}
    function landmark(key,type,x,z,extra={}){landmarks.push({id:key,type,x,z,position:{x,y:.3,z},...extra});}
    // Ground banks leave an actual lower channel under the stream.
@@ -125,7 +125,7 @@
     fence(x-w/2,z-d/2,x-w/2,z+d/2,.66,false);fence(x-w/2,z+d/2,x+w/2,z+d/2,.66,false);
    }
    instance(coneGeo,straw,-22,1.38,-14.3,1.14,2.15,1.14);circle(-22,-14.3,1.1);landmark('haystack','haystack',-22,-14.3);
-   function pot(x,z,r=.28){instance(taperGeo,clay,x,.3+r*.85,z,r,r*1.7,r);instance(torusGeo,darkWood,x,.3+r*1.72,z,r*.70,r*.40,r*.70,Math.PI/2);circle(x,z,r);}
+   function pot(x,z,r=.28){instance(taperGeo,clay,x,.3+r*.85,z,r,r*1.7,r);instance(torusGeo,darkWood,x,.3+r*1.72,z,r*.70,r*.40,r*.70,Math.PI/2);circle(x,z,r,.3+r*1.9+.03);}
    for(const [x,z] of [[-16.6,15.8],[-16.3,17.3],[-7.5,15.7],[-6.8,15.5],[19.6,15.3],[19.6,16.1],[12.1,15.5],[8.6,15.1]])pot(x,z,.25+random()*.12);
    // Medicinal beds flank the healer's route, never the central spawn/courtyard.
    for(const x of [12.5,18]){
@@ -219,12 +219,13 @@
    root.updateMatrixWorld(true);
    const bounds={minX:-25,maxX:25,minZ:-27,maxZ:27};
    const bridgeSurface=(x,z)=>Math.abs(x)<=1.63&&z>=0&&z<=8;
-   function canWalk(x,z){
+   function canWalk(x,z,feetY=-Infinity){
     if(!Number.isFinite(x)||!Number.isFinite(z)||x<bounds.minX||x>bounds.maxX||z<bounds.minZ||z>bounds.maxZ)return false;
     if(z>1.18&&z<6.82&&!bridgeSurface(x,z))return false;
-    for(const c of colliders){const dx=x-c.x,dz=z-c.z;if(c.type==='circle'?dx*dx+dz*dz<c.r*c.r:Math.abs(dx)<c.w&&Math.abs(dz)<c.d)return false;}
+    for(const c of colliders){const dx=x-c.x,dz=z-c.z;if((c.type==='circle'?dx*dx+dz*dz<c.r*c.r:Math.abs(dx)<c.w&&Math.abs(dz)<c.d)&&!(Number.isFinite(c.top)&&feetY>=c.top))return false;}
     return true;
    }
+   function jumpSurface(x,z){let top=null;for(const c of colliders)if(Number.isFinite(c.top)&&Math.hypot(x-c.x,z-c.z)<c.r)top=Math.max(top??0,c.top);return Number.isFinite(top)&&canWalk(x,z,top)?top:null;}
    function groundHeight(x,z){
     if(bridgeSurface(x,z))return bridgeHeight(z);
     for(const house of buildings){const front=z-house.z-house.d/2;if(Math.abs(x-house.x)<house.w/2+.06&&front>=0&&front<=1.32)return house.floor;if(Math.abs(x-house.x)<=1.4&&front>1.32&&front<=1.87)return .4;}
@@ -235,7 +236,7 @@
    const spawns=Object.freeze({'village-entry':spawn,'from-lang-viet':{x:0,y:.3,z:17,yaw:Math.PI}});
    const portal={id:'lang-viet',x:0,y:.335,z:20.5,radius:1,interactionRadius:1.8,activation:'interact',targetMapId:'lang-viet',targetSpawnId:'from-dong-tre',label:'Làng Việt'};
    const references=[['01_Ngoai_Lang_Dong_Tre_Truoc.png','Phía trước · cổng và sân nhiệm vụ'],['02_Ngoai_Lang_Dong_Tre_Trai.png','Bên trái · ruộng và cầu gỗ'],['03_Ngoai_Lang_Dong_Tre_Phai.png','Bên phải · lũy tre và sân luyện tập'],['04_Ngoai_Lang_Dong_Tre_Sau.png','Phía sau · gò đá và hang']].map(([file,label])=>({path:'../MAP/regions/'+id+'/references/'+file,label}));
-   return {id,networkMapId:id,name,parentMapId:'lang-viet',root,spawn,spawns,defaultSpawnId:'village-entry',portal,bounds,canWalk,groundHeight,roofHeight,cameraBounds,waterMeshes,wetMaterials,lampGlowMaterials,lights,landmarks,references,dispose,diagnostics:{drawCalls,triangles,instances}};
+   return {id,networkMapId:id,name,parentMapId:'lang-viet',root,spawn,spawns,defaultSpawnId:'village-entry',portal,bounds,canWalk,jumpSurface,groundHeight,roofHeight,cameraBounds,waterMeshes,wetMaterials,lampGlowMaterials,lights,landmarks,references,dispose,diagnostics:{drawCalls,triangles,instances}};
   }catch(error){dispose();throw error;}
  }
  global.createDongTreRegion=createDongTreRegion;

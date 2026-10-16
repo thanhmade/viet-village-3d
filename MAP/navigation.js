@@ -8,9 +8,9 @@ function villageTempleFloor(x,z){
  return null;
 }
 function langVietGroundHeight(x,z){const templeFloor=villageTempleFloor(x,z);if(templeFloor!==null)return templeFloor;const access=houseAccessFloor(x,z);if(access)return access.y;return Math.abs(z-18)<.95&&x>=9.2&&x<=20.8?.45+1.25*Math.sin(Math.PI*(x-9.2)/11.6):.3;}
-function langVietCanWalk(x,z){
+function langVietCanWalk(x,z,feetY=-Infinity){
  if(!Number.isFinite(x)||!Number.isFinite(z)||Math.abs(x)>24.1||Math.abs(z)>26.1)return false;
- if(window.VietVillageMapAssets?.canWalk(x,z)===false)return false;
+ if(window.VietVillageMapAssets?.canWalk(x,z,false,feetY)===false)return false;
  if(villageTempleFloor(x,z)!==null){
   // Open only the front porch/steps, never the hall walls or supporting columns.
   return ![-4.9,-2.5,0,2.5,4.9].some(column=>Math.hypot(x-column,z+16.3)<.43);
@@ -19,9 +19,9 @@ function langVietCanWalk(x,z){
   const dx=x-h.x,dz=z-h.z;
   if(Math.abs(dx)<3.47&&dz>-2.65&&dz<2.99)return false;
   if(Math.abs(dx)<1.01&&dz>=2.99&&dz<3.65)return false;
-  if(Math.abs(Math.abs(dx)-3.8)<.20&&dz>-3.1&&dz<5.25)return false;
-  if(Math.abs(dz+2.9)<.20&&Math.abs(dx)<4)return false;
-  if(Math.abs(dz-5.05)<.20&&Math.abs(dx)>.67&&Math.abs(dx)<4)return false;
+  if(Math.abs(Math.abs(dx)-3.8)<.20&&dz>-3.1&&dz<5.25&&feetY<1.18)return false;
+  if(Math.abs(dz+2.9)<.20&&Math.abs(dx)<4&&feetY<1.18)return false;
+  if(Math.abs(dz-5.05)<.20&&Math.abs(dx)>.67&&Math.abs(dx)<4&&feetY<1.18)return false;
   if(Math.hypot(dx+3.48,dz-2.95)<.60||Math.hypot(dx-3.48,dz-3.35)<.45)return false;
  }
  if(houseAccessFloor(x,z))return true;
@@ -34,6 +34,21 @@ function langVietCanWalk(x,z){
 }
 function bridgeHeight(x,z){return window.VietVillageRegions?.current?.groundHeight(x,z)??langVietGroundHeight(x,z);}
 function canWalk(x,z){const region=window.VietVillageRegions?.current;return region?region.canWalk(x,z):langVietCanWalk(x,z);}
+// A finite support surface is an explicit permission to jump onto/over it.
+// Unknown colliders, water, buildings and map edges remain solid at every height.
+function villageMovementSurface(x,z){
+ const region=window.VietVillageRegions?.current;
+ if(canWalk(x,z))return bridgeHeight(x,z);
+ if(region&&region.id!=='lang-viet')return region.jumpSurface?.(x,z)??null;
+ let top=window.VietVillageMapAssets?.jumpSurface?.(x,z)??null;
+ for(const h of village.houses){
+  const dx=x-h.x,dz=z-h.z;
+  if((Math.abs(Math.abs(dx)-3.8)<.20&&dz>-3.1&&dz<5.25)||
+   (Math.abs(dz+2.9)<.20&&Math.abs(dx)<4)||
+   (Math.abs(dz-5.05)<.20&&Math.abs(dx)>.67&&Math.abs(dx)<4))top=Math.max(top??0,1.18);
+ }
+ return Number.isFinite(top)&&langVietCanWalk(x,z,top)?top:null;
+}
 // Calcul de chemin sur une grille pour contourner les maisons et le bassin.
 function findPath(start,end){return findWalkPath(start,end,.5,canWalk,14000);}
 function findRoomPath(start,end){return findWalkPath(start,end,.25,roomCanWalk,3000);}

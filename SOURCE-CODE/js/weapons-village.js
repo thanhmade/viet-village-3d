@@ -3,7 +3,7 @@
 // Skill cluster: slot 1 is the main (largest) button; slots 2-3 form the arc.
 // Aimed skill types accept a world point (core range check); the others act
 // around the player. Aiming never starts a cooldown: only a successful cast does.
-window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, stopRoaming, clearMotion, onSkillUsed, aim = null, notify = () => {}}) {
+window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, clearMotion, onSkillUsed, aim = null, notify = () => {}}) {
   const el = id => document.getElementById(id);
   const panel = el('weaponsPanel'), bar = el('weaponSkillBar');
   const configs = window.WeaponVFXCore.getWeaponConfigs();
@@ -182,7 +182,9 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   }
   function deactivate() {
     enabled = false; cancel(); showEquipped(false); closePanel();
-    stopRoaming(); lastAllowed = false; render(false);
+    // Equipment does not own the actor, walking mode, camera or map.
+    // Logout/scene exit remains the responsibility of the game controller.
+    lastAllowed = false; render(false);
   }
   function cast(slot, {point = null} = {}) {
     const allowed = usable();

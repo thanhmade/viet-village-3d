@@ -26,6 +26,25 @@ async function visual(kind='female'){const gltf=await asset(kind),context=runtim
 function advance(v,seconds,callback){let elapsed=0;while(elapsed<seconds){const dt=Math.min(.05,seconds-elapsed);v.update(dt);elapsed+=dt;callback?.();}}
 function close(actual,expected,tolerance=1e-5){assert(Math.abs(actual-expected)<=tolerance,`${actual} differs from ${expected} by ${Math.abs(actual-expected)}`);}
 
+test('physical jump on both real GLBs follows collider height once and returns to locomotion',async()=>{
+ for(const gender of ['male','female']){
+  const {v,gltf,actor}=await visual(gender),bounds=new T.Box3();v.setLocomotion(4.5);advance(v,.3);
+  const duration=6.4*2/18;assert(v.startJump(duration));
+  for(let frame=1;frame<=42;frame++){
+   const time=frame/60;actor.position.y=.3+6.4*time-9*time*time;v.update(1/60);bounds.setFromObject(gltf.scene,true);
+   close(bounds.min.y,actor.position.y,.025);assert.equal(v.state.clip,'jump');
+  }
+  actor.position.y=.3;v.endJump();advance(v,.4);assert.equal(v.state.clip,'walk');assert.equal(v.state.busy,false);
+  v.dispose();
+ }
+});
+
+test('speed fluctuations near run threshold do not repeatedly restart the gait',async()=>{
+ const {v}=await visual();v.setLocomotion(6.5);advance(v,.3);
+ for(let i=0;i<30;i++){v.setLocomotion(i%2?5.35:5.6);v.update(.016);assert.equal(v.state.clip,'run');}
+ assert.equal(v.state.activeActions,1);v.setLocomotion(4.5);advance(v,.3);assert.equal(v.state.clip,'walk');v.dispose();
+});
+
 test('male GLB has its own 33 named clips, matching 65-joint hierarchy, one textured mesh and no morph targets',async()=>{
  assert.equal(maleBuffer.toString('ascii',0,4),'glTF');assert.equal(maleBuffer.readUInt32LE(4),2);assert.equal(maleBuffer.readUInt32LE(8),maleBuffer.length);
  const maleNames=maleJSON.animations.map(clip=>clip.name),femaleNames=json.animations.map(clip=>clip.name);

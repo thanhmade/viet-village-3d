@@ -1,7 +1,7 @@
 (function(global){
  'use strict';
  // Visual choice is session-local. Firebase avatar IDs, HP and saved progress are unchanged.
- global.createVillagePlayerAvatar=function({THREE:T,body,proceduralParts,getState,pause,notify,load=global.loadVillageNPCGLTF,onAttachment,models=global.VietVillageCharacterModels||[]}){
+ global.createVillagePlayerAvatar=function({THREE:T,body,proceduralParts,getState,pause,notify,load=global.loadVillageNPCGLTF,onAttachment,motion=null,models=global.VietVillageCharacterModels||[]}){
   const el=id=>document.getElementById(id),panel=el('playerAvatarPanel');
   const testing=!!global.location&&['localhost','127.0.0.1','[::1]'].includes(global.location.hostname)&&
    new URLSearchParams(global.location.search).get('characterTest')==='1';
@@ -10,6 +10,7 @@
   const definition=id=>models.find(model=>model.avatarId===id&&model.available);
   const hasGLTF=()=>selected!=='original'&&!!visual;
   let visual=null,selected='original',requested='original',open=false,epoch=0,lastHp=null,disposed=false,uiTime=0;
+  let physicalJump=false,lastJumpPointerAt=-Infinity;
   let social=null,pendingReaction=null,conversation=null;const socialQueue=[];
   const bindings=[];
   function listen(target,type,handler){target?.addEventListener(type,handler);bindings.push(()=>target?.removeEventListener?.(type,handler));}
@@ -75,6 +76,7 @@
   }
   function update(dt,speed=0){
    const s=getState();if(!s.authenticated)return;
+   if(physicalJump&&!motion?.airborne){physicalJump=false;visual?.endJump?.();}
    if(hasGLTF()){
     if(!open){
      if(Number.isFinite(lastHp)&&s.hp<lastHp&&s.hp>0){clearInteraction();visual.returnToIdle();pendingReaction={clip:'hit_to_body_01',kind:'hit'};}
@@ -88,7 +90,7 @@
      const next=socialQueue[0];if(visual.playOnce(next)){social=next;socialQueue.shift();}
     }
    }
-   const jumpButton=el('playerJumpBtn');if(jumpButton){jumpButton.hidden=!(hasGLTF()&&s.authenticated&&s.visible&&!open&&s.canOpen);jumpButton.disabled=s.hp<=0||!!visual?.state.busy;}
+   const jumpButton=el('playerJumpBtn');if(jumpButton){jumpButton.hidden=!(motion&&s.authenticated&&s.visible&&!open&&s.canOpen);jumpButton.disabled=s.hp<=0||motion.airborne||!!visual?.state.busy;}
    lastHp=s.hp;uiTime+=dt;if(uiTime>=.1){render();uiTime=0;}
   }
   function onSkillUsed({weaponId}={}){
@@ -115,20 +117,25 @@
    return true;
   }
   function jump(){
-   const s=getState();if(!hasGLTF()||!s.authenticated||s.hp<=0||!s.canOpen||open)return false;
-   // Authored vertical pose only: grounded collider stays on the valid floor.
-   // No second Y offset, obstacle bypass, invented gravity or implicit attack.
-   if(!visual.playOnce('jump'))return false;
-   pause();return true;
+   const s=getState();if(!motion||!s.authenticated||s.hp<=0||!s.visible||!s.canOpen||open||visual?.state.busy||motion.airborne)return false;
+   if(!motion.jump())return false;
+   clearInteraction();physicalJump=true;
+   if(hasGLTF()){
+    if(visual.startJump)visual.startJump(motion.jumpDuration);
+    else visual.playOnce('jump');
+   }
+   // Keep WASD, joystick and horizontal velocity. A jump never calls pause().
+   return true;
   }
-  function lock(){epoch++;requested=selected;clearInteraction();pendingReaction=null;close({restoreFocus:false});visual?.returnToIdle();lastHp=null;const button=el('playerJumpBtn');if(button)button.hidden=true;}
+  function lock(){physicalJump=false;motion?.reset();epoch++;requested=selected;clearInteraction();pendingReaction=null;close({restoreFocus:false});visual?.returnToIdle();lastHp=null;const button=el('playerJumpBtn');if(button)button.hidden=true;}
   // Main menu opens the saved profile; this panel is reached only from test mode.
   listen(el('closePlayerAvatar'),'click',()=>close());
   listen(el('useOriginalPlayer'),'click',()=>select('original'));
   listen(el('useFemalePlayer'),'click',()=>select('female'));
   listen(el('useMalePlayer'),'click',()=>select('male'));
-  listen(el('playerJumpBtn'),'click',e=>{e.stopPropagation();jump();document.activeElement?.blur?.();});
-  for(const type of ['pointerdown','pointerup'])listen(el('playerJumpBtn'),type,e=>e.stopPropagation());
+  listen(el('playerJumpBtn'),'pointerdown',e=>{e.stopPropagation();if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault?.();lastJumpPointerAt=Date.now();jump();});
+  listen(el('playerJumpBtn'),'click',e=>{e.stopPropagation();if(e.detail===0||Date.now()-lastJumpPointerAt>500)jump();});
+  for(const type of ['pointerup','pointercancel'])listen(el('playerJumpBtn'),type,e=>e.stopPropagation());
   listen(global,'keydown',e=>{if(e.code!=='Space'||e.repeat||['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target?.tagName)||e.target?.isContentEditable)return;if(jump())e.preventDefault();});
   listen(el('playPlayerClip'),'click',()=>preview(clips.value));
   listen(el('pausePlayerClip'),'click',()=>{if(testing)visual?.pausePreview();render();});
@@ -150,7 +157,7 @@
   listen(global,'keydown',e=>{if(open&&e.key==='Escape'){e.preventDefault();close();}});
   panel.classList.add('hidden');el('playerAnimationTests').hidden=true;message('Chọn nhân vật cho phiên chơi local. Nhân vật ban đầu luôn được giữ lại.');
   return Object.freeze({select,open:show,close,isOpen:()=>open,update,onSkillUsed,onInteraction,jump,lock,
-   get isJumping(){return hasGLTF()&&visual.state.clip==='jump'&&visual.state.mode==='once';},
+   get isJumping(){return !!motion?.airborne;},
    get isFemale(){return selected==='female';},get isGLTF(){return hasGLTF();},get state(){return {selected,modelId:definition(selected)?.id||null,loading:loads.size>0,testing,animation:hasGLTF()?visual.state:null};},
    dispose(){if(disposed)return;lock();selected='original';displaySelection();disposed=true;bindings.forEach(remove=>remove());for(const item of visuals.values())item.dispose();visuals.clear();visual=null;}
   });

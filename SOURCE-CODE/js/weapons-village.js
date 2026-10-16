@@ -3,7 +3,11 @@
 // Skill cluster: slot 1 is the main (largest) button; slots 2-3 form the arc.
 // Aimed skill types accept a world point (core range check); the others act
 // around the player. Aiming never starts a cooldown: only a successful cast does.
-window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, stopRoaming, clearMotion, onSkillUsed, aim = null, notify = () => {}}) {
+// VFX hooks: getQuality() → 'low'|'medium'|'high' (applied when no effect is live),
+// onVfxEvent(event) receives the core's cast/impact/shield events (camera shake),
+// getCasterHeight() sizes body-centred effects such as the Hộ Thân shell.
+window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, stopRoaming, clearMotion, onSkillUsed, aim = null, notify = () => {},
+  getQuality = () => 'low', onVfxEvent = null, getCasterHeight = () => 2.35}) {
   const el = id => document.getElementById(id);
   const panel = el('weaponsPanel'), bar = el('weaponSkillBar');
   const configs = window.WeaponVFXCore.getWeaponConfigs();
@@ -12,7 +16,8 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     config.skills.map((skill, index) => `${index + 1} · ${skill.name}`)]));
   const nameLabel = el('equippedWeaponName');
   const skillButtons = [el('weaponSkill1'), el('weaponSkill2'), el('weaponSkill3')];
-  const AIMED = new Set(['projectile', 'volley', 'rain', 'thrust', 'cleave', 'armor-break', 'slam']);
+  // Same aimed set as the VFX core (Chấn Địa strikes where the staff lands, in front).
+  const AIMED = new Set(window.WeaponVFXCore.aimedTypes);
   const GLYPHS = {sweep: '↻', combo: '⚔', thrust: '➶', projectile: '➹', volley: '⇶', rain: '☂', cleave: '⚒', 'armor-break': '✸', slam: '◎', shield: '⛨', lotus: '✿', vortex: '❂', cyclone: '✺'};
   const KEYS = ['J', '2', '3'];
   // Child labels are built once; render() only touches the parts that changed.
@@ -55,9 +60,13 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     attachGrip(); grip.visible = false;
     // Keep unequipped models out of the scene's matrix traversal.
     for (const model of models.models.values()) model.group.removeFromParent();
-    manager = new window.WeaponVFXCore({THREE: T, scene, quality: 'low', maxActive: 4,
-      getGroundY, getEquippedWeapon: () => weaponId});
+    manager = new window.WeaponVFXCore({THREE: T, scene, quality: qualityName(), maxActive: 4,
+      getGroundY, getEquippedWeapon: () => weaponId,
+      onEvent: event => { try { onVfxEvent?.(event); } catch (_) { /* Camera/UI reactions never break the effect. */ } }});
   }
+  function qualityName() { const value = getQuality?.(); return ['low', 'medium', 'high'].includes(value) ? value : 'low'; }
+  // Switching quality rebuilds the pool, so it only happens while nothing is on screen.
+  function syncQuality() { const value = qualityName(); if (manager && manager.quality !== value && !manager.hasActiveEffects) manager.setQuality(value); }
   const bindings = [];
   function listen(target, name, handler) {
     target?.addEventListener(name, handler);
@@ -172,7 +181,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   }
   function equip(id) {
     if (!getState().authenticated || disposed || !configById.has(id)) return false;
-    ensureResources(); cancel(); weaponId = id; currentConfig = configById.get(id); caster.userData.weaponId = id;
+    ensureResources(); cancel(); syncQuality(); weaponId = id; currentConfig = configById.get(id); caster.userData.weaponId = id;
     if (selectedModel) { selectedModel.group.visible = false; selectedModel.group.removeFromParent(); }
     selectedModel = models.models.get(id); grip.add(selectedModel.group); selectedModel.group.visible = true;
     attachGrip();
@@ -180,9 +189,11 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     if (!startRoaming()) return false;
     enabled = true; update(0); render(usable()); return true;
   }
+  // Putting the weapon away only stows the weapon: the player keeps walking and
+  // stays visible. Leaving the village (lock/logout) also stops roaming.
   function deactivate() {
     enabled = false; cancel(); showEquipped(false); closePanel();
-    stopRoaming(); lastAllowed = false; render(false);
+    lastAllowed = false; render(false);
   }
   function cast(slot, {point = null} = {}) {
     const allowed = usable();
@@ -197,8 +208,11 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       const origin = body.getWorldPosition(new T.Vector3());
       if (Math.hypot(target.x - origin.x, target.z - origin.z) > .05) body.rotation.y = Math.atan2(target.x - origin.x, target.z - origin.z);
     }
-    // Core reads world transforms from the caster/tip ancestor chains itself.
-    const result = manager.cast(skill.id, {caster, weaponTip: selectedModel.tip, point: target});
+    // Core reads world transforms from the caster/tip/staff ancestor chains itself.
+    syncQuality();
+    const height = Number(getCasterHeight?.());
+    const result = manager.cast(skill.id, {caster, weaponTip: selectedModel.tip, weapon: selectedModel.group, point: target,
+      casterHeight: Number.isFinite(height) && height > 0 ? height : 2.35});
     if (result.ok) {
       poseTime = 0; poseLength = Math.min(skill.duration, .9);
       const button = skillButtons[slot - 1];
@@ -320,10 +334,12 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
         remaining: manager?.cooldownRemaining(skill.id, caster) || 0}));
     },
     suspend() { cancel(); showEquipped(false); lastAllowed = false; render(false); },
-    lock() { deactivate(); },
+    lock() { deactivate(); stopRoaming(); },
+    // A real hit on the player (world point): ripples an active Hộ Thân shell.
+    onPlayerHit(point) { return !!manager && !disposed && enabled && manager.hitShield(caster, point); },
     get state() { return {enabled, weaponId, weaponName: currentConfig.name, aiming: aiming ? {slot: aiming.slot, source: aiming.source, cancel: aiming.cancel, point: {x: aiming.point.x, z: aiming.point.z}} : null, active: manager?.effects.length || 0, particles: manager?.pool.count || 0}; },
     dispose() {
-      if (disposed) return; deactivate(); disposed = true; bindings.forEach(remove => remove()); manager?.dispose();
+      if (disposed) return; deactivate(); stopRoaming(); disposed = true; bindings.forEach(remove => remove()); manager?.dispose();
       if (indicator) { indicator.group.removeFromParent(); indicator.group.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); indicator = null; }
       // The model helper owns every model, including detached cached equipment.
       if (models) { for (const model of models.models.values()) grip.add(model.group); models.dispose(); }

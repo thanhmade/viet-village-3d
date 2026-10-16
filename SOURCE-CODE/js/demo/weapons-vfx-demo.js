@@ -400,7 +400,8 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
     const forward=new T.Vector3(0,0,-1).applyQuaternion(actor.quaternion);
     const point=['projectile','volley','thrust','rain'].includes(s.type)?actor.position.clone().addScaledVector(forward,s.type==='rain'?5:Math.min(s.range||9,9)):null;
     if(point)point.y=0;
-    const result=vfx.cast(id,{caster:actor,weaponTip:models.get(weaponId).tip,point});
+    // The staff passes its model too: Côn Quét's ribbon follows two points on the shaft.
+    const result=vfx.cast(id,{caster:actor,weaponTip:models.get(weaponId).tip,weapon:weaponId==='staff'?models.get(weaponId).group:null,point});
     if(!result.ok){toast(result.reason==='cooldown'?'Đang hồi chiêu · còn '+fmt(result.retryAfter)+' giây':'Chưa thi triển được: '+result.reason);return false;}
     pose={id,start:simulationTime(),handle:result.handle};$('active-label').textContent=s.name;return true;
   }

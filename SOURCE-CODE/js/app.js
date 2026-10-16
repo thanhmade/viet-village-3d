@@ -109,6 +109,15 @@ function openScenery(){if(!window.VietVillageAuth?.isAuthenticated()||(window.Vi
 function bindScenery(){yaw=.55;pitch=.67;$('pondBtn').onclick=showPondView;$('play').onclick=()=>window.VietVillageAuth?.enterGame(openScenery);$('walkBtn').onclick=startRoaming;$('houseBtn').onclick=()=>{if(regionTravel&&regionTravel.currentId!=='lang-viet')return;stopVillageWalk();world.visible=false;housePreview.visible=true;clearMotion();gateView=-1;houseView=(houseView+1)%4;sceneryFocus.set(11,2.0,0);sceneryRadius=Math.max(12,7.5/camera.aspect);yaw=[0,Math.PI,-Math.PI/2,Math.PI/2][houseView];pitch=.22;toast('Nhà dân · '+['Mặt trước','Mặt sau','Bên trái','Bên phải'][houseView]);};$('overviewBtn').onclick=()=>{stopVillageWalk();world.visible=true;housePreview.visible=false;gateView=-1;houseView=-1;sceneryFocus.set(0,1,0);sceneryRadius=60;yaw+=Math.PI/2;pitch=.67;};$('cameraBtn').onclick=()=>{stopVillageWalk();world.visible=true;housePreview.visible=false;gateView=-1;houseView=-1;sceneryFocus.set(0,1,0);sceneryRadius=60;yaw=.55;pitch=.67;};}
 let clockT=0,climateElapsed=0,uiElapsed=0,nextFrameAt=0,contentLoading=true,contentWatchUntil=0;
 const cameraDestination=new THREE.Vector3(),cameraOffset=new THREE.Vector3();
+// Light camera shake from VFX impacts (Chấn Địa): added just before render and removed
+// right after, so camera follow/collision never sees it. Player can turn it off (climate panel).
+const CAMERA_SHAKE_KEY='viet-village:camera-shake',cameraShakeOffset=new THREE.Vector3();let cameraShakeAmount=0,cameraShakeTime=0;
+function cameraShakeEnabled(){const box=$('cameraShake');return !box||box.checked;}
+function addCameraShake(amount){if(!cameraShakeEnabled()||!(amount>0))return;cameraShakeAmount=Math.min(.18,Math.max(cameraShakeAmount,amount));}
+function applyCameraShake(dt){cameraShakeOffset.set(0,0,0);if(cameraShakeAmount<.002){cameraShakeAmount=0;return;}cameraShakeTime+=dt;const a=cameraShakeAmount,k=cameraShakeTime*47;
+ cameraShakeOffset.set(Math.sin(k*1.13)*a,Math.sin(k*1.71+1.3)*a*.8,Math.sin(k*.93+2.1)*a*.6);camera.position.add(cameraShakeOffset);cameraShakeAmount*=Math.exp(-dt*(window.StaffVFXConfig?.cameraShake?.decay||11));}
+(()=>{const box=$('cameraShake');if(!box)return;try{box.checked=localStorage.getItem(CAMERA_SHAKE_KEY)!=='off';}catch(_){/* storage blocked: keep default */}
+ box.addEventListener('change',()=>{try{localStorage.setItem(CAMERA_SHAKE_KEY,box.checked?'on':'off');}catch(_){/* not persisted */}if(!box.checked)cameraShakeAmount=0;});})();
 function tick(ms){requestAnimationFrame(tick);experienceView?.update();if(document.hidden||!window.VietVillageAuth?.isAuthenticated()){villageWeapons?.suspend();window.VillagePerformance?.resetSample();resetHouseTravel();regionTravel?.reset();last=0;nextFrameAt=0;return;}
 // The opaque atlas does not need a second GPU render underneath it. Room presence continues.
 if(window.VietVillageAtlas?.isOpen()||window.VietVillageCharacter?.isOpen()){window.VietVillageOnline?.tick(last?Math.min((ms-last)/1000,.05):0);last=ms;nextFrameAt=0;window.VillagePerformance?.resetSample();return;}
@@ -144,7 +153,7 @@ if(climateElapsed>=1/30){updateClimate(climateElapsed);window.VietVillageMapAsse
 playerHealthView?.update(dt);
 if(uiElapsed>=.1){if(!contentWatchUntil)contentWatchUntil=ms+60000;contentLoading=ms<contentWatchUntil&&!!window.isVillageContentLoading?.();updatePondChecks();updateEntrances();if($('minimap').offsetParent!==null)minimap();gameHud?.update();window.VietVillageLandscape?.schedule();uiElapsed=0;}
 if(playerAvatar?.isGLTF)body.position.y=0;playerAvatar?.update(dt,avatarSpeed);
-regionTravel?.update(portalDt);window.VietVillageNPCs?.update(dt);learningCollectibles?.update(dt);housePortalSystem?.update(portalDt);villageWeapons?.update(dt);window.VietVillageOnline?.tick(dt);window.VillagePerformance?.beforeRender(ms);renderer.render(scene,camera);window.VillagePerformance?.sample(ms,!overlays()&&!contentLoading);
+regionTravel?.update(portalDt);window.VietVillageNPCs?.update(dt);learningCollectibles?.update(dt);housePortalSystem?.update(portalDt);villageWeapons?.update(dt);window.VietVillageOnline?.tick(dt);window.VillagePerformance?.beforeRender(ms);applyCameraShake(dt);renderer.render(scene,camera);camera.position.sub(cameraShakeOffset);window.VillagePerformance?.sample(ms,!overlays()&&!contentLoading);
 }
 let gameInitialized=false,gameInitializationStarted=false,enteredCharacterUid=null;
 function initializeVillageGame(){
@@ -161,7 +170,9 @@ experienceView=window.createVillageExperienceView({document,getState:()=>playerE
 window.VietVillageExperience=playerExperience;
 addEventListener('storage',event=>{if(event.key===null||event.key?.startsWith(playerExperience.storagePrefix))playerExperience.refresh();});
 $('experienceRewardRetry').addEventListener('click',()=>{for(const item of pendingExperienceRewards.values())if(item.uid===window.VietVillageAuth?.getProfile?.()?.uid&&!item.promise)void claimActivityExperience(item.kind,item.id);});
-playerJourney=window.createVillageJourney?.({getIdentity:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),uid:window.VietVillageAuth?.getProfile?.()?.uid||null}),storage:localStorage,notify:toast,getExperience:()=>playerExperience.getState()})||null;
+playerJourney=window.createVillageJourney?.({getIdentity:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),uid:window.VietVillageAuth?.getProfile?.()?.uid||null}),storage:localStorage,notify:toast,getExperience:()=>playerExperience.getState(),
+ // A real blow with a world position ripples an active Hộ Thân shell at that point (visual only).
+ onDamage:({source})=>{const p=source?.position;if(p&&[p.x,p.y,p.z].every(Number.isFinite))villageWeapons?.onPlayerHit(p);}})||null;
 window.VietVillageJourney=playerJourney;
 if(!THREE.WebGLRenderer)throw new Error('Không tải được Three.js.');renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;$('view').append(renderer.domElement);if(matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch');
 // Hybrid devices: the touch layout (joystick, large skills) follows the input actually used.
@@ -172,10 +183,14 @@ addEventListener('keydown',e=>{if(e.code!=='KeyC'||e.repeat||e.ctrlKey||e.altKey
  if(!overlays()){e.preventDefault();void openCharacterSheet();}});
 $('playerPortraitBtn')?.addEventListener('click',e=>{e.stopPropagation?.();void openCharacterSheet();});window.VillagePerformance=window.createVillagePerformance({renderer,getSun:()=>sun,getSize:()=>({width:innerWidth,height:innerHeight,dpr:devicePixelRatio,mobile:innerWidth<800||matchMedia('(pointer:coarse)').matches}),readout:$('performanceReadout'),storage:localStorage});$('quality').value=window.VillagePerformance.mode;quality();createWorld();bind();bindScenery();bindInterior();initClimate();initializeHouseTravel();initializeRegionTravel();void window.VietVillageMapAssets?.initialize({region:regionTravel.current,interior:interiorRoot,preview:housePreview,notify:toast});$('loading').classList.add('hidden');requestAnimationFrame(tick);renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();toast('Đồ họa bị gián đoạn. Hãy tải lại trang để tiếp tục.');});gameInitialized=true;
 villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,clearMotion,startRoaming,stopRoaming,aim:{fromScreen:aimFromScreen,fromDrag:aimFromDrag},notify:toast,
+ getQuality:()=>{const level=window.VillagePerformance?.policy?.level;return level>=3?'high':level>=2?'medium':'low';},
+ getCasterHeight:()=>playerAvatar?.height||2.35,
+ onVfxEvent:event=>{if(event.type==='impact'&&event.shake>0)addCameraShake(event.shake);},
  onSkillUsed:skill=>{playerJourney?.recordSkillUse();window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
  getGroundY:point=>bridgeHeight(point.x,point.z),
  getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),
- canCast:gameInitialized&&!!window.VietVillageAuth?.isAuthenticated()&&(localWalking||multiplayerWalking)&&world.visible&&!insideHouse&&!overlays()&&gateView<0&&houseView<0})});
+ // HP 0 (defeat) blocks casting; update() then cancels any live skill visuals.
+ canCast:gameInitialized&&!!window.VietVillageAuth?.isAuthenticated()&&playerJourney?.getState().alive!==false&&(localWalking||multiplayerWalking)&&world.visible&&!insideHouse&&!overlays()&&gateView<0&&houseView<0})});
 window.VietVillageWeapons=villageWeapons;
 playerAvatar=window.createVillagePlayerAvatar({THREE,body,proceduralParts:body.children.filter(part=>part.userData.proceduralAvatarPart),
  getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),hp:playerJourney?.getState().hp,

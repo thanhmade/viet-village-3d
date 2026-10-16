@@ -91,8 +91,12 @@
    const jumpButton=el('playerJumpBtn');if(jumpButton){jumpButton.hidden=!(hasGLTF()&&s.authenticated&&s.visible&&!open&&s.canOpen);jumpButton.disabled=s.hp<=0||!!visual?.state.busy;}
    lastHp=s.hp;uiTime+=dt;if(uiTime>=.1){render();uiTime=0;}
   }
-  function onSkillUsed({weaponId}={}){
-   if(hasGLTF()&&getState().authenticated&&getState().hp>0&&!open&&['staff','sword','spear','axe'].includes(weaponId))return visual.playOnce('slash');
+  function onSkillUsed({weaponId,skillId}={}){
+   if(!hasGLTF()||!getState().authenticated||!(getState().hp>0)||open)return false;
+   // Staff skills play the measured part of a clip that matches their VFX timeline.
+   const segment=global.StaffVFXConfig?.animation?.[skillId];
+   if(segment&&visual.playSegment?.(segment.clip,{from:segment.from,to:segment.to,force:true})){social=null;pendingReaction=null;return true;}
+   if(['staff','sword','spear','axe'].includes(weaponId))return visual.playOnce('slash');
    return false;
   }
   function clearInteraction(){socialQueue.length=0;conversation=null;if(social)visual?.returnToIdle();social=null;}
@@ -151,7 +155,7 @@
   panel.classList.add('hidden');el('playerAnimationTests').hidden=true;message('Chọn nhân vật cho phiên chơi local. Nhân vật ban đầu luôn được giữ lại.');
   return Object.freeze({select,open:show,close,isOpen:()=>open,update,onSkillUsed,onInteraction,jump,lock,
    get isJumping(){return hasGLTF()&&visual.state.clip==='jump'&&visual.state.mode==='once';},
-   get isFemale(){return selected==='female';},get isGLTF(){return hasGLTF();},get state(){return {selected,modelId:definition(selected)?.id||null,loading:loads.size>0,testing,animation:hasGLTF()?visual.state:null};},
+   get isFemale(){return selected==='female';},get height(){const value=hasGLTF()?visual.stats?.height:null;return Number.isFinite(value)&&value>0?value:null;},get isGLTF(){return hasGLTF();},get state(){return {selected,modelId:definition(selected)?.id||null,loading:loads.size>0,testing,animation:hasGLTF()?visual.state:null};},
    dispose(){if(disposed)return;lock();selected='original';displaySelection();disposed=true;bindings.forEach(remove=>remove());for(const item of visuals.values())item.dispose();visuals.clear();visual=null;}
   });
  };

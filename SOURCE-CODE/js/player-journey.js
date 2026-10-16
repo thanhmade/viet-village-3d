@@ -6,7 +6,9 @@
 
   // getIdentity returns only Firebase's current {authenticated, uid}. These local
   // tutorial flags are UI progress, never trusted grades, roles or server rights.
-  global.createVillageJourney = function ({getIdentity, storage, notify, getExperience} = {}) {
+  // onDamage({amount, hp, source}) runs after a real hit lowered HP; source.position
+  // (world point of the blow) lets visuals such as the Hộ Thân shell react there.
+  global.createVillageJourney = function ({getIdentity, storage, notify, getExperience, onDamage = null} = {}) {
     let identity = null, authenticated = false, uid = null, walked = 0;
     let alive = false, hp = 0, level = 0, movement = false, skills = false, snapshot;
     function publish() {
@@ -90,9 +92,11 @@
       const before = hp; hp = MAX_HP; publish();
       return {ok: true, before, hp, maxHp: MAX_HP, amount: hp - before, message: 'Đã hồi đầy HP: ' + hp + '/' + MAX_HP + ' · Miễn phí trong bản thử nghiệm.'};
     }
-    function takeDamage(amount) {
+    function takeDamage(amount, {source = null} = {}) {
       if (!syncIdentity() || !alive || !Number.isFinite(amount) || amount <= 0) return false;
-      hp = Math.max(0, hp - amount); alive = hp > 0; publish(); return true;
+      hp = Math.max(0, hp - amount); alive = hp > 0; publish();
+      try { onDamage?.({amount, hp, source}); } catch (_) { /* Hit visuals never change the HP result. */ }
+      return true;
     }
     function lock() {
       // Firebase has already blocked the session before the game's lock hook.

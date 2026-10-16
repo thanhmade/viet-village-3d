@@ -1,6 +1,8 @@
 /* VIET VILLAGE 3D — Côn / Gậy: 3 kỹ năng riêng.
  * Thời gian: giây; khoảng cách: mét (quy ước 1 đơn vị Three.js = 1 mét).
- * Các trị số là mặc định thử nghiệm do thiết kế, không đo từ ảnh.
+ * activeAt/activeEnd khớp đoạn hoạt ảnh GLB trong staff-vfx-config.js (đo từ
+ * clip thật: tay quét ngang, thế thủ, điểm côn chạm đất); các trị số khác là
+ * mặc định thiết kế, không đo từ ảnh.
  * Hướng trước trong local space là -Z; scene cần dùng hệ trục Y-up.
  */
 (function (root, factory) {
@@ -27,13 +29,13 @@
       "type": "sweep",
       "slot": 1,
       "duration": 1.2,
-      "activeAt": 0.12,
-      "activeEnd": 0.75,
+      "activeAt": 0.15,
+      "activeEnd": 0.9,
       "cooldown": 1.4,
       "radius": 3.2,
       "range": 3.2,
       "forwardOffset": 0.0,
-      "description": "Quét côn ngang tạo dải khí xanh ngọc, mép vàng, bụi đất và mảnh đá quanh chân."
+      "description": "Quét côn ngang để lại dải khí xanh ngọc bám theo thân côn, mép vàng, tia lửa vàng và bụi nhẹ dưới chân."
     },
     {
       "id": "staff.ho-than",
@@ -42,13 +44,13 @@
       "type": "shield",
       "slot": 2,
       "duration": 3.0,
-      "activeAt": 0.18,
+      "activeAt": 0.25,
       "activeEnd": 2.65,
       "cooldown": 5.0,
       "radius": 1.55,
       "range": 0,
       "forwardOffset": 0.0,
-      "description": "Cầu khí xanh ngọc trong suốt quanh người, nhiều vòng sáng và phù hiệu vàng quay."
+      "description": "Cầu khí xanh ngọc trong suốt bám theo người, hai vòng sáng nghiêng và hoa văn vàng nhạt; gợn sóng tại điểm trúng đòn."
     },
     {
       "id": "staff.chan-dia",
@@ -57,13 +59,13 @@
       "type": "slam",
       "slot": 3,
       "duration": 1.8,
-      "activeAt": 0.38,
-      "activeEnd": 1.25,
+      "activeAt": 0.72,
+      "activeEnd": 1.5,
       "cooldown": 3.6,
       "radius": 4.5,
       "range": 4.5,
       "forwardOffset": 0.65,
-      "description": "Nện côn xuống đất tạo cột sáng đứng, vòng chấn động, vết nứt sáng và đá văng."
+      "description": "Tụ khí ở đầu côn rồi nện xuống đất: chớp sáng, cột sáng thấp, sóng chấn động bám địa hình, vết nứt phát sáng và đá văng."
     }
   ]
 };

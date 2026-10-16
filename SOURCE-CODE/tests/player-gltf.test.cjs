@@ -260,3 +260,17 @@ test('actual preview keeps the last Male/Female selection and disposes older mod
   assert.equal(renderDisposed,1);assert.equal(contextLost,1);preview.dispose();assert.equal(renderDisposed,1);
  }finally{preview.dispose();global.disposeVillageNPCGLTF=previousDisposer;}
 });
+
+test('skill segments play only the measured part of a clip, chain with force and never cut defeat or preview',async()=>{
+ const {v}=await visual();
+ assert.equal(v.playSegment('cast_a_spell',{from:.55,to:1.75,force:true}),true);
+ assert.equal(v.state.clip,'cast_a_spell');assert.equal(v.state.mode,'once');close(v.state.time,.55);
+ advance(v,1.1);assert.equal(v.state.clip,'cast_a_spell');assert(v.state.time<1.75);
+ advance(v,.2);assert.equal(v.state.mode,'locomotion');assert.equal(v.state.clip,'idle','returns to locomotion at the segment end');
+ assert.equal(v.playSegment('slash',{from:1.45,to:3.25,force:true}),true);close(v.state.time,1.45);
+ assert.equal(v.playSegment('cast_a_spell',{from:1.95,to:4.95}),false,'without force a running one-shot is kept');
+ assert.equal(v.playSegment('cast_a_spell',{from:1.95,to:4.95,force:true}),true,'skill after skill');close(v.state.time,1.95);
+ for(const bad of [['missing',{}],['slash',{from:3,to:2}],['slash',{from:9,to:12}]])assert.equal(v.playSegment(bad[0],{...bad[1],force:true}),false);
+ assert.equal(v.preview('slash'),true);assert.equal(v.playSegment('slash',{from:1,to:2,force:true}),false,'preview untouched');
+ v.dispose();assert.equal(v.playSegment('slash',{from:1,to:2,force:true}),false);
+});

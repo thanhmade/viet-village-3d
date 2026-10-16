@@ -10,6 +10,8 @@ const Core = require('../js/vfx/weapon-vfx-core.js');
 for (const weapon of ['staff', 'sword', 'spear', 'bow', 'axe']) {
   require(`../js/vfx/${weapon}-skill-vfx.js`);
 }
+// Hiệu ứng riêng của Côn chạy trên cùng timeline/sự kiện/dispose của lõi.
+require('../js/vfx/staff-skill-effects.js');
 
 const expectedIds = {
   staff: ['con-quet', 'ho-than', 'chan-dia'],

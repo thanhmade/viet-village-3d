@@ -1,0 +1,596 @@
+/* VIET VILLAGE 3D — CÔN (staff) skill effects: Côn Quét, Hộ Thân, Chấn Địa.
+ * Plugged into WeaponVFXCore by skill id, so they share its timeline, events,
+ * particle pool, cancel and disposal. Visual only: no damage or cooldown logic,
+ * no render loop and no timers; everything advances with the game's delta.
+ * Textures/geometries used by every cast are created once per manager
+ * (core.sharedResource) and disposed with it; per-cast buffers and materials
+ * live in fx.geometries / fx.materials and are disposed exactly once.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports)
+    module.exports = factory(require('./weapon-vfx-core.js'), require('./staff-vfx-config.js'));
+  else root.StaffSkillEffects = factory(root.WeaponVFXCore, root.StaffVFXConfig);
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (Core, VFX) {
+  'use strict';
+  if (!Core || !VFX) throw new Error('Nạp weapon-vfx-core.js và staff-vfx-config.js trước staff-skill-effects.js.');
+  const TAU = Math.PI * 2;
+  const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+  const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const rand = (core, a, b) => a + core.random() * (b - a);
+  const tier = core => VFX.quality[core.quality] || VFX.quality.medium;
+
+  // ---------------- procedural textures (pure data: no image files, no canvas) ----------------
+  function hash(x, y, seed) { let h = (x * 374761393 + y * 668265263 + seed * 362437) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
+  function valueNoise(size, cell, seed) {
+    const out = new Float32Array(size * size), cells = size / cell, wrap = i => ((i % cells) + cells) % cells;
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const gx = x / cell, gy = y / cell, ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
+      const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+      const a = hash(wrap(ix), wrap(iy), seed), b = hash(wrap(ix + 1), wrap(iy), seed), c = hash(wrap(ix), wrap(iy + 1), seed), d = hash(wrap(ix + 1), wrap(iy + 1), seed);
+      const top = a + (b - a) * sx, bottom = c + (d - c) * sx; out[y * size + x] = top + (bottom - top) * sy;
+    }
+    return out;
+  }
+  function dataTexture(T, size, fill, repeat) {
+    const data = new Uint8Array(size * size * 4);
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) data.set(fill(x, y).map(v => Math.round(clamp(v) * 255)), (y * size + x) * 4);
+    const tex = new T.DataTexture(data, size, size, T.RGBAFormat);
+    tex.wrapS = tex.wrapT = repeat ? T.RepeatWrapping : T.ClampToEdgeWrapping;
+    tex.magFilter = tex.minFilter = T.LinearFilter; tex.generateMipmaps = false; tex.needsUpdate = true;
+    return tex;
+  }
+  // Tileable value noise for dissolve edges and streaks.
+  function noiseTexture(T) {
+    const size = 64, a = valueNoise(size, 8, 11), b = valueNoise(size, 4, 23);
+    return dataTexture(T, size, (x, y) => { const i = y * size + x; return [a[i] * .65 + b[i] * .35, b[i], a[i], 1]; }, true);
+  }
+  // Soft round glow (alpha) with a little texture so it is not a flat disc.
+  function softDotTexture(T) {
+    const size = 64, n = valueNoise(size, 8, 5);
+    return dataTexture(T, size, (x, y) => {
+      const r = Math.hypot((x + .5) / size * 2 - 1, (y + .5) / size * 2 - 1);
+      return [1, 1, 1, clamp(1 - r) ** 1.8 * (.78 + .22 * n[y * size + x])];
+    }, false);
+  }
+  // Branching crack mask: R = crack line, G = glow halo, A = radial fade.
+  function crackTexture(T) {
+    const size = 256, line = new Float32Array(size * size);
+    let seed = 97; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const stamp = (x, y, r) => {
+      for (let j = Math.max(0, Math.floor(y - r - 2)); j < Math.min(size, Math.ceil(y + r + 2)); j++)
+        for (let i = Math.max(0, Math.floor(x - r - 2)); i < Math.min(size, Math.ceil(x + r + 2)); i++)
+          line[j * size + i] = Math.max(line[j * size + i], clamp(1 - Math.hypot(i - x, j - y) / (r + .8)));
+    };
+    const branch = (x, y, angle, length, width, depth) => {
+      for (let k = 0; k < length; k++) {
+        angle += (rnd() - .5) * .5; x += Math.cos(angle) * 1.6; y += Math.sin(angle) * 1.6;
+        stamp(x, y, Math.max(.6, width * (1 - k / length)));
+        if (depth > 0 && rnd() < .035) branch(x, y, angle + (rnd() < .5 ? -1 : 1) * (.5 + rnd() * .6), length * .45, width * .6, depth - 1);
+        if (Math.hypot(x - size / 2, y - size / 2) > size * .47) break;
+      }
+    };
+    for (let i = 0; i < 9; i++) branch(size / 2, size / 2, i / 9 * TAU + rnd() * .4, 58 + rnd() * 30, 2.4, 2);
+    const halo = new Float32Array(size * size);
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      let sum = 0, count = 0;
+      for (let j = -4; j <= 4; j += 2) for (let i = -4; i <= 4; i += 2) { const xx = x + i, yy = y + j; if (xx >= 0 && yy >= 0 && xx < size && yy < size) { sum += line[yy * size + xx]; count++; } }
+      halo[y * size + x] = sum / count;
+    }
+    return dataTexture(T, size, (x, y) => {
+      const r = Math.hypot(x / size - .5, y / size - .5) * 2;
+      return [line[y * size + x], clamp(halo[y * size + x] * 2.2), 0, 1 - smooth(.72, 1, r)];
+    }, false);
+  }
+  // Thin closed band of unit radius (the shield's tilted rings).
+  function bandGeometry(T, segments) {
+    const pos = [], uv = [], idx = [];
+    for (let i = 0; i <= segments; i++) {
+      const u = i / segments, a = u * TAU;
+      for (let v = 0; v < 2; v++) { pos.push(Math.sin(a), v - .5, Math.cos(a)); uv.push(u, v); }
+      if (i < segments) { const j = i * 2; idx.push(j, j + 1, j + 2, j + 1, j + 3, j + 2); }
+    }
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeBoundingSphere();
+    return g;
+  }
+  function sharedFor(core) {
+    const q = tier(core);
+    return core.sharedResource('staff-vfx:' + core.quality, T => {
+      const column = new T.CylinderGeometry(1, 1, 1, 28, 1, true); column.translate(0, .5, 0);
+      const r = {
+        noise: noiseTexture(T), dot: softDotTexture(T), crack: crackTexture(T),
+        sphere: new T.SphereGeometry(1, q.sphereSegments, Math.round(q.sphereSegments * .7)),
+        band: bandGeometry(T, 96), quad: new T.PlaneGeometry(1, 1), column,
+        rock: new T.DodecahedronGeometry(1, 0),
+        rockMaterial: new T.MeshStandardMaterial({color: VFX.colors.rock, roughness: .92, metalness: 0, flatShading: true})
+      };
+      Object.defineProperty(r, 'dispose', {value() { for (const value of Object.values(r)) value.dispose(); }});
+      return r;
+    });
+  }
+  const palette = T => Object.fromEntries(Object.entries(VFX.colors).map(([k, v]) => [k, new T.Color(v)]));
+  function material(core, fx, options) {
+    const T = core.THREE, m = new T.ShaderMaterial({transparent: true, depthWrite: false, toneMapped: false,
+      blending: T.AdditiveBlending, side: T.DoubleSide, ...options,
+      fragmentShader: options.fragmentShader.replace(/\}\s*$/, '\n#include <colorspace_fragment>\n}')});
+    fx.materials.add(m); return m;
+  }
+  function mesh(core, fx, geometry, mat, parent, order = 9) {
+    const n = new core.THREE.Mesh(geometry, mat); n.renderOrder = order; parent.add(n); return n;
+  }
+  // World-space layer: fx.group never rotates, so a child at -group.position is
+  // in world coordinates while the group itself still marks the effect's anchor.
+  function worldLayer(core, fx) { fx.world = new core.THREE.Group(); fx.world.name = 'world-space'; fx.group.add(fx.world); }
+  function syncWorld(fx) { fx.group.rotation.set(0, 0, 0); if (fx.world) fx.world.position.copy(fx.group.position).negate(); }
+  function anchorAtCaster(core, fx) { const p = fx.caster.getWorldPosition(fx.anchor || (fx.anchor = new core.THREE.Vector3())); fx.group.position.set(p.x, core._ground(p), p.z); }
+
+  // Per-cast dust: soft sprites (normal blending so dust darkens nothing and never glows).
+  function createDust(core, fx, capacity, color) {
+    const T = core.THREE, g = new T.BufferGeometry();
+    const position = new Float32Array(capacity * 3), alpha = new Float32Array(capacity), size = new Float32Array(capacity);
+    g.setAttribute('position', new T.BufferAttribute(position, 3).setUsage(T.DynamicDrawUsage));
+    g.setAttribute('aAlpha', new T.BufferAttribute(alpha, 1).setUsage(T.DynamicDrawUsage));
+    g.setAttribute('aSize', new T.BufferAttribute(size, 1).setUsage(T.DynamicDrawUsage));
+    g.setDrawRange(0, 0); fx.geometries.add(g);
+    const m = material(core, fx, {blending: T.NormalBlending, side: T.FrontSide,
+      uniforms: {uMap: {value: sharedFor(core).dot}, uColor: {value: new T.Color(color)}, uScale: {value: 300}},
+      vertexShader: 'attribute float aAlpha;attribute float aSize;varying float vAlpha;uniform float uScale;void main(){vAlpha=aAlpha;vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=clamp(aSize*uScale/max(.1,-mv.z),1.,96.);gl_Position=projectionMatrix*mv;}',
+      fragmentShader: 'uniform sampler2D uMap;uniform vec3 uColor;varying float vAlpha;void main(){float a=texture2D(uMap,gl_PointCoord).a*vAlpha;if(a<.01)discard;gl_FragColor=vec4(uColor,a);}'});
+    const points = new T.Points(g, m); points.frustumCulled = false; points.renderOrder = 7; points.visible = false; fx.world.add(points);
+    const velocity = new Float32Array(capacity * 3), age = new Float32Array(capacity), life = new Float32Array(capacity), base = new Float32Array(capacity), grow = new Float32Array(capacity);
+    let count = 0;
+    const move = (to, from) => {
+      position.copyWithin(to * 3, from * 3, from * 3 + 3); velocity.copyWithin(to * 3, from * 3, from * 3 + 3);
+      age[to] = age[from]; life[to] = life[from]; base[to] = base[from]; size[to] = size[from]; grow[to] = grow[from]; alpha[to] = alpha[from];
+    };
+    return {
+      get count() { return count; },
+      spawn(x, y, z, vx, vy, vz, s, l, a) {
+        if (count >= capacity) return false; const i = count++;
+        position[i * 3] = x; position[i * 3 + 1] = y; position[i * 3 + 2] = z; velocity[i * 3] = vx; velocity[i * 3 + 1] = vy; velocity[i * 3 + 2] = vz;
+        age[i] = 0; life[i] = l; base[i] = a; size[i] = s; grow[i] = s * 1.6; alpha[i] = 0; return true;
+      },
+      update(dt) {
+        if (!count) { points.visible = false; return; }
+        const drag = Math.exp(-dt * 2.4);
+        for (let i = 0; i < count; i++) {
+          age[i] += dt; const k = age[i] / life[i];
+          if (k >= 1) { if (i !== --count) move(i, count); i--; continue; }
+          const j = i * 3; velocity[j] *= drag; velocity[j + 1] = velocity[j + 1] * drag + .12 * dt; velocity[j + 2] *= drag;
+          position[j] += velocity[j] * dt; position[j + 1] += velocity[j + 1] * dt; position[j + 2] += velocity[j + 2] * dt;
+          alpha[i] = base[i] * smooth(0, .12, k) * (1 - smooth(.45, 1, k)) * VFX.intensity; size[i] += grow[i] * dt / life[i];
+        }
+        g.setDrawRange(0, count); points.visible = count > 0;
+        for (const name of ['position', 'aAlpha', 'aSize']) g.attributes[name].needsUpdate = true;
+      }
+    };
+  }
+
+  // ---------------- shaders ----------------
+  const UV_VERTEX = 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}';
+  // Camera-facing quad: no camera reference needed, scale comes from the object.
+  const BILLBOARD_VERTEX = 'varying vec2 vUv;void main(){vUv=uv;vec4 mv=modelViewMatrix*vec4(0.,0.,0.,1.);mv.xy+=position.xy*vec2(length(modelMatrix[0].xyz),length(modelMatrix[1].xyz));gl_Position=projectionMatrix*mv;}';
+  const GLOW_FRAGMENT = 'uniform sampler2D uMap;uniform vec3 uColor,uCore;uniform float uOpacity;varying vec2 vUv;void main(){float a=texture2D(uMap,vUv).a;gl_FragColor=vec4(mix(uColor,uCore,smoothstep(.5,1.,a)),a*uOpacity);}';
+  const TRAIL_VERTEX = 'attribute float aAge;attribute float aSide;varying float vAge;varying float vSide;varying float vHeight;void main(){vAge=aAge;vSide=aSide;vec4 w=modelMatrix*vec4(position,1.);vHeight=w.y;gl_Position=projectionMatrix*viewMatrix*w;}';
+  // side 0 = inner staff point, 1 = tip. Age 0 = newest sample (leading edge).
+  const TRAIL_FRAGMENT = `uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uTime;uniform sampler2D uNoise;
+    varying float vAge;varying float vSide;varying float vHeight;
+    void main(){
+      float age=clamp(vAge,0.,1.),side=clamp(vSide,0.,1.);
+      float body=smoothstep(0.,.45,side)*(1.-.4*smoothstep(.96,1.,side));
+      float d=(side-.86)/.06;float coreLine=exp(-d*d); // x*x: GLSL pow() is undefined for x<0
+      float lead=1.-smoothstep(0.,.28,age);
+      float n=texture2D(uNoise,vec2(age*1.7+uTime*.45,side*1.3+vHeight*.2)).r;
+      float dissolve=smoothstep(age-.12,age+.1,n*1.2);
+      float fade=pow(1.-age,1.5);
+      vec3 col=mix(uJade,uGold,clamp(lead*.85+smoothstep(.9,1.,side)*.5,0.,1.));
+      col=mix(col,uCore,coreLine*.6);
+      float a=(body*.62+coreLine*.95+lead*.4*smoothstep(.5,1.,side))*fade*dissolve*uOpacity;
+      gl_FragColor=vec4(col,min(a,.95));
+    }`;
+  const SHELL_VERTEX = 'varying vec3 vN;varying vec3 vView;varying vec3 vLocal;void main(){vLocal=normalize(position);vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vView=-mv.xyz;gl_Position=projectionMatrix*mv;}';
+  // uHits[i] = (direction in shell space, start time; w < 0 = unused slot).
+  const SHELL_FRAGMENT = `uniform vec3 uJade,uGold;uniform float uOpacity,uTime,uDissolve,uRimPower,uRim,uBase,uPattern,uRippleSpeed,uRippleLife;
+    uniform vec4 uHits[4];uniform sampler2D uNoise;varying vec3 vN;varying vec3 vView;varying vec3 vLocal;
+    void main(){
+      float facing=abs(dot(normalize(vN),normalize(vView)));
+      float rim=pow(1.-facing,uRimPower);
+      float lat=asin(clamp(vLocal.y,-1.,1.)),lon=atan(vLocal.z,vLocal.x);
+      float lattice=pow(.5+.5*sin(lon*12.+lat*3.),26.)+pow(.5+.5*sin(lat*16.-uTime*.6),30.);
+      float n=texture2D(uNoise,vec2(lon*.32+uTime*.03,lat*.5)).r;
+      float ripple=0.;
+      for(int i=0;i<4;i++){
+        if(uHits[i].w<0.)continue;float age=uTime-uHits[i].w;if(age<0.||age>uRippleLife)continue;
+        float ang=acos(clamp(dot(vLocal,normalize(uHits[i].xyz)),-1.,1.));
+        float d=(ang-age*uRippleSpeed)/.16; // x*x: GLSL pow() is undefined for x<0
+        ripple+=exp(-d*d)*(1.-age/uRippleLife)+exp(-ang*ang*22.)*(1.-smoothstep(0.,.22,age))*1.4;
+      }
+      float dissolve=smoothstep(uDissolve-.08,uDissolve+.08,n);
+      vec3 col=mix(mix(uJade,uGold,clamp(rim*.4+lattice*uPattern*2.,0.,1.)),uGold,clamp(ripple,0.,1.));
+      float a=(uBase+rim*uRim+lattice*uPattern*(.4+.6*rim)+ripple*1.1)*dissolve*uOpacity;
+      gl_FragColor=vec4(col,min(a,.85));
+    }`;
+  const BAND_FRAGMENT = `uniform vec3 uJade,uGold;uniform float uOpacity,uTime,uSpeed;varying vec2 vUv;
+    void main(){float across=1.-abs(vUv.y-.5)*2.;float dash=smoothstep(.15,.75,.5+.5*sin(vUv.x*6.2831*7.-uTime*uSpeed*6.));
+      float head=pow(fract(vUv.x-uTime*uSpeed*.16),6.);
+      gl_FragColor=vec4(mix(uJade,uGold,head),across*across*(.25+.55*dash+.6*head)*uOpacity);}`;
+  const SIGIL_FRAGMENT = `uniform vec3 uGold;uniform float uOpacity,uTime;varying vec2 vUv;
+    float seg(vec2 p,vec2 a,vec2 b){vec2 pa=p-a,ba=b-a;return 1.-smoothstep(.02,.045,length(pa-ba*clamp(dot(pa,ba)/dot(ba,ba),0.,1.)));}
+    void main(){vec2 p=vUv;float g=seg(p,vec2(.5,.15),vec2(.5,.85));g=max(g,seg(p,vec2(.25,.62),vec2(.75,.62)));
+      g=max(g,seg(p,vec2(.3,.32),vec2(.5,.5)));g=max(g,seg(p,vec2(.7,.32),vec2(.5,.5)));
+      float ring=1.-smoothstep(.02,.05,abs(length(p-.5)-.44));
+      gl_FragColor=vec4(uGold,(g*.9+ring*.45)*uOpacity*(.8+.2*sin(uTime*2.3)));}`;
+  const COLUMN_FRAGMENT = `uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uTime;uniform sampler2D uNoise;varying vec2 vUv;
+    void main(){float h=vUv.y;float n=texture2D(uNoise,vec2(vUv.x*3.,h*1.2-uTime*1.8)).r;
+      float streak=smoothstep(.45,.95,n);float fade=(1.-h)*(1.-h)*smoothstep(0.,.08,h);
+      vec3 c=mix(uJade,uCore,streak*.6+(1.-h)*.3);c=mix(c,uGold,smoothstep(.75,1.,1.-h)*.35);
+      gl_FragColor=vec4(c,(.25+.75*streak)*fade*uOpacity);}`;
+  // uv.y: 0 inner edge → 1 leading (outer) edge of the shock ring.
+  const RING_FRAGMENT = `uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uTime;uniform sampler2D uNoise;varying vec2 vUv;
+    void main(){float across=vUv.y;float leading=smoothstep(.55,1.,across)*(1.-smoothstep(.93,1.,across));
+      float body=smoothstep(0.,.6,across)*(1.-smoothstep(.93,1.,across));float n=texture2D(uNoise,vec2(vUv.x*8.,uTime*.5)).r;
+      vec3 c=mix(uJade,uGold,leading);c=mix(c,uCore,pow(leading,4.)*.5);
+      gl_FragColor=vec4(c,(body*.45+leading*.8)*(.7+.3*n)*uOpacity);}`;
+  const CRACK_FRAGMENT = `uniform sampler2D uMap;uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uHeat,uRot;varying vec2 vUv;
+    void main(){vec2 p=vUv-.5;float c=cos(uRot),s=sin(uRot);p=vec2(c*p.x-s*p.y,s*p.x+c*p.y)+.5;
+      vec4 m=texture2D(uMap,p);float line=m.r,halo=m.g;vec3 col=mix(uJade,uGold,line*uHeat);col=mix(col,uCore,line*line*uHeat*.6);
+      gl_FragColor=vec4(col,(line*.75+halo*.22)*m.a*uOpacity);}`;
+
+  // ---------------- Côn Quét: ribbon trail bound to two points on the staff ----------------
+  function makeTrail(core, fx, samples, opacityScale) {
+    const T = core.THREE, g = new T.BufferGeometry(), c = palette(T);
+    const position = new Float32Array(samples * 6), age = new Float32Array(samples * 2), side = new Float32Array(samples * 2), index = [];
+    for (let i = 0; i < samples; i++) { side[i * 2 + 1] = 1; if (i < samples - 1) { const j = i * 2; index.push(j, j + 1, j + 2, j + 1, j + 3, j + 2); } }
+    g.setAttribute('position', new T.BufferAttribute(position, 3).setUsage(T.DynamicDrawUsage));
+    g.setAttribute('aAge', new T.BufferAttribute(age, 1).setUsage(T.DynamicDrawUsage));
+    g.setAttribute('aSide', new T.BufferAttribute(side, 1)); g.setIndex(index); g.setDrawRange(0, 0); fx.geometries.add(g);
+    const m = material(core, fx, {uniforms: {uJade: {value: c.jade}, uGold: {value: c.gold}, uCore: {value: c.core}, uOpacity: {value: 0}, uTime: {value: 0}, uNoise: {value: sharedFor(core).noise}},
+      vertexShader: TRAIL_VERTEX, fragmentShader: TRAIL_FRAGMENT});
+    const n = mesh(core, fx, g, m, fx.world, 11); n.frustumCulled = false; n.visible = false;
+    return {mesh: n, geometry: g, material: m, position, age, opacityScale, head: 0, count: 0,
+      ring: Array.from({length: samples}, () => ({inner: new T.Vector3(), outer: new T.Vector3(), time: 0})),
+      last: {inner: new T.Vector3(), outer: new T.Vector3(), time: 0, valid: false}};
+  }
+  function pushSample(trail, inner, outer, time) {
+    const slot = trail.ring[trail.head]; slot.inner.copy(inner); slot.outer.copy(outer); slot.time = time;
+    trail.head = (trail.head + 1) % trail.ring.length; trail.count = Math.min(trail.count + 1, trail.ring.length);
+  }
+  // Newest sample first; samples older than `life` are dropped from the history.
+  function writeTrail(trail, now, life) {
+    const total = trail.ring.length; let n = 0;
+    for (let k = 0; k < trail.count; k++) {
+      const s = trail.ring[(trail.head - 1 - k + total) % total], a = (now - s.time) / life;
+      if (a > 1) break;
+      const j = n * 6; trail.position[j] = s.inner.x; trail.position[j + 1] = s.inner.y; trail.position[j + 2] = s.inner.z;
+      trail.position[j + 3] = s.outer.x; trail.position[j + 4] = s.outer.y; trail.position[j + 5] = s.outer.z;
+      trail.age[n * 2] = trail.age[n * 2 + 1] = clamp(a); n++;
+    }
+    trail.count = n; trail.mesh.visible = n >= 2 && trail.material.uniforms.uOpacity.value > 0;
+    trail.geometry.setDrawRange(0, Math.max(0, n - 1) * 6);
+    trail.geometry.attributes.position.needsUpdate = trail.geometry.attributes.aAge.needsUpdate = true;
+  }
+  const StaffSweepEffect = {
+    build(core, fx) {
+      const T = core.THREE, q = tier(core); worldLayer(core, fx);
+      fx.sweep = {trails: [makeTrail(core, fx, q.trailSamples, 1)], dust: createDust(core, fx, q.dust, VFX.colors.dust),
+        a: new T.Vector3(), b: new T.Vector3(), c: new T.Vector3(), d: new T.Vector3(), v: new T.Vector3(), tip: new T.Vector3(),
+        sparkCarry: 0, glintCarry: 0, dusted: false};
+      if (VFX.sweep.mirror) fx.sweep.trails.push(makeTrail(core, fx, q.trailSamples, VFX.sweep.mirrorOpacity));
+      syncWorld(fx);
+    },
+    // The anchor follows the caster's feet; the trail itself is in world space.
+    place(core, fx) { anchorAtCaster(core, fx); syncWorld(fx); },
+    // Two points on the staff, read after this frame's animation is applied.
+    staffPoints(core, fx, mirrored, inner, outer) {
+      const cfg = VFX.sweep, sign = mirrored ? -1 : 1;
+      if (fx.weapon) {
+        fx.weapon.updateWorldMatrix(true, false);
+        fx.weapon.localToWorld(inner.set(cfg.inner[0] * sign, cfg.inner[1], cfg.inner[2]));
+        fx.weapon.localToWorld(outer.set(cfg.outer[0] * sign, cfg.outer[1], cfg.outer[2]));
+        return;
+      }
+      // Without a staff model (headless tools) an arc in front of the caster stands in.
+      const {p, d} = core._pose(fx.caster), s = fx.skill, k = clamp((fx.age - s.activeAt) / (s.activeEnd - s.activeAt));
+      const a = Math.atan2(d.x, d.z) + (k - .5) * Math.PI * 1.6 + (mirrored ? Math.PI : 0), y = core._ground(p) + 1.1;
+      inner.set(p.x + Math.sin(a) * .5, y, p.z + Math.cos(a) * .5); outer.set(p.x + Math.sin(a) * 1.6, y + .1, p.z + Math.cos(a) * 1.6);
+    },
+    tick(core, fx, dt) {
+      const s = fx.skill, t = fx.age, cfg = VFX.sweep, st = fx.sweep, q = tier(core);
+      if (t >= s.activeAt) core._emit('impact', fx, {hitIndex: 0, position: fx.group.position.clone(), activeSeconds: s.activeEnd - s.activeAt}, 'hit0');
+      if (!fx.alive) return;
+      const emitting = t >= s.activeAt && t <= s.activeEnd;
+      const opacity = cfg.opacity * VFX.intensity * smooth(s.activeAt - .02, s.activeAt + .06, t) * (1 - smooth(s.activeEnd, s.activeEnd + cfg.life, t));
+      st.trails.forEach((trail, index) => {
+        const u = trail.material.uniforms; u.uTime.value = t; u.uOpacity.value = opacity * trail.opacityScale;
+        if (emitting) {
+          this.staffPoints(core, fx, index === 1, st.a, st.b);
+          // Teleport / map change / respawn: start a fresh trail instead of a huge streak.
+          if (trail.last.valid && st.b.distanceTo(trail.last.outer) > cfg.teleportDistance) { trail.count = 0; trail.last.valid = false; }
+          if (!trail.last.valid) pushSample(trail, st.a, st.b, t);
+          else {
+            const distance = st.b.distanceTo(trail.last.outer), steps = Math.min(cfg.maxInsertPerFrame, Math.max(1, Math.ceil(distance / cfg.maxStep)));
+            for (let i = 1; i <= steps; i++) {
+              const k = i / steps; st.c.lerpVectors(trail.last.inner, st.a, k); st.d.lerpVectors(trail.last.outer, st.b, k);
+              pushSample(trail, st.c, st.d, trail.last.time + (t - trail.last.time) * k);
+            }
+            // Gold sparks peel off the tip only while the staff really moves fast.
+            if (index === 0 && dt > 0 && distance / dt > cfg.sparkMinSpeed) {
+              st.sparkCarry += dt * q.sparks * 3; const n = Math.min(6, Math.floor(st.sparkCarry)); st.sparkCarry -= n;
+              st.v.subVectors(st.b, trail.last.outer).multiplyScalar(.3 / Math.max(dt, 1 / 120));
+              for (let i = 0; i < n; i++) {
+                st.c.lerpVectors(trail.last.outer, st.b, core.random());
+                st.d.set(st.v.x + rand(core, -.6, .6), st.v.y + rand(core, .2, 1.1), st.v.z + rand(core, -.6, .6));
+                core.pool.spawn(st.c, st.d, VFX.colors.gold, rand(core, .18, .38), rand(core, .035, .06), 2.5, .95);
+              }
+            }
+          }
+          trail.last.inner.copy(st.a); trail.last.outer.copy(st.b); trail.last.time = t; trail.last.valid = true;
+        }
+        writeTrail(trail, t, cfg.life);
+      });
+      // Small glints exactly at the real staff tip while the sweep is live.
+      if (emitting) {
+        st.glintCarry += Math.min(dt, t - s.activeAt + 1e-6) * 14; const n = Math.min(4, Math.floor(st.glintCarry)); st.glintCarry -= n;
+        if (n) {
+          if (fx.weaponTip) { fx.weaponTip.updateWorldMatrix(true, false); fx.weaponTip.getWorldPosition(st.tip); } else this.staffPoints(core, fx, false, st.c, st.tip);
+          for (let i = 0; i < n; i++) core.pool.spawn(st.tip, st.v.set(rand(core, -.3, .3), rand(core, .1, .5), rand(core, -.3, .3)), i % 2 ? VFX.colors.gold : VFX.colors.core, rand(core, .2, .32), .05, .6, .8);
+        }
+      }
+      // A light puff of dust at the feet once the sweep passes low.
+      if (!st.dusted && t >= s.activeAt + cfg.dustAt && t < s.duration) {
+        st.dusted = true; const {p, d} = core._pose(fx.caster), y = core._ground(p);
+        for (let i = 0; i < 12; i++) {
+          const a = Math.atan2(d.x, d.z) + rand(core, -1.6, 1.6), r = rand(core, .25, .9), speed = rand(core, .6, 1.5);
+          if (!st.dust.spawn(p.x + Math.sin(a) * r, y + .08, p.z + Math.cos(a) * r, Math.sin(a) * speed, rand(core, .05, .25), Math.cos(a) * speed, rand(core, .35, .6), rand(core, .55, .9), .32)) break;
+        }
+      }
+      st.dust.update(Math.min(dt, .1));
+    }
+  };
+
+  // ---------------- Hộ Thân: Fresnel shell, tilted bands, real-hit ripples ----------------
+  const ProtectiveShieldEffect = {
+    build(core, fx) {
+      const T = core.THREE, cfg = VFX.shield, shared = sharedFor(core), c = palette(T);
+      const height = fx.casterHeight, radius = Math.max(fx.skill.radius * .75, height * cfg.radiusFactor), center = height * cfg.centerFactor;
+      const time = {value: 0}, hits = {value: Array.from({length: 4}, () => new T.Vector4(0, 1, 0, -1))}, dissolve = {value: -.2};
+      const shellUniforms = rim => ({uJade: {value: c.jade}, uGold: {value: c.gold}, uOpacity: {value: 0}, uTime: time, uDissolve: dissolve,
+        uRimPower: {value: cfg.rimPower}, uRim: {value: rim}, uBase: {value: cfg.baseOpacity}, uPattern: {value: cfg.patternOpacity},
+        uRippleSpeed: {value: cfg.rippleSpeed}, uRippleLife: {value: cfg.rippleLife}, uHits: hits, uNoise: {value: shared.noise}});
+      const root = new T.Group(); root.name = 'shield-shell'; root.position.y = center; fx.group.add(root);
+      const back = material(core, fx, {uniforms: shellUniforms(cfg.rimOpacity * .3), side: T.BackSide, vertexShader: SHELL_VERTEX, fragmentShader: SHELL_FRAGMENT});
+      const front = material(core, fx, {uniforms: shellUniforms(cfg.rimOpacity), side: T.FrontSide, vertexShader: SHELL_VERTEX, fragmentShader: SHELL_FRAGMENT});
+      const inner = mesh(core, fx, shared.sphere, back, root, 8); inner.scale.setScalar(radius * .995);
+      const shell = mesh(core, fx, shared.sphere, front, root, 10); shell.scale.setScalar(radius);
+      const bands = cfg.bandTilt.map((tilt, i) => {
+        const pivot = new T.Group(); pivot.rotation.set(tilt, i * 1.3, i ? .3 : -.18); root.add(pivot);
+        const m = material(core, fx, {uniforms: {uJade: {value: c.jade}, uGold: {value: c.gold}, uOpacity: {value: 0}, uTime: time, uSpeed: {value: cfg.bandSpeed[i]}},
+          vertexShader: UV_VERTEX, fragmentShader: BAND_FRAGMENT});
+        const band = mesh(core, fx, shared.band, m, pivot, 10); band.scale.set(radius * (1.04 + i * .05), cfg.bandWidth, radius * (1.04 + i * .05));
+        return {pivot, material: m, speed: cfg.bandSpeed[i]};
+      });
+      const sigilMaterial = material(core, fx, {uniforms: {uGold: {value: c.gold}, uOpacity: {value: 0}, uTime: time}, vertexShader: UV_VERTEX, fragmentShader: SIGIL_FRAGMENT});
+      const sigils = new T.Group(); root.add(sigils);
+      for (let i = 0; i < 3; i++) {
+        const a = i / 3 * TAU, n = mesh(core, fx, shared.quad, sigilMaterial, sigils, 10);
+        n.scale.setScalar(.34); n.position.set(Math.sin(a) * radius * 1.02, (i - 1) * .32, Math.cos(a) * radius * 1.02); n.rotation.y = a;
+      }
+      const floorMaterial = material(core, fx, {uniforms: {uMap: {value: shared.dot}, uColor: {value: c.jade}, uCore: {value: c.gold}, uOpacity: {value: 0}}, vertexShader: UV_VERTEX, fragmentShader: GLOW_FRAGMENT});
+      const floor = mesh(core, fx, shared.quad, floorMaterial, fx.group, 7); floor.rotation.x = -Math.PI / 2; floor.position.y = .03; floor.scale.setScalar(radius * 2.1);
+      fx.shield = {root, shell, bands, sigils, sigilMaterial, floorMaterial, front, back, time, hits: hits.value, dissolve, radius, hitIndex: 0, hitCount: 0, moteCarry: 0,
+        p: new T.Vector3(), v: new T.Vector3()};
+    },
+    // Centred on the character's world position (feet on the ground), never tilted by hands or swing.
+    place(core, fx) { anchorAtCaster(core, fx); syncWorld(fx); },
+    tick(core, fx, dt) {
+      const s = fx.skill, t = fx.age, cfg = VFX.shield, sh = fx.shield;
+      if (t >= s.activeAt) core._emit('shield-start', fx, {activeSeconds: s.activeEnd - s.activeAt});
+      if (!fx.alive) return;
+      if (t >= s.activeEnd) core._emit('shield-end', fx);
+      const grow = smooth(s.activeAt - .1, s.activeAt + .22, t), pop = 1 + .08 * Math.sin(clamp((t - s.activeAt) / .35) * Math.PI);
+      const fade = smooth(s.activeEnd, s.activeEnd + cfg.fadeOut, t), energy = grow * VFX.intensity, held = energy * (1 - fade);
+      sh.time.value = t; sh.dissolve.value = -.2 + fade * 1.3;
+      sh.front.uniforms.uOpacity.value = sh.back.uniforms.uOpacity.value = energy;
+      sh.root.visible = energy > 0;
+      sh.root.scale.setScalar(Math.max(.001, (.55 + .45 * grow) * pop * (1 + fade * .06)));
+      for (const b of sh.bands) { b.pivot.rotation.y += b.speed * dt; b.material.uniforms.uOpacity.value = held * .9; }
+      sh.sigils.rotation.y = -t * .35; sh.sigilMaterial.uniforms.uOpacity.value = held * smooth(s.activeAt + .2, s.activeAt + .6, t) * .55;
+      sh.floorMaterial.uniforms.uOpacity.value = held * .28;
+      // A few jade/gold motes drift up inside the shell while it holds.
+      if (t >= s.activeAt && t < s.activeEnd) {
+        sh.moteCarry += Math.min(dt, .1) * 10; const n = Math.min(4, Math.floor(sh.moteCarry)); sh.moteCarry -= n;
+        for (let i = 0; i < n; i++) {
+          const a = core.random() * TAU, r = core.random() * sh.radius * .8;
+          sh.p.set(fx.group.position.x + Math.sin(a) * r, fx.group.position.y + .2, fx.group.position.z + Math.cos(a) * r);
+          core.pool.spawn(sh.p, sh.v.set(0, rand(core, .35, .8), 0), i % 2 ? VFX.colors.jade : VFX.colors.gold, rand(core, .7, 1.2), rand(core, .03, .05), -.2, .55);
+        }
+      }
+    },
+    // A real hit (world point) → ripple from the matching point on the shell.
+    onHit(core, fx, point) {
+      const s = fx.skill, sh = fx.shield;
+      if (!sh || fx.age < s.activeAt || fx.age > s.activeEnd) return false;
+      sh.shell.updateWorldMatrix(true, false);
+      const local = sh.shell.worldToLocal(sh.p.set(point.x, point.y, point.z));
+      if (local.lengthSq() < 1e-8) local.set(0, 0, 1);
+      local.normalize(); sh.hits[sh.hitIndex].set(local.x, local.y, local.z, fx.age);
+      sh.hitIndex = (sh.hitIndex + 1) % sh.hits.length; sh.hitCount++;
+      const surface = sh.shell.localToWorld(sh.v.copy(local)), normal = sh.p.copy(surface).sub(sh.shell.getWorldPosition(new core.THREE.Vector3())).normalize();
+      for (let i = 0; i < 10; i++) {
+        const v = new core.THREE.Vector3(normal.x * rand(core, 1, 2.4) + rand(core, -.7, .7), normal.y * rand(core, 1, 2.4) + rand(core, -.2, .9), normal.z * rand(core, 1, 2.4) + rand(core, -.7, .7));
+        core.pool.spawn(surface, v, i % 3 ? VFX.colors.gold : VFX.colors.core, rand(core, .2, .4), rand(core, .04, .065), 3, .95);
+      }
+      core._emit('shield-hit', fx, {position: new core.THREE.Vector3(point.x, point.y, point.z), hitCount: sh.hitCount}, 'shield-hit-' + sh.hitCount);
+      return true;
+    }
+  };
+
+  // ---------------- Chấn Địa: charge at the tip → one impact where the staff meets the ground ----------------
+  function terrainRing(core, fx, segments) {
+    const T = core.THREE, g = new T.BufferGeometry(), position = new Float32Array((segments + 1) * 6), uv = new Float32Array((segments + 1) * 4), index = [];
+    for (let i = 0; i <= segments; i++) { uv.set([i / segments, 0, i / segments, 1], i * 4); if (i < segments) { const j = i * 2; index.push(j, j + 1, j + 2, j + 1, j + 3, j + 2); } }
+    g.setAttribute('position', new T.BufferAttribute(position, 3).setUsage(T.DynamicDrawUsage)); g.setAttribute('uv', new T.BufferAttribute(uv, 2)); g.setIndex(index); fx.geometries.add(g);
+    return {geometry: g, position, segments, v: new T.Vector3()};
+  }
+  // Each ring vertex sits on the terrain (steps, slopes and bridge edges included).
+  function drawRing(core, ring, center, inner, outer, lift) {
+    const v = ring.v;
+    for (let i = 0; i <= ring.segments; i++) {
+      const a = i / ring.segments * TAU, sx = Math.sin(a), sz = Math.cos(a);
+      for (let k = 0; k < 2; k++) {
+        const r = k ? outer : inner, j = (i * 2 + k) * 3; v.set(center.x + sx * r, center.y, center.z + sz * r);
+        ring.position[j] = v.x; ring.position[j + 1] = core._ground(v) + lift; ring.position[j + 2] = v.z;
+      }
+    }
+    ring.geometry.attributes.position.needsUpdate = true;
+  }
+  const GroundSlamEffect = {
+    build(core, fx) {
+      const T = core.THREE, q = tier(core), shared = sharedFor(core), c = palette(T), cfg = VFX.slam; worldLayer(core, fx);
+      const tinted = () => ({uJade: {value: c.jade}, uGold: {value: c.gold}, uCore: {value: c.core}, uOpacity: {value: 0}, uTime: {value: 0}, uNoise: {value: shared.noise}});
+      const glow = (color, centre) => material(core, fx, {uniforms: {uMap: {value: shared.dot}, uColor: {value: color}, uCore: {value: centre}, uOpacity: {value: 0}}, vertexShader: BILLBOARD_VERTEX, fragmentShader: GLOW_FRAGMENT});
+      const orbMaterial = glow(c.jade, c.core), orb = mesh(core, fx, shared.quad, orbMaterial, fx.world, 12); orb.visible = false; orb.frustumCulled = false;
+      const impact = new T.Group(); impact.name = 'slam-impact'; impact.visible = false; fx.world.add(impact);
+      const flashMaterial = glow(c.gold, c.core), flash = mesh(core, fx, shared.quad, flashMaterial, impact, 12); flash.position.y = .3; flash.visible = false; flash.frustumCulled = false;
+      const columnMaterial = material(core, fx, {uniforms: tinted(), vertexShader: UV_VERTEX, fragmentShader: COLUMN_FRAGMENT});
+      // Named `column` like the generic slam: invisible until the contact frame.
+      fx.column = mesh(core, fx, shared.column, columnMaterial, impact, 10); fx.column.scale.set(.3, cfg.columnHeight, .3); fx.column.visible = false;
+      const waves = [0, 1].map(() => {
+        const ring = terrainRing(core, fx, q.ringSegments);
+        const m = material(core, fx, {uniforms: tinted(), vertexShader: UV_VERTEX, fragmentShader: RING_FRAGMENT, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2});
+        const n = mesh(core, fx, ring.geometry, m, fx.world, 9); n.frustumCulled = false; n.visible = false; return {ring, mesh: n, material: m};
+      });
+      // Crack decal: a small terrain-following grid, heights sampled once at contact.
+      const crackGeometry = new T.PlaneGeometry(cfg.crackRadius * 2, cfg.crackRadius * 2, q.crackGrid, q.crackGrid); crackGeometry.rotateX(-Math.PI / 2); fx.geometries.add(crackGeometry);
+      const crackMaterial = material(core, fx, {uniforms: {uMap: {value: shared.crack}, uJade: {value: c.jade}, uGold: {value: c.gold}, uCore: {value: c.core}, uOpacity: {value: 0}, uHeat: {value: 1}, uRot: {value: core.random() * TAU}},
+        vertexShader: UV_VERTEX, fragmentShader: CRACK_FRAGMENT, side: T.FrontSide, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3});
+      const cracks = mesh(core, fx, crackGeometry, crackMaterial, fx.world, 8); cracks.visible = false; cracks.frustumCulled = false;
+      const rocks = new T.InstancedMesh(shared.rock, shared.rockMaterial, q.rocks); rocks.visible = false; rocks.frustumCulled = false; fx.world.add(rocks);
+      fx.slam = {orb, orbMaterial, impact, flash, flashMaterial, columnMaterial, waves, cracks, crackMaterial, crackGeometry, rocks,
+        crackBase: Float32Array.from(crackGeometry.attributes.position.array),
+        rockState: Array.from({length: q.rocks}, () => ({p: new T.Vector3(), v: new T.Vector3(), spin: new T.Vector3(), size: 0, life: 0, age: 0, alive: false, bounced: false})),
+        dust: createDust(core, fx, q.dust, VFX.colors.dust), contact: new T.Vector3(), normal: new T.Vector3(0, 1, 0), up: new T.Vector3(0, 1, 0),
+        tip: new T.Vector3(), p: new T.Vector3(), v: new T.Vector3(), dummy: new T.Object3D(), impacted: false, chargeCarry: 0};
+      syncWorld(fx);
+    },
+    // Before contact the anchor follows the caster; from contact on it stays on the struck ground.
+    place(core, fx) { if (!fx.slam?.impacted) anchorAtCaster(core, fx); syncWorld(fx); },
+    tipWorld(core, fx, out) {
+      if (fx.weaponTip) { fx.weaponTip.updateWorldMatrix(true, false); return fx.weaponTip.getWorldPosition(out); }
+      const {p, d} = core._pose(fx.caster); return out.copy(p).addScaledVector(d, .5).setY(core._ground(p) + 2.25);
+    },
+    // The striking end is the lower end of the staff at contact (the clip lands it front-left).
+    strikeEnd(core, fx, out) {
+      if (!fx.weapon) return fx.weaponTip ? this.tipWorld(core, fx, out) : null;
+      const L = VFX.slam.staffEnd; fx.weapon.updateWorldMatrix(true, false);
+      const a = fx.weapon.localToWorld(out.set(L, 0, 0)), ay = a.y, ax = a.x, az = a.z;
+      const b = fx.weapon.localToWorld(fx.slam.p.set(-L, 0, 0));
+      return b.y < ay ? out.copy(b) : out.set(ax, ay, az);
+    },
+    // That end projected on the terrain. Only a missing staff, an end behind the player
+    // or out of reach falls back to the ground straight ahead of the feet.
+    contactPoint(core, fx, out) {
+      const cfg = VFX.slam, {p, d} = core._pose(fx.caster), end = this.strikeEnd(core, fx, fx.slam.tip);
+      let dx = end ? end.x - p.x : 0, dz = end ? end.z - p.z : 0;
+      const reach = Math.hypot(dx, dz), ahead = dx * d.x + dz * d.z;
+      if (!end || !(reach >= cfg.contactMin && reach <= cfg.contactMax) || ahead < -.1) { dx = d.x * cfg.contactFallback; dz = d.z * cfg.contactFallback; }
+      out.set(p.x + dx, p.y, p.z + dz); out.y = core._ground(out); return out;
+    },
+    impactNow(core, fx) {
+      const cfg = VFX.slam, sl = fx.slam, q = tier(core);
+      this.contactPoint(core, fx, sl.contact); core.groundNormal(sl.contact.x, sl.contact.z, sl.normal);
+      fx.group.position.copy(sl.contact); syncWorld(fx); fx.impactLocked = true;
+      sl.impact.position.copy(sl.contact); sl.impact.quaternion.setFromUnitVectors(sl.up, sl.normal); sl.impact.visible = true;
+      const pos = sl.crackGeometry.attributes.position, base = sl.crackBase;
+      for (let i = 0; i < pos.count; i++) {
+        sl.p.set(sl.contact.x + base[i * 3], sl.contact.y, sl.contact.z + base[i * 3 + 2]);
+        pos.setXYZ(i, sl.p.x, core._ground(sl.p) + cfg.decalLift, sl.p.z);
+      }
+      pos.needsUpdate = true; sl.cracks.visible = true;
+      for (const rock of sl.rockState) {
+        const a = core.random() * TAU, speed = rand(core, cfg.rockSpeed[0], cfg.rockSpeed[1]);
+        rock.p.set(sl.contact.x + Math.sin(a) * .25, sl.contact.y + .05, sl.contact.z + Math.cos(a) * .25);
+        rock.v.set(Math.sin(a) * speed, rand(core, cfg.rockUp[0], cfg.rockUp[1]), Math.cos(a) * speed);
+        rock.spin.set(rand(core, -9, 9), rand(core, -9, 9), rand(core, -9, 9)); rock.size = rand(core, cfg.rockSize[0], cfg.rockSize[1]);
+        rock.life = rand(core, cfg.rockLife[0], cfg.rockLife[1]); rock.age = 0; rock.alive = true; rock.bounced = false;
+      }
+      for (let i = 0; i < q.dust; i++) {
+        const a = core.random() * TAU, r = rand(core, .2, 1.4), speed = rand(core, .8, 2.2);
+        if (!sl.dust.spawn(sl.contact.x + Math.sin(a) * r, sl.contact.y + .1, sl.contact.z + Math.cos(a) * r, Math.sin(a) * speed, rand(core, .05, .3), Math.cos(a) * speed, rand(core, .5, .95), rand(core, cfg.dustLife[0], cfg.dustLife[1]), .55)) break;
+      }
+      for (let i = 0; i < q.sparks; i++) {
+        const a = core.random() * TAU, speed = rand(core, 1.5, 4.5);
+        sl.p.copy(sl.contact); sl.p.y += .12; sl.v.set(Math.sin(a) * speed, rand(core, 1.5, 4), Math.cos(a) * speed);
+        core.pool.spawn(sl.p, sl.v, i % 3 ? VFX.colors.gold : VFX.colors.jade, rand(core, .3, .6), rand(core, .04, .07), 6, .9);
+      }
+      core._emit('impact', fx, {hitIndex: 0, position: sl.contact.clone(), normal: sl.normal.clone(), activeSeconds: fx.skill.activeEnd - fx.skill.activeAt,
+        shake: VFX.cameraShake.enabled ? VFX.cameraShake.slam : 0}, 'hit0');
+    },
+    tick(core, fx, dt) {
+      const s = fx.skill, t = fx.age, cfg = VFX.slam, sl = fx.slam, after = t - s.activeAt;
+      for (const m of fx.materials) if (m.uniforms?.uTime) m.uniforms.uTime.value = t;
+      // Charge: energy gathers at the staff tip during the raise; no ground effect yet.
+      if (after < 0) {
+        const k = smooth(0, s.activeAt, t), tip = this.tipWorld(core, fx, sl.tip);
+        sl.orb.visible = k > 0; sl.orb.position.copy(tip);
+        sl.orb.scale.setScalar(cfg.chargeRadius * 2 * (.35 + .65 * k) * (1 + .12 * Math.sin(t * 38)));
+        sl.orbMaterial.uniforms.uOpacity.value = k * .95 * VFX.intensity;
+        sl.chargeCarry += Math.min(dt, .1) * 40 * k; const n = Math.min(4, Math.floor(sl.chargeCarry)); sl.chargeCarry -= n;
+        for (let i = 0; i < n; i++) {
+          const a = core.random() * TAU, b = rand(core, -1, 1), r = rand(core, .45, .8), ring = Math.sqrt(1 - b * b) * r;
+          sl.p.set(tip.x + Math.cos(a) * ring, tip.y + b * r, tip.z + Math.sin(a) * ring);
+          core.pool.spawn(sl.p, sl.v.subVectors(tip, sl.p).multiplyScalar(2.4), i % 2 ? VFX.colors.jade : VFX.colors.gold, .32, .04, 0, .85);
+        }
+        return;
+      }
+      // Exactly one contact per cast, even when one frame jumps past the whole timeline.
+      if (!sl.impacted) { sl.impacted = true; this.impactNow(core, fx); if (!fx.alive) return; }
+      sl.orb.visible = false; sl.orbMaterial.uniforms.uOpacity.value = 0;
+      const flash = 1 - smooth(0, cfg.flash, after);
+      sl.flash.visible = flash > 0; sl.flashMaterial.uniforms.uOpacity.value = flash * .9 * VFX.intensity; sl.flash.scale.setScalar(.9 + after * 10);
+      const column = 1 - smooth(.03, cfg.columnLife, after);
+      sl.columnMaterial.uniforms.uOpacity.value = column * VFX.intensity; fx.column.visible = column > 0;
+      fx.column.scale.set(.28 + after * .7, cfg.columnHeight * (.7 + .3 * column), .28 + after * .7);
+      // Two expanding shock rings, re-fitted to the terrain every frame.
+      sl.waves.forEach((w, i) => {
+        const k = clamp((after - i * cfg.secondWaveDelay) / cfg.waveLife); w.mesh.visible = k > 0 && k < 1;
+        if (!w.mesh.visible) { w.material.uniforms.uOpacity.value = 0; return; }
+        const r = .25 + (cfg.waveRadius * (i ? .85 : 1) - .25) * (1 - (1 - k) * (1 - k)), width = cfg.waveWidth * (1 - k * .5);
+        drawRing(core, w.ring, sl.contact, Math.max(.05, r - width), r, .045 + i * .01);
+        w.material.uniforms.uOpacity.value = Math.pow(1 - k, .7) * (i ? .6 : .95) * VFX.intensity;
+      });
+      // Cracks glow hot, cool and vanish; the ground itself is never modified.
+      const crack = 1 - smooth(cfg.crackLife * .55, cfg.crackLife, after);
+      sl.crackMaterial.uniforms.uOpacity.value = crack * smooth(0, .06, after) * VFX.intensity; sl.crackMaterial.uniforms.uHeat.value = 1 - smooth(.1, .8, after);
+      sl.cracks.visible = crack > 0;
+      // Rocks: launch velocity, gravity, one damped bounce, shrink out (sub-stepped for stability).
+      let remaining = Math.min(dt, .5), alive = 0;
+      while (remaining > 1e-6) {
+        const h = Math.min(remaining, 1 / 30); remaining -= h;
+        for (const rock of sl.rockState) {
+          if (!rock.alive) continue; rock.age += h; if (rock.age >= rock.life) { rock.alive = false; continue; }
+          rock.v.y -= cfg.gravity * h; rock.p.addScaledVector(rock.v, h);
+          const ground = core._ground(rock.p) + rock.size * .6;
+          if (rock.p.y < ground) {
+            rock.p.y = ground;
+            if (!rock.bounced && rock.v.y < -.5) { rock.v.set(rock.v.x * .55, -rock.v.y * cfg.bounce, rock.v.z * .55); rock.bounced = true; }
+            else rock.v.set(rock.v.x * .7, 0, rock.v.z * .7);
+          }
+        }
+      }
+      sl.rockState.forEach((rock, i) => {
+        const d = sl.dummy;
+        if (rock.alive) { alive++; d.position.copy(rock.p); d.rotation.set(rock.spin.x * rock.age, rock.spin.y * rock.age, rock.spin.z * rock.age); d.scale.setScalar(rock.size * (1 - smooth(.7, 1, rock.age / rock.life))); }
+        else d.scale.setScalar(0);
+        d.updateMatrix(); sl.rocks.setMatrixAt(i, d.matrix);
+      });
+      sl.rocks.instanceMatrix.needsUpdate = true; sl.rocks.visible = alive > 0;
+      sl.dust.update(Math.min(dt, .1));
+    }
+  };
+
+  Core.registerEffect('staff.con-quet', StaffSweepEffect);
+  Core.registerEffect('staff.ho-than', ProtectiveShieldEffect);
+  Core.registerEffect('staff.chan-dia', GroundSlamEffect);
+  return Object.freeze({StaffSweepEffect, ProtectiveShieldEffect, GroundSlamEffect});
+});

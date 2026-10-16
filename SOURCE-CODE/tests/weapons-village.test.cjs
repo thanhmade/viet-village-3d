@@ -292,3 +292,61 @@ test('skill buttons: one pointer tap casts once (no click duplicate); a drag rel
   assert.equal(stopped, 1, 'Moves inside the cluster never reach the camera/world');
   weapons.dispose();
 });
+
+test('putting the weapon away stows only the weapon: the character stays visible and keeps walking', () => {
+  const {run, context} = createHarness();
+  const controller = context.VietVillageWeapons, player = context.VietVillageGame.avatarTemplate();
+  assert.equal(controller.equip('staff'), true);
+  assert.equal(controller.cast(2).ok, true);
+  controller.deactivate(); // the "Cất vũ khí" button handler
+  assert.equal(run('localWalking && player.visible'), true, 'the player root is never hidden by putting the weapon away');
+  assert.equal(player.getObjectByName('village-local-weapon').visible, false);
+  assert.equal(controller.state.active, 0, 'live skill visuals are cancelled with the weapon');
+  assert.equal(context.document.body.classList.contains('weapons-roaming'), false);
+  const before = player.position.clone();
+  run('keys.KeyW=true;tick(17);keys.KeyW=false;');
+  assert.ok(player.position.distanceTo(before) > 0, 'walking continues without a weapon');
+  assert.equal(controller.equip('staff'), true);
+  assert.equal(player.getObjectByName('village-local-weapon').visible, true);
+  controller.lock(); // leaving the village (logout) still ends roaming as before
+  assert.equal(run('localWalking'), false);
+});
+
+test('staff skills: trail sits on the equipped staff, Chấn Địa is a tap skill, shield ripples on a real HP hit', () => {
+  const {run, context} = createHarness();
+  const controller = context.VietVillageWeapons, scene = context.VietVillageGame.scene(), T = context.THREE;
+  assert.equal(controller.equip('staff'), true);
+  assert.equal(controller.skills().filter(skill => skill.aimed).length, 0, 'no staff skill needs aiming');
+  assert.equal(controller.beginAim(3, 'touch'), false);
+  assert.equal(controller.cast(1).ok, true);
+  const skill = context.WeaponVFXCore.getWeaponConfigs().find(config => config.weaponId === 'staff').skills[0];
+  controller.update(skill.activeAt + .05); controller.update(1 / 60);
+  const world = scene.getObjectByName('staff.con-quet-vfx').getObjectByName('world-space');
+  const trail = world.children.find(child => child.isMesh && child.geometry.getAttribute('aAge'));
+  assert.ok(trail && trail.visible);
+  const staff = scene.getObjectByName('weapon-staff'), outer = staff.localToWorld(new T.Vector3(context.StaffVFXConfig.sweep.outer[0], 0, 0));
+  const newest = trail.localToWorld(new T.Vector3().fromArray(trail.geometry.getAttribute('position').array, 3));
+  assert.ok(newest.distanceTo(outer) < 1e-4, 'ribbon vertex = point on the visible staff model');
+  controller.update(skill.duration + 2);
+  // Hộ Thân + a real damage call with a world hit position → ripple there; HP math unchanged.
+  const journey = context.VietVillageJourney, hpBefore = journey.getState().hp;
+  assert.equal(controller.cast(2).ok, true);
+  controller.update(.5);
+  const shell = scene.getObjectByName('shield-shell'), hits = shell.children[1].material.uniforms.uHits.value;
+  assert.ok(hits.every(hit => hit.w < 0), 'no ripple without a hit');
+  assert.equal(journey.takeDamage(7), true);
+  assert.ok(hits.every(hit => hit.w < 0), 'a blow without a position does not invent a ripple point');
+  const origin = shell.getWorldPosition(new T.Vector3());
+  assert.equal(journey.takeDamage(5, {source: {position: {x: origin.x + 3, y: origin.y, z: origin.z}}}), true);
+  assert.ok(hits[0].w >= 0 && hits[0].x > .99, 'ripple starts on the side the blow came from');
+  assert.equal(journey.getState().hp, hpBefore - 12, 'the shield is visual: damage is not reduced');
+  controller.update(5);
+  // Chấn Địa shakes the camera lightly, only if the player keeps the option on.
+  run("$('cameraShake').checked=true;");
+  assert.equal(controller.cast(3).ok, true); controller.update(2);
+  assert.ok(run('cameraShakeAmount') > 0, 'impact requests a light shake');
+  run('cameraShakeAmount=0;'); controller.update(5);
+  run("$('cameraShake').checked=false;");
+  assert.equal(controller.cast(3).ok, true); controller.update(2);
+  assert.equal(run('cameraShakeAmount'), 0, 'option off: no shake');
+});

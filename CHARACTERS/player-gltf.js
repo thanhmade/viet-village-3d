@@ -85,11 +85,12 @@
    if(lowest<groundPoint.y){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-lowest)/rootScale.y;sync();}
    updateSockets();
   }
-  let mode='locomotion',speed=0,outgoing=null,fadeEnd=0,returningUntil=0,pendingFinished=null,pausedPreview=false,disposed=false,defeatClip=null;
+  let mode='locomotion',speed=0,outgoing=null,fadeEnd=0,returningUntil=0,pendingFinished=null,pausedPreview=false,disposed=false,defeatClip=null,segmentEnd=Infinity;
   const reviewedDefeats=new Set();
   const locomotion=()=>speed<=.08?'idle':speed>=5.5?'run':'walk';
   function transition(name,nextMode){
    const next=actionFor(name);if(current===next&&mode===nextMode&&nextMode==='locomotion')return true;
+   segmentEnd=Infinity;
    if(outgoing){outgoing.stop();outgoing=null;}
    const previous=current;previous.stopFading().setEffectiveWeight(1);previous.paused=false;
    next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).setLoop(nextMode==='locomotion'?T.LoopRepeat:T.LoopOnce,nextMode==='locomotion'?Infinity:1);
@@ -106,6 +107,15 @@
    stats:Object.freeze({modelId,height,sourceHeight,scale:height/sourceHeight,vertices,triangles,texturedMeshes,bones:new Set([...skeletons].flatMap(s=>s.bones)).size,footProbes:soles.length,forward:'+Z',forwardYaw,rootMotion:'Hips X/Z locked to idle; authored Y retained',handNames:{right:hands.right.name,left:hands.left.name},socketCalibration:'source-skeleton-idle'}),
    setLocomotion(value){if(disposed)return false;speed=Number.isFinite(value)?Math.max(0,value):0;if(mode==='locomotion')transition(locomotion(),'locomotion');return true;},
    playOnce(name){if(disposed||mode!=='locomotion'||mixer.time<returningUntil||!clipMap.has(name))return false;return transition(name,'once');},
+   // One part of a clip (skill motions): starts at `from`, returns to locomotion at `to`.
+   // `force` may cut another one-shot (skill after skill), never defeat or a preview.
+   playSegment(name,{from=0,to=Infinity,force=false}={}){
+    if(disposed||!clipMap.has(name)||mode==='defeat'||mode==='preview')return false;
+    if(!force&&(mode!=='locomotion'||mixer.time<returningUntil))return false;
+    const duration=clipMap.get(name).duration,start=Math.max(0,Math.min(Number.isFinite(from)?from:0,duration)),end=Math.min(duration,Number.isFinite(to)?to:duration);
+    if(!(end>start))return false;
+    transition(name,'once');current.time=start;segmentEnd=end<duration?end:Infinity;return true;
+   },
    preview(name){if(disposed||!clipMap.has(name))return false;return transition(name,'preview');},
    pausePreview(){if(disposed||mode!=='preview')return false;pausedPreview=true;return true;},
    resumePreview(){if(disposed||mode!=='preview'||current.paused)return false;pausedPreview=false;return true;},
@@ -116,6 +126,7 @@
    update(dt){
     if(disposed||!Number.isFinite(dt)||dt<0)return;
     if(!pausedPreview)mixer.update(Math.min(dt,.1));
+    if(mode==='once'&&current.time>=segmentEnd)pendingFinished=current;
     if(outgoing&&mixer.time>=fadeEnd){outgoing.stop();outgoing=null;current.stopFading().setEffectiveWeight(1);}
     if(pendingFinished){
      const name=current.getClip().name;pendingFinished=null;

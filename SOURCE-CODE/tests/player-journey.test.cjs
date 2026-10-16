@@ -9,7 +9,7 @@ function runtime(options = {}) {
   const stored = options.stored || new Map(), notices = [], scope = {};
   scope.window = scope; vm.runInNewContext(code, scope);
   const storage = options.storage || {getItem: key => stored.get(key) || null, setItem: (key, value) => stored.set(key, value)};
-  const journey = scope.createVillageJourney({getIdentity: () => { if (identity instanceof Error) throw identity; return identity; }, storage, notify: text => notices.push(text)});
+  const journey = scope.createVillageJourney({getIdentity: () => { if (identity instanceof Error) throw identity; return identity; }, storage, notify: text => notices.push(text), onDamage: options.onDamage});
   return {journey, stored, notices, identity: value => { identity = value; }, scope};
 }
 const initial = {alive: true, hp: 100, maxHp: 100, level: 1, tutorials: {movement: false, skills: false}};
@@ -131,4 +131,16 @@ test('the weapon adapter reports successful casts exactly once and ignores coold
   context.testAuthAllowed = false; context.VietVillageGame.lock();
   assert.equal(weapons.cast(2).ok, false); assert.equal(context.skillEvents, 1);
   assert.equal(context.VietVillageJourney.getState().alive, false);
+});
+
+test('a real hit reports its source after HP drops; the hook cannot change the HP result', () => {
+  const hits = [];
+  const {journey} = runtime({onDamage: hit => { hits.push(plain(hit)); throw new Error('visual failure'); }});
+  assert.equal(journey.takeDamage(30, {source: {position: {x: 1, y: 2, z: 3}}}), true);
+  assert.deepEqual(hits, [{amount: 30, hp: 70, source: {position: {x: 1, y: 2, z: 3}}}]);
+  assert.equal(journey.takeDamage(10), true);
+  assert.deepEqual(hits[1], {amount: 10, hp: 60, source: null});
+  for (const amount of [0, -5, NaN, Infinity]) assert.equal(journey.takeDamage(amount), false);
+  assert.equal(hits.length, 2, 'rejected damage never reports a hit');
+  assert.equal(journey.getState().hp, 60);
 });

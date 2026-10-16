@@ -230,12 +230,18 @@
   }
 
   const registry = new Map();
+  // Skill-specific effects (by full skill id) replace the generic builder for
+  // that skill only; they share this lifecycle, timeline, events and pool.
+  // Effect: {build(core,fx), tick(core,fx,dt), place?(core,fx), release?(core,fx,reason), onHit?(core,fx,worldPoint)}.
+  const effects = new Map();
   const QUALITY = Object.freeze({
     low: {particles:450,segments:36,sphereSegments:24,debris:18},
     medium: {particles:1100,segments:64,sphereSegments:36,debris:36},
     high: {particles:2200,segments:96,sphereSegments:48,debris:60}
   });
-  const AIMED = new Set(['projectile','volley','rain','thrust','cleave','armor-break','slam']);
+  // Chấn Địa (slam) strikes where the staff meets the ground in front of the
+  // player, so it is not a point-aimed skill.
+  const AIMED = new Set(['projectile','volley','rain','thrust','cleave','armor-break']);
   class WeaponVFXCore {
     static registerWeapon(config) {
       if (!config?.weaponId || !Array.isArray(config.skills) || config.skills.length !== 3)
@@ -251,6 +257,12 @@
       return config;
     }
     static getWeaponConfigs() { return Array.from(registry.values()); }
+    static registerEffect(skillId, effect) {
+      if (typeof skillId !== 'string' || !effect || typeof effect.build !== 'function' || typeof effect.tick !== 'function')
+        throw new TypeError('Hiệu ứng riêng cần mã chiêu, build() và tick().');
+      effects.set(skillId, effect); return effect;
+    }
+    static get aimedTypes() { return Array.from(AIMED); }
     static createWeaponClass(weaponId) {
       return class extends WeaponVFXCore {
         static get config() { return registry.get(weaponId); }
@@ -274,11 +286,28 @@
       this.onEvent=onEvent;this.getGroundY=getGroundY;this.getEquippedWeapon=getEquippedWeapon;this.random=random;
       this.skills=new Map();this.configs=new Map(registry);
       for(const c of this.configs.values()) for(const s of c.skills) this.skills.set(s.id,{...s,weaponId:c.weaponId});
-      this.time=0;this.serial=0;this.effects=[];this.cooldowns=new WeakMap();this.disposed=false;
+      this.time=0;this.serial=0;this.effects=[];this.cooldowns=new WeakMap();this.disposed=false;this.shared=new Map();
       this.pool=new ParticlePool(THREE,scene,QUALITY[quality].particles);
     }
     get stats() {return {active:this.effects.length,particles:this.pool.count,capacity:this.pool.capacity,time:this.time,quality:this.quality,disposed:this.disposed};}
     get hasActiveEffects() {return this.effects.length > 0 || this.pool.count > 0;}
+    // Geometry/material/texture shared by many casts: created once, disposed only with the manager.
+    sharedResource(key,create) {
+      if(!this.shared.has(key))this.shared.set(key,create(this.THREE));
+      return this.shared.get(key);
+    }
+    // Surface normal from the game's own height function (finite differences).
+    groundNormal(x,z,out=new this.THREE.Vector3(),step=.25) {
+      const sample=(a,b)=>{const y=this.getGroundY(new this.THREE.Vector3(a,0,b));return Number.isFinite(y)?y:0;};
+      const hx=sample(x+step,z)-sample(x-step,z),hz=sample(x,z+step)-sample(x,z-step);
+      return out.set(-hx,2*step,-hz).normalize();
+    }
+    // A real hit on a caster: forwarded to its active shield effect, if any.
+    hitShield(caster,point) {
+      if(this.disposed||!caster||!point||![point.x,point.y,point.z].every(Number.isFinite))return false;
+      for(const fx of this.effects)if(fx.alive&&fx.caster===caster&&fx.custom?.onHit&&fx.custom.onHit(this,fx,point))return true;
+      return false;
+    }
     cooldownRemaining(id,caster) {return Math.max(0,(this.cooldowns.get(caster)?.get(id)||0)-this.time);}
     _ground(p) {const y=this.getGroundY(p.clone());if(!Number.isFinite(y)) throw new TypeError('getGroundY phải trả về số hữu hạn.');return y;}
     _pose(caster) {
@@ -286,18 +315,19 @@
       const d=new T.Vector3(0,0,-1).applyQuaternion(caster.getWorldQuaternion(new T.Quaternion()));
       d.y=0;if(d.lengthSq()<1e-8)d.set(0,0,-1);d.normalize();return {p,d};
     }
-    cast(id,{caster,point=null,weaponTip=null}={}) {
+    cast(id,{caster,point=null,weaponTip=null,weapon=null,casterHeight=null}={}) {
       if(this.disposed)return {ok:false,reason:'disposed'};
       const s=this.skills.get(id);if(!s)return {ok:false,reason:'unknown-skill'};
       if(!caster?.isObject3D)return {ok:false,reason:'missing-caster'};
       if(weaponTip&&!weaponTip.isObject3D)return {ok:false,reason:'invalid-weapon-tip'};
+      if(weapon&&!weapon.isObject3D)return {ok:false,reason:'invalid-weapon'};
       if(point&&![point.x,point.y,point.z].every(Number.isFinite))return {ok:false,reason:'invalid-point'};
       if(this.getEquippedWeapon&&this.getEquippedWeapon(caster)!==s.weaponId)return {ok:false,reason:'wrong-weapon'};
       const {p,d}=this._pose(caster),T=this.THREE;
       if(point&&AIMED.has(s.type)&&Math.hypot(point.x-p.x,point.z-p.z)>s.range+1e-6)return {ok:false,reason:'out-of-range'};
       const retryAfter=this.cooldownRemaining(id,caster);if(retryAfter>0)return {ok:false,reason:'cooldown',retryAfter};
       if(this.effects.length>=this.maxActive)return {ok:false,reason:'capacity'};
-      const fx={handle:++this.serial,skill:s,caster,weaponTip,point:point?new T.Vector3(point.x,point.y,point.z):null,
+      const fx={handle:++this.serial,skill:s,caster,weaponTip,weapon,casterHeight:Number.isFinite(casterHeight)&&casterHeight>0?casterHeight:2.35,custom:effects.get(id)||null,point:point?new T.Vector3(point.x,point.y,point.z):null,
         palette:{...this.configs.get(s.weaponId).palette},quality:QUALITY[this.quality],group:new T.Group(),age:0,
         geometries:new Set(),materials:new Set(),emitted:new Set(),alive:true,impactLocked:false,particleCarry:0};
       fx.group.name=id+'-vfx';
@@ -318,6 +348,7 @@
       return {ok:true,handle:fx.handle,skillId:id};
     }
     _place(fx) {
+      if(fx.custom?.place){fx.custom.place(this,fx);return;}
       if(fx.impactLocked)return;
       const {p,d}=this._pose(fx.caster),type=fx.skill.type;
       if(['projectile','volley','rain','thrust','cleave','armor-break'].includes(type)) {
@@ -340,7 +371,7 @@
       this.pool.update(dt);
       for(const fx of this.effects.slice()) {
         if(!fx.alive)continue;
-        fx.age+=dt;this._place(fx);this._tick(fx,dt);
+        fx.age+=dt;this._place(fx);if(fx.custom)fx.custom.tick(this,fx,dt);else this._tick(fx,dt);
         if(fx.alive&&fx.age>=fx.skill.duration)this._release(fx,'complete');
       }
       this.pool.flush();
@@ -352,7 +383,9 @@
       if(this.disposed)return;if(quality===this.quality)return;
       this.cancelAll();this.pool.dispose();this.quality=quality;this.pool=new ParticlePool(this.THREE,this.scene,QUALITY[quality].particles);
     }
-    dispose() {if(this.disposed)return;this.disposed=true;this.cancelAll();this.pool.dispose();}
+    dispose() {if(this.disposed)return;this.disposed=true;this.cancelAll();this.pool.dispose();
+      for(const resource of this.shared.values()){if(resource?.dispose)resource.dispose();else if(resource&&typeof resource==='object')for(const item of Object.values(resource))item?.dispose?.();}
+      this.shared.clear();}
     _emit(type,fx,extra={},key=type) {
       if(fx.emitted.has(key))return false;fx.emitted.add(key);
       if(this.onEvent)this.onEvent({type,handle:fx.handle,skillId:fx.skill.id,weaponId:fx.skill.weaponId,skillType:fx.skill.type,
@@ -386,6 +419,7 @@
       }
     }
     _build(fx) {
+      if(fx.custom){fx.custom.build(this,fx);return;}
       const type=fx.skill.type;
       if(type==='sweep')this._buildSweep(fx);
       else if(type==='shield')this._buildShield(fx);
@@ -577,6 +611,7 @@
       if(!fx.alive)return;fx.alive=false;
       const i=this.effects.indexOf(fx);if(i>=0)this.effects.splice(i,1);
       if(fx.emitted.has('shield-start')&&!fx.emitted.has('shield-end'))this._emit('shield-end',fx,{cancelled:reason==='cancel'});
+      try{fx.custom?.release?.(this,fx,reason);}catch(_){/* Visual clean-up must never block disposal. */}
       this._disposeResources(fx);this._emit(reason,fx);
     }
   }

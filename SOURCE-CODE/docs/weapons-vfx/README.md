@@ -21,6 +21,7 @@ Nếu server đúng worktree đã chạy ở cổng 8001 thì dùng lại. Bản
 |---|---|
 | `SOURCE-CODE/js/vfx/weapon-vfx-core.js` | Timeline, hạt, sự kiện và dọn tài nguyên |
 | `SOURCE-CODE/js/vfx/*-skill-config.js`, `*-skill-vfx.js` | 5 bộ cấu hình/đăng ký, mỗi bộ 3 chiêu |
+| `SOURCE-CODE/js/vfx/staff-vfx-config.js`, `staff-skill-effects.js` | Thông số mỹ thuật và hiệu ứng riêng của 3 chiêu Côn (đăng ký bằng `WeaponVFXCore.registerEffect`) |
 | `SOURCE-CODE/js/weapons-village.js` | Trang bị, chiêu thức, UI và vòng đời hiệu ứng trong làng |
 | `SOURCE-CODE/js/weapons-village-models.js` | Dựng 5 vũ khí 3D và điểm phát hiệu ứng trên vũ khí |
 | `SOURCE-CODE/js/app.js`, `load-order.json`, `index.html` | Nối mô-đun vào trình khởi tạo và vòng lặp hiện có |
@@ -36,6 +37,13 @@ Nếu server đúng worktree đã chạy ở cổng 8001 thì dùng lại. Bản
 ## Quy ước tích hợp
 
 Nhân vật làng nhìn theo +Z, còn VFX dùng -Z; đối tượng caster được xoay để đồng nhất hướng đánh. Điểm phát lấy từ đầu vũ khí thật; cao độ dùng `bridgeHeight`. Trang bị là tài nguyên riêng của mô-đun và được đánh dấu `localOnly`, không tự sao chép sang nhân vật phòng.
+
+### Hiệu ứng riêng của Côn (16/10/2026)
+
+- `WeaponVFXCore.registerEffect(skillId, {build, tick, place?, release?, onHit?})` thay builder chung cho đúng một chiêu, vẫn dùng chung timeline (`activeAt/activeEnd/duration`), sự kiện (`cast/impact/shield-start/shield-end/complete/cancel`), pool hạt, hủy và dispose của lõi. Tài nguyên dùng chung (texture nhiễu/vết nứt, sphere, dải, quad, cylinder, đá) tạo một lần theo chất lượng qua `core.sharedResource` và chỉ giải phóng khi `dispose()` lõi.
+- `cast(id, {caster, weaponTip, weapon, casterHeight, point})`: `weapon` là nhóm mô hình côn (thân dọc trục X cục bộ −1,4…+1,4). **Côn Quét** lấy 2 điểm `sweep.inner/outer` trên thân côn mỗi khung (sau hoạt ảnh), chèn mẫu khi quét nhanh, xóa lịch sử khi nhảy xa hơn `teleportDistance`; **Hộ Thân** đặt theo vị trí thế giới của nhân vật, không nghiêng, bán kính theo `casterHeight`; `core.hitShield(caster, worldPoint)` tạo gợn tại điểm trúng (chỉ trong cửa sổ hoạt động); **Chấn Địa** tụ khí ở `weaponTip`, đúng một lần chạm tại hình chiếu đầu côn xuống đất (giới hạn `contactMin…contactMax`, ngoài vùng dùng `contactFallback`), sóng và decal bám `getGroundY`, sự kiện `impact` có `position`, `normal`, `shake`.
+- Chấn Địa không còn là chiêu ngắm điểm (`aimedTypes` của lõi không có `slam`); làng dùng chung danh sách này.
+- Trong làng: chất lượng hiệu ứng theo `VillagePerformance.policy.level` (0–1 low, 2 medium, 3 high, chỉ đổi khi không có hiệu ứng đang chạy); hoạt ảnh nhân vật GLB dùng `playSegment` theo `StaffVFXConfig.animation`; rung máy quay nhẹ bật/tắt ở bảng **Thời gian & thời tiết**; `journey.takeDamage(amount, {source: {position}})` là đường trúng đòn thật để Hộ Thân gợn sóng (không giảm sát thương).
 
 Hiệu ứng dừng khi ngữ cảnh không phù hợp: nội thất, chế độ xem công trình, hộp thoại, tab mất focus hoặc phiên đăng nhập hết hiệu lực. Không tạo dữ liệu hồ sơ/phòng thật; `onlineConfig.enabled` giữ `false`.
 

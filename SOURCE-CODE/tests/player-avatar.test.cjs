@@ -319,3 +319,14 @@ test('Male saved profile shares movement, weapons, jump, NPC and map logic while
  assert.equal(h.context.VietVillageRegions.travelTo('lang-viet','village-entry').ok,true);
  assert.equal(h.avatar.state.modelId,'male-base');assert.equal(h.run('player'),actor);assert.equal(weapons.state.weaponId,'spear');assert.equal(h.context.VietVillageJourney.getState().hp,hp);
 });
+
+test('staff skills play their measured clip segment (forced so skills can chain); other melee weapons keep slash', async () => {
+  const h = game(); await h.avatar.select('female'); const visual = h.calls.visuals[0], weapons = h.context.VietVillageWeapons;
+  const segments = []; visual.playSegment = (clip, options) => { segments.push({clip, ...options}); return true; };
+  weapons.equip('staff');
+  for (const slot of [1, 2, 3]) { assert.equal(weapons.cast(slot).ok, true); h.step(); }
+  const animation = h.context.StaffVFXConfig.animation;
+  assert.deepEqual(plain(segments), ['staff.con-quet', 'staff.ho-than', 'staff.chan-dia'].map(id => ({...plain(animation[id]), force: true})));
+  assert.deepEqual(visual.once, [], 'the whole slash clip is no longer used for the staff');
+  weapons.equip('axe'); assert.equal(weapons.cast(1).ok, true); assert.deepEqual(visual.once, ['slash']);
+});

@@ -24,6 +24,8 @@
   "SOURCE-CODE/js/vfx/weapon-vfx-core.js",
   "SOURCE-CODE/js/vfx/staff-skill-config.js",
   "SOURCE-CODE/js/vfx/staff-skill-vfx.js",
+  "SOURCE-CODE/js/vfx/staff-vfx-config.js",
+  "SOURCE-CODE/js/vfx/staff-skill-effects.js",
   "SOURCE-CODE/js/vfx/sword-skill-config.js",
   "SOURCE-CODE/js/vfx/sword-skill-vfx.js",
   "SOURCE-CODE/js/vfx/spear-skill-config.js",

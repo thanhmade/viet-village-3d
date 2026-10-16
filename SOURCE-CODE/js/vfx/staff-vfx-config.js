@@ -1,8 +1,9 @@
 /* VIET VILLAGE 3D — tunable art values for the three CÔN (staff) skills.
  * Units: seconds and metres (1 Three.js unit = 1 m). Colours are sRGB hex.
- * Timings are measured from the real player GLB clips (right-hand bone sampled
- * at 30 Hz, see DOCUMENTS/CLAUDE-REVIEW.md §17):
- *   cast_a_spell 0.70–1.45 s: fast horizontal hand sweep  → Côn Quét
+ * Côn Quét keeps the designed four-phase timeline and two-hand pose of
+ * staff-sweep.js; only its staff ribbon is tuned here (`sweep`).
+ * Hộ Thân / Chấn Địa timings are measured from the real player GLB clips
+ * (right-hand bone sampled at 30 Hz):
  *   cast_a_spell 2.10–2.50 s: gathering gesture            → Hộ Thân
  *   slash 1.40–1.90 s raise, 1.90–2.20 s downward strike,
  *   lowest hand point ≈ 2.17 s                            → Chấn Địa impact
@@ -25,12 +26,13 @@
       medium: {trailSamples: 40, sparks: 18, dust: 24, rocks: 14, ringSegments: 72, crackGrid: 14, sphereSegments: 40},
       high: {trailSamples: 56, sparks: 28, dust: 36, rocks: 22, ringSegments: 96, crackGrid: 18, sphereSegments: 56}
     }),
-    // Animation segment each skill plays on the GLB avatar (from/to in clip seconds).
+    // Animation segment played on the GLB avatar (from/to in clip seconds). Côn Quét
+    // has none: it uses the two-hand staff pose driven by staff-sweep.js.
     animation: Object.freeze({
-      'staff.con-quet': Object.freeze({clip: 'cast_a_spell', from: 0.55, to: 1.75}),
       'staff.ho-than': Object.freeze({clip: 'cast_a_spell', from: 1.95, to: 4.95}),
       'staff.chan-dia': Object.freeze({clip: 'slash', from: 1.45, to: 3.25})
     }),
+    // Côn Quét staff ribbon (sparks, ground band, wave, grit and light: staff-sweep.js).
     sweep: Object.freeze({
       // Two points on the staff in weapon-local metres (staff spans x −1.4…+1.4).
       inner: Object.freeze([0.15, 0, 0]), outer: Object.freeze([1.42, 0, 0]),
@@ -39,9 +41,7 @@
       maxStep: 0.12,           // metres between inserted samples (fast swings)
       maxInsertPerFrame: 8,
       teleportDistance: 2.5,   // a jump larger than this resets the history
-      opacity: 0.95, mirrorOpacity: 0.45,
-      sparkMinSpeed: 4.0,      // tip speed (m/s) before gold sparks detach
-      dustAt: 0.22             // seconds after the trail starts: dust at the feet
+      opacity: 0.95, mirrorOpacity: 0.45
     }),
     shield: Object.freeze({
       radiusFactor: 0.6,       // × character height (2.35 m → 1.41 m), at least skill.radius

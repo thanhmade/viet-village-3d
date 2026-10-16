@@ -1,8 +1,9 @@
 /* VIET VILLAGE 3D — Côn / Gậy: 3 kỹ năng riêng.
  * Thời gian: giây; khoảng cách: mét (quy ước 1 đơn vị Three.js = 1 mét).
- * activeAt/activeEnd khớp đoạn hoạt ảnh GLB trong staff-vfx-config.js (đo từ
- * clip thật: tay quét ngang, thế thủ, điểm côn chạm đất); các trị số khác là
- * mặc định thiết kế, không đo từ ảnh.
+ * Côn Quét: nhịp 4 pha do thiết kế (staff-sweep.js, docs/staff-sweep-20261016.md).
+ * Hộ Thân/Chấn Địa: activeAt/activeEnd khớp đoạn hoạt ảnh GLB trong staff-vfx-config.js
+ * (đo từ clip thật: thế thủ, điểm côn chạm đất); các trị số khác là mặc định thiết kế,
+ * không đo từ ảnh.
  * Hướng trước trong local space là -Z; scene cần dùng hệ trục Y-up.
  */
 (function (root, factory) {
@@ -27,15 +28,18 @@
       "localId": "con-quet",
       "name": "Côn Quét",
       "type": "sweep",
+      "sweepRadius": 2.1,
+      "containRadius": 1.65,
+      "phases": {"windup": 0.14, "openEnd": 0.36, "accelerateEnd": 0.82, "closeEnd": 1.06, "releaseAt": 1.12, "releaseEnd": 1.48},
       "slot": 1,
-      "duration": 1.2,
-      "activeAt": 0.15,
-      "activeEnd": 0.9,
-      "cooldown": 1.4,
+      "duration": 1.8,
+      "activeAt": 0.14,
+      "activeEnd": 1.48,
+      "cooldown": 2.4,
       "radius": 3.2,
       "range": 3.2,
       "forwardOffset": 0.0,
-      "description": "Quét côn ngang để lại dải khí xanh ngọc bám theo thân côn, mép vàng, tia lửa vàng và bụi nhẹ dưới chân."
+      "description": "Quét ngang liên tục: mở cung, tăng lực, khép vòng — dải khí xanh ngọc bám theo thân côn, mép vàng; rồi phát một sóng xanh ngọc viền vàng sát đất. Tầm côn 2,1 m; sóng 3,2 m."
     },
     {
       "id": "staff.ho-than",

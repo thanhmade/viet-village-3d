@@ -1,4 +1,4 @@
-/* VIET VILLAGE 3D — CÔN (staff) skill effects: Côn Quét, Hộ Thân, Chấn Địa.
+/* VIET VILLAGE 3D — CÔN (staff) skill effects: Hộ Thân, Chấn Địa and the Côn Quét staff ribbon.
  * Plugged into WeaponVFXCore by skill id, so they share its timeline, events,
  * particle pool, cancel and disposal. Visual only: no damage or cooldown logic,
  * no render loop and no timers; everything advances with the game's delta.
@@ -237,7 +237,9 @@
       gl_FragColor=vec4(col,(line*.75+halo*.22)*m.a*uOpacity);}`;
 
   // ---------------- Côn Quét: ribbon trail bound to two points on the staff ----------------
-  function makeTrail(core, fx, samples, opacityScale) {
+  // Used by staff-sweep.js (Côn Quét timeline, hit windows, wave): the ribbon replaces a
+  // single-point tip trail with the band swept by the staff itself.
+  function makeTrail(core, fx, samples, opacityScale, parent) {
     const T = core.THREE, g = new T.BufferGeometry(), c = palette(T);
     const position = new Float32Array(samples * 6), age = new Float32Array(samples * 2), side = new Float32Array(samples * 2), index = [];
     for (let i = 0; i < samples; i++) { side[i * 2 + 1] = 1; if (i < samples - 1) { const j = i * 2; index.push(j, j + 1, j + 2, j + 1, j + 3, j + 2); } }
@@ -246,7 +248,7 @@
     g.setAttribute('aSide', new T.BufferAttribute(side, 1)); g.setIndex(index); g.setDrawRange(0, 0); fx.geometries.add(g);
     const m = material(core, fx, {uniforms: {uJade: {value: c.jade}, uGold: {value: c.gold}, uCore: {value: c.core}, uOpacity: {value: 0}, uTime: {value: 0}, uNoise: {value: sharedFor(core).noise}},
       vertexShader: TRAIL_VERTEX, fragmentShader: TRAIL_FRAGMENT});
-    const n = mesh(core, fx, g, m, fx.world, 11); n.frustumCulled = false; n.visible = false;
+    const n = mesh(core, fx, g, m, parent, 11); n.frustumCulled = false; n.visible = false;
     return {mesh: n, geometry: g, material: m, position, age, opacityScale, head: 0, count: 0,
       ring: Array.from({length: samples}, () => ({inner: new T.Vector3(), outer: new T.Vector3(), time: 0})),
       last: {inner: new T.Vector3(), outer: new T.Vector3(), time: 0, valid: false}};
@@ -269,84 +271,57 @@
     trail.geometry.setDrawRange(0, Math.max(0, n - 1) * 6);
     trail.geometry.attributes.position.needsUpdate = trail.geometry.attributes.aAge.needsUpdate = true;
   }
-  const StaffSweepEffect = {
-    build(core, fx) {
-      const T = core.THREE, q = tier(core); worldLayer(core, fx);
-      fx.sweep = {trails: [makeTrail(core, fx, q.trailSamples, 1)], dust: createDust(core, fx, q.dust, VFX.colors.dust),
-        a: new T.Vector3(), b: new T.Vector3(), c: new T.Vector3(), d: new T.Vector3(), v: new T.Vector3(), tip: new T.Vector3(),
-        sparkCarry: 0, glintCarry: 0, dusted: false};
-      if (VFX.sweep.mirror) fx.sweep.trails.push(makeTrail(core, fx, q.trailSamples, VFX.sweep.mirrorOpacity));
-      syncWorld(fx);
-    },
-    // The anchor follows the caster's feet; the trail itself is in world space.
-    place(core, fx) { anchorAtCaster(core, fx); syncWorld(fx); },
-    // Two points on the staff, read after this frame's animation is applied.
-    staffPoints(core, fx, mirrored, inner, outer) {
-      const cfg = VFX.sweep, sign = mirrored ? -1 : 1;
+  /* createStaffRibbon(core, fx) → {trails, meshes, update(t, {emitting, opacity, tip})}
+   * `opacity` is a 0…1 envelope from the caller's timeline (× sweep.opacity).
+   * Two points on the held staff (fx.weapon, sweep.inner/outer in weapon-local metres)
+   * are sampled after this frame's animation/IK; fast swings get interpolated samples,
+   * a jump larger than teleportDistance restarts the history. Vertices are in world
+   * space under a layer that cancels fx.group's transform, so the history never turns
+   * or slides with the caster. Without a staff model the band runs from the given tip
+   * toward the caster. Buffers/materials belong to fx and are disposed with it. */
+  function createStaffRibbon(core, fx) {
+    const T = core.THREE, q = tier(core), cfg = VFX.sweep;
+    const layer = new T.Group(); layer.name = 'staff-ribbon-world'; layer.matrixAutoUpdate = false; fx.group.add(layer);
+    const trails = [makeTrail(core, fx, q.trailSamples, 1, layer)];
+    if (cfg.mirror && fx.weapon) trails.push(makeTrail(core, fx, q.trailSamples, cfg.mirrorOpacity, layer));
+    const a = new T.Vector3(), b = new T.Vector3(), c = new T.Vector3(), d = new T.Vector3(), centre = new T.Vector3();
+    function points(mirrored, inner, outer, tip) {
+      const sign = mirrored ? -1 : 1;
       if (fx.weapon) {
         fx.weapon.updateWorldMatrix(true, false);
         fx.weapon.localToWorld(inner.set(cfg.inner[0] * sign, cfg.inner[1], cfg.inner[2]));
         fx.weapon.localToWorld(outer.set(cfg.outer[0] * sign, cfg.outer[1], cfg.outer[2]));
-        return;
+        return true;
       }
-      // Without a staff model (headless tools) an arc in front of the caster stands in.
-      const {p, d} = core._pose(fx.caster), s = fx.skill, k = clamp((fx.age - s.activeAt) / (s.activeEnd - s.activeAt));
-      const a = Math.atan2(d.x, d.z) + (k - .5) * Math.PI * 1.6 + (mirrored ? Math.PI : 0), y = core._ground(p) + 1.1;
-      inner.set(p.x + Math.sin(a) * .5, y, p.z + Math.cos(a) * .5); outer.set(p.x + Math.sin(a) * 1.6, y + .1, p.z + Math.cos(a) * 1.6);
-    },
-    tick(core, fx, dt) {
-      const s = fx.skill, t = fx.age, cfg = VFX.sweep, st = fx.sweep, q = tier(core);
-      if (t >= s.activeAt) core._emit('impact', fx, {hitIndex: 0, position: fx.group.position.clone(), activeSeconds: s.activeEnd - s.activeAt}, 'hit0');
-      if (!fx.alive) return;
-      const emitting = t >= s.activeAt && t <= s.activeEnd;
-      const opacity = cfg.opacity * VFX.intensity * smooth(s.activeAt - .02, s.activeAt + .06, t) * (1 - smooth(s.activeEnd, s.activeEnd + cfg.life, t));
-      st.trails.forEach((trail, index) => {
-        const u = trail.material.uniforms; u.uTime.value = t; u.uOpacity.value = opacity * trail.opacityScale;
-        if (emitting) {
-          this.staffPoints(core, fx, index === 1, st.a, st.b);
-          // Teleport / map change / respawn: start a fresh trail instead of a huge streak.
-          if (trail.last.valid && st.b.distanceTo(trail.last.outer) > cfg.teleportDistance) { trail.count = 0; trail.last.valid = false; }
-          if (!trail.last.valid) pushSample(trail, st.a, st.b, t);
-          else {
-            const distance = st.b.distanceTo(trail.last.outer), steps = Math.min(cfg.maxInsertPerFrame, Math.max(1, Math.ceil(distance / cfg.maxStep)));
-            for (let i = 1; i <= steps; i++) {
-              const k = i / steps; st.c.lerpVectors(trail.last.inner, st.a, k); st.d.lerpVectors(trail.last.outer, st.b, k);
-              pushSample(trail, st.c, st.d, trail.last.time + (t - trail.last.time) * k);
-            }
-            // Gold sparks peel off the tip only while the staff really moves fast.
-            if (index === 0 && dt > 0 && distance / dt > cfg.sparkMinSpeed) {
-              st.sparkCarry += dt * q.sparks * 3; const n = Math.min(6, Math.floor(st.sparkCarry)); st.sparkCarry -= n;
-              st.v.subVectors(st.b, trail.last.outer).multiplyScalar(.3 / Math.max(dt, 1 / 120));
-              for (let i = 0; i < n; i++) {
-                st.c.lerpVectors(trail.last.outer, st.b, core.random());
-                st.d.set(st.v.x + rand(core, -.6, .6), st.v.y + rand(core, .2, 1.1), st.v.z + rand(core, -.6, .6));
-                core.pool.spawn(st.c, st.d, VFX.colors.gold, rand(core, .18, .38), rand(core, .035, .06), 2.5, .95);
+      if (!tip) return false;
+      fx.caster.getWorldPosition(centre); centre.y = tip.y; outer.copy(tip);
+      const towards = centre.sub(tip), length = towards.length();
+      inner.copy(tip).addScaledVector(towards, length > 1e-6 ? Math.min(cfg.outer[0] - cfg.inner[0], length) / length : 0);
+      return true;
+    }
+    return {
+      trails, meshes: trails.map(trail => trail.mesh),
+      update(t, {emitting = false, opacity = 0, tip = null} = {}) {
+        fx.group.updateWorldMatrix(true, false); layer.matrix.copy(fx.group.matrixWorld).invert(); layer.matrixWorldNeedsUpdate = true;
+        trails.forEach((trail, index) => {
+          const u = trail.material.uniforms; u.uTime.value = t; u.uOpacity.value = clamp(opacity) * cfg.opacity * trail.opacityScale * VFX.intensity;
+          if (emitting && points(index === 1, a, b, tip)) {
+            if (trail.last.valid && b.distanceTo(trail.last.outer) > cfg.teleportDistance) { trail.count = 0; trail.last.valid = false; }
+            if (!trail.last.valid) pushSample(trail, a, b, t);
+            else {
+              const steps = Math.min(cfg.maxInsertPerFrame, Math.max(1, Math.ceil(b.distanceTo(trail.last.outer) / cfg.maxStep)));
+              for (let i = 1; i <= steps; i++) {
+                const k = i / steps; c.lerpVectors(trail.last.inner, a, k); d.lerpVectors(trail.last.outer, b, k);
+                pushSample(trail, c, d, trail.last.time + (t - trail.last.time) * k);
               }
             }
+            trail.last.inner.copy(a); trail.last.outer.copy(b); trail.last.time = t; trail.last.valid = true;
           }
-          trail.last.inner.copy(st.a); trail.last.outer.copy(st.b); trail.last.time = t; trail.last.valid = true;
-        }
-        writeTrail(trail, t, cfg.life);
-      });
-      // Small glints exactly at the real staff tip while the sweep is live.
-      if (emitting) {
-        st.glintCarry += Math.min(dt, t - s.activeAt + 1e-6) * 14; const n = Math.min(4, Math.floor(st.glintCarry)); st.glintCarry -= n;
-        if (n) {
-          if (fx.weaponTip) { fx.weaponTip.updateWorldMatrix(true, false); fx.weaponTip.getWorldPosition(st.tip); } else this.staffPoints(core, fx, false, st.c, st.tip);
-          for (let i = 0; i < n; i++) core.pool.spawn(st.tip, st.v.set(rand(core, -.3, .3), rand(core, .1, .5), rand(core, -.3, .3)), i % 2 ? VFX.colors.gold : VFX.colors.core, rand(core, .2, .32), .05, .6, .8);
-        }
+          writeTrail(trail, t, cfg.life);
+        });
       }
-      // A light puff of dust at the feet once the sweep passes low.
-      if (!st.dusted && t >= s.activeAt + cfg.dustAt && t < s.duration) {
-        st.dusted = true; const {p, d} = core._pose(fx.caster), y = core._ground(p);
-        for (let i = 0; i < 12; i++) {
-          const a = Math.atan2(d.x, d.z) + rand(core, -1.6, 1.6), r = rand(core, .25, .9), speed = rand(core, .6, 1.5);
-          if (!st.dust.spawn(p.x + Math.sin(a) * r, y + .08, p.z + Math.cos(a) * r, Math.sin(a) * speed, rand(core, .05, .25), Math.cos(a) * speed, rand(core, .35, .6), rand(core, .55, .9), .32)) break;
-        }
-      }
-      st.dust.update(Math.min(dt, .1));
-    }
-  };
+    };
+  }
 
   // ---------------- Hộ Thân: Fresnel shell, tilted bands, real-hit ripples ----------------
   const ProtectiveShieldEffect = {
@@ -589,8 +564,8 @@
     }
   };
 
-  Core.registerEffect('staff.con-quet', StaffSweepEffect);
+  // Côn Quét is rendered by staff-sweep.js (registerSkillRenderer) and uses createStaffRibbon.
   Core.registerEffect('staff.ho-than', ProtectiveShieldEffect);
   Core.registerEffect('staff.chan-dia', GroundSlamEffect);
-  return Object.freeze({StaffSweepEffect, ProtectiveShieldEffect, GroundSlamEffect});
+  return Object.freeze({createStaffRibbon, ProtectiveShieldEffect, GroundSlamEffect});
 });

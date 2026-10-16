@@ -1,7 +1,8 @@
 /* Chạy: node --test SOURCE-CODE/tests/staff-skill-effects.test.cjs
- * Hiệu ứng riêng của 3 chiêu Côn trên Three.js thật (không cần WebGL): bám điểm trên
- * thân côn, khiên theo nhân vật và gợn tại điểm trúng thật, Chấn Địa nện một lần
- * đúng mặt đất. Kiểm tra vị trí/thời gian/tài nguyên, không thay cho kiểm tra hình ảnh GPU.
+ * Hiệu ứng riêng của 3 chiêu Côn trên Three.js thật (không cần WebGL): dải khí Côn Quét
+ * bám 2 điểm trên thân côn (trong timeline staff-sweep.js), khiên theo nhân vật và gợn
+ * tại điểm trúng thật, Chấn Địa nện một lần đúng mặt đất. Kiểm tra vị trí/thời gian/
+ * tài nguyên, không thay cho kiểm tra hình ảnh GPU.
  */
 'use strict';
 const assert = require('node:assert/strict');
@@ -31,8 +32,9 @@ function rig({ground = () => 0, quality = 'low'} = {}) {
 const staffPoint = (weapon, x) => weapon.localToWorld(new THREE.Vector3(x, 0, 0));
 const vertex = (mesh, array, index) => mesh.localToWorld(new THREE.Vector3().fromArray(array, index * 3));
 
-test('animation segments last exactly as long as each VFX timeline', () => {
-  for (const item of staff.skills) {
+test('animation segments last exactly as long as each VFX timeline; Côn Quét uses the two-hand pose', () => {
+  assert.equal(VFX.animation['staff.con-quet'], undefined, 'Côn Quét: staff-sweep pose, no clip segment');
+  for (const item of staff.skills.filter(item => item.id !== 'staff.con-quet')) {
     const segment = VFX.animation[item.id];
     assert.ok(segment && segment.clip, item.id);
     close(segment.to - segment.from, item.duration, item.id + ' segment length');
@@ -42,38 +44,39 @@ test('animation segments last exactly as long as each VFX timeline', () => {
   for (const tier of ['low', 'medium', 'high']) assert.ok(VFX.quality[tier].trailSamples > 0 && VFX.quality[tier].rocks > 0);
 });
 
-test('Côn Quét: the ribbon is built from two real points on the staff, only while the sweep is live', () => {
-  const {scene, caster, hand, weapon, tip, events, vfx} = rig(), s = skill('staff.con-quet');
+test('Côn Quét: the ribbon is built from two real points on the staff during the sweep phases only', () => {
+  const {scene, caster, hand, weapon, tip, events, vfx} = rig(), s = skill('staff.con-quet'), p = s.phases;
   assert.equal(vfx.cast(s.id, {caster, weapon, weaponTip: tip}).ok, true);
-  const fx = vfx.effects[0], [trail, mirror] = fx.sweep.trails;
-  assert.ok(mirror, 'a fainter mirror trail from the other end');
-  vfx.update(s.activeAt * .5);
-  assert.equal(trail.mesh.visible, false); assert.equal(trail.count, 0); assert.equal(byType(events, 'impact').length, 0);
-  let spawned = 0, teleported = false;
-  for (let t = s.activeAt * .5; t < s.activeEnd - .05; t += 1 / 60) {
-    hand.rotation.y += 9 / 60; // fast horizontal swing (tip ≈ 13 m/s)
-    // Teleport mid-swing (map change / respawn): the history restarts, no streak across the map.
-    const jump = !teleported && fx.age > s.activeAt + .3;
+  const fx = vfx.effects[0], ribbon = fx.sweep.ribbon, [trail, mirror] = ribbon.trails;
+  assert.ok(trail && mirror, 'staff ribbon and a fainter mirror from the other end');
+  assert.deepEqual(fx.sweep.ribbons, ribbon.meshes, 'the sweep renderer owns exactly these ribbons');
+  vfx.update(p.windup * .5);
+  assert.equal(trail.mesh.visible, false); assert.equal(trail.count, 0);
+  let teleported = false;
+  for (let t = p.windup * .5; t < p.closeEnd - .05; t += 1 / 60) {
+    hand.rotation.y += 6 / 60; caster.rotation.y += .4 / 60; // the actor turns too: history must not turn with it
+    const jump = !teleported && fx.age > p.windup + .3;
     if (jump) { caster.position.x += 30; teleported = true; }
-    const before = vfx.pool.count; vfx.update(1 / 60); spawned += Math.max(0, vfx.pool.count - before);
+    vfx.update(1 / 60);
     if (jump) assert.equal(trail.count, 1, 'history restarted at the new position');
-    if (fx.age < s.activeAt + 2 / 60 || jump) continue;
-    for (let i = 1; i < trail.count; i++) {
-      const a = vertex(trail.mesh, trail.position, i * 2 + 1), b = vertex(trail.mesh, trail.position, (i - 1) * 2 + 1);
-      assert.ok(a.distanceTo(b) < VFX.sweep.teleportDistance, 'no segment spans a jump');
-    }
+    if (fx.age < p.windup + 2 / 60 || jump) continue;
+    const layer = trail.mesh.parent; layer.updateWorldMatrix(true, false);
+    assert.ok(layer.matrixWorld.equals(new THREE.Matrix4()) || layer.matrixWorld.elements.every((v, i) => Math.abs(v - new THREE.Matrix4().elements[i]) < 1e-5), 'ribbon vertices are world space');
     assert.equal(trail.mesh.visible, true);
     closeVector(vertex(trail.mesh, trail.position, 1), staffPoint(weapon, VFX.sweep.outer[0]), 'newest outer vertex sits on the staff');
     closeVector(vertex(trail.mesh, trail.position, 0), staffPoint(weapon, VFX.sweep.inner[0]), 'newest inner vertex sits on the staff');
     closeVector(vertex(mirror.mesh, mirror.position, 1), staffPoint(weapon, -VFX.sweep.outer[0]), 'mirror follows the other end');
-    for (let i = 1; i < trail.count; i++) assert.ok(trail.age[i * 2] >= trail.age[(i - 1) * 2], 'newest first, older samples fade');
+    for (let i = 1; i < trail.count; i++) {
+      assert.ok(trail.age[i * 2] >= trail.age[(i - 1) * 2], 'newest first, older samples fade');
+      const a = vertex(trail.mesh, trail.position, i * 2 + 1), b = vertex(trail.mesh, trail.position, (i - 1) * 2 + 1);
+      assert.ok(a.distanceTo(b) < VFX.sweep.teleportDistance, 'no segment spans a jump');
+    }
   }
-  assert.ok(teleported && spawned > 0, 'sparks and tip glints come from the swing');
-  assert.equal(byType(events, 'impact').length, 1, 'one gameplay hit window event');
-  vfx.update(s.activeEnd + VFX.sweep.life + .02 - fx.age);
-  assert.equal(trail.mesh.visible, false, 'trail is gone shortly after the hit window');
+  assert.ok(teleported);
+  vfx.update(p.releaseAt + .14 - fx.age + .01);
+  assert.equal(trail.mesh.visible, false, 'ribbon gone before the wave release completes');
   vfx.update(5);
-  assert.equal(vfx.stats.active, 0); assert.equal(fx.group.parent, null);
+  assert.equal(byType(events, 'impact').length, 1, 'one release'); assert.equal(vfx.stats.active, 0); assert.equal(fx.group.parent, null);
   vfx.dispose(); assert.deepEqual(scene.children, [caster]);
 });
 
@@ -201,7 +204,7 @@ test('repeated casts reuse shared resources and free every per-cast buffer exact
         assert.equal(vfx.cast(item.id, {caster, weapon, weaponTip: tip}).ok, true, quality + ' ' + item.id);
         const fx = vfx.effects.at(-1), owned = [...fx.geometries, ...fx.materials];
         for (const resource of owned) { counts.set(resource, 0); resource.addEventListener('dispose', () => counts.set(resource, counts.get(resource) + 1)); }
-        if (item.id === 'staff.con-quet') assert.equal(fx.sweep.trails[0].ring.length, VFX.quality[quality].trailSamples);
+        if (item.id === 'staff.con-quet') assert.equal(fx.sweep.ribbon.trails[0].ring.length, VFX.quality[quality].trailSamples);
         if (item.id === 'staff.chan-dia') assert.equal(fx.slam.rockState.length, VFX.quality[quality].rocks);
         for (let t = 0; t < item.cooldown + .1; t += 1 / 30) { if (round % 3 === 0) caster.rotation.y += .05; vfx.update(1 / 30); }
       }

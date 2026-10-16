@@ -143,7 +143,7 @@
   if(loadedGroups.has(definition.id))return;
   const root=new THREE.Group();root.name='assets-3d-'+definition.id;root.userData.assetGroup=definition.id;
   for(const placement of definition.placements){const gltf=templates.get(placement.id);if(!gltf)throw new Error('Chưa tải được '+placement.id);root.add(fit(gltf,placement));}
-  const groupColliders=definition.placements.filter(p=>p.collider).map(p=>({...p.collider,x:p.position[0],z:p.position[2],interior:!!definition.interior,houses:p.houses}));
+  const groupColliders=definition.placements.filter(p=>p.collider).map(p=>({...p.collider,top:p.collider.jumpable&&p.size?p.position[1]+p.size[1]+.03:null,x:p.position[0],z:p.position[2],interior:!!definition.interior,houses:p.houses}));
   let pondSetup=null;
   if(definition.id==='pond'){
    const placement=definition.placements.find(p=>p.id==='LV_AO_SEN_01'),record=assetRecords.get(placement.id),gltf=templates.get(placement.id);
@@ -175,7 +175,8 @@
   setInterior(interiorIndex);
  }
  function setInterior(index){interiorIndex=index;for(const root of loadedGroups.values())root.traverse(node=>{if(node.userData.placement?.houses)node.visible=node.userData.placement.houses.includes(index);});}
- function canWalk(x,z,interior=false){return (interior||!blockedByPondBank(x,z))&&!colliders.some(c=>c.interior===interior&&(!c.houses||c.houses.includes(interiorIndex))&&Math.abs(x-c.x)<c.w+.16&&Math.abs(z-c.z)<c.d+.16);}
+ function canWalk(x,z,interior=false,feetY=-Infinity){return (interior||!blockedByPondBank(x,z))&&!colliders.some(c=>c.interior===interior&&!(Number.isFinite(c.top)&&feetY>=c.top)&&(!c.houses||c.houses.includes(interiorIndex))&&Math.abs(x-c.x)<c.w+.16&&Math.abs(z-c.z)<c.d+.16);}
+ function jumpSurface(x,z){let top=null;for(const c of colliders)if(!c.interior&&Number.isFinite(c.top)&&Math.abs(x-c.x)<c.w+.16&&Math.abs(z-c.z)<c.d+.16)top=Math.max(top??0,c.top);return top;}
  async function initialize({region,interior,preview,notify=()=>{},load=global.loadVillageNPCGLTF,catalogURL='../MAP/regions/lang-viet/assets-3d.json'}={}){
   if(pending)return pending;
   if(!region?.root||!interior||typeof load!=='function'||typeof global.fetch!=='function')return false;
@@ -222,6 +223,6 @@
   const hour=climateState?.displayHour??12,night=hour<6||hour>18?1:0;
   for(const material of glowMaterials)material.emissiveIntensity=night?.85:.08;
  }
- global.VietVillageMapAssets=Object.freeze({initialize,update,canWalk,pondContainsWater,setInterior,setWind:value=>{windStrength=Math.max(0,Math.min(1,Number(value)||0));},
+ global.VietVillageMapAssets=Object.freeze({initialize,update,canWalk,jumpSurface,pondContainsWater,setInterior,setWind:value=>{windStrength=Math.max(0,Math.min(1,Number(value)||0));},
   get status(){return {ready,loading:!!pending&&!ready,loaded:templates.size,groups:[...loadedGroups.keys()],errors:errors.slice(),pond:pondModel?{ready:true,url:pondModel.url,terrainCut:true,bankColliders:pondModel.bankColliders.length,...pondModel.animator.state}:{ready:false,url:assetRecords.get('LV_AO_SEN_01')?.loadedUrl}};}});
 })(typeof window==='undefined'?globalThis:window);

@@ -229,11 +229,13 @@
     dispose() { this.mesh.removeFromParent(); this.geometry.dispose(); this.material.dispose(); }
   }
 
-  const registry = new Map();
-  // Skill-specific effects (by full skill id) replace the generic builder for
-  // that skill only; they share this lifecycle, timeline, events and pool.
-  // Effect: {build(core,fx), tick(core,fx,dt), place?(core,fx), release?(core,fx,reason), onHit?(core,fx,worldPoint)}.
-  const effects = new Map();
+  // Two ways to replace the generic builder for one skill id; both share this
+  // lifecycle, timeline, events, pool and disposal:
+  // - registerSkillRenderer(id, {build, tick}): default placement; tick runs after
+  //   the generic uTime/uOpacity pass (Côn Quét, staff-sweep.js).
+  // - registerEffect(id, {build, tick, place?, release?, onHit?}): owns placement,
+  //   timing and opacity itself (Hộ Thân, Chấn Địa, staff-skill-effects.js).
+  const registry = new Map(), skillRenderers = new Map(), effects = new Map();
   const QUALITY = Object.freeze({
     low: {particles:450,segments:36,sphereSegments:24,debris:18},
     medium: {particles:1100,segments:64,sphereSegments:36,debris:36},
@@ -243,6 +245,10 @@
   // player, so it is not a point-aimed skill.
   const AIMED = new Set(['projectile','volley','rain','thrust','cleave','armor-break']);
   class WeaponVFXCore {
+    static registerSkillRenderer(id, renderer) {
+      if(!id||typeof renderer?.build!=='function'||typeof renderer?.tick!=='function')throw new TypeError('Invalid skill renderer');
+      skillRenderers.set(id,renderer);
+    }
     static registerWeapon(config) {
       if (!config?.weaponId || !Array.isArray(config.skills) || config.skills.length !== 3)
         throw new TypeError('Mỗi cấu hình cần weaponId và đúng 3 chiêu.');
@@ -420,6 +426,8 @@
     }
     _build(fx) {
       if(fx.custom){fx.custom.build(this,fx);return;}
+      const custom=skillRenderers.get(fx.skill.id);
+      if(custom){fx.customRenderer=custom;custom.build(this,fx);return;}
       const type=fx.skill.type;
       if(type==='sweep')this._buildSweep(fx);
       else if(type==='shield')this._buildShield(fx);
@@ -551,6 +559,7 @@
       const T=this.THREE,s=fx.skill,t=fx.age,type=s.type,phase=clamp((t-s.activeAt)/(s.activeEnd-s.activeAt)),after=t-s.activeAt;
       const energy=smooth(0,Math.max(.04,s.activeAt),t)*(1-smooth(s.activeEnd,s.duration,t));
       for(const m of fx.materials)if(m.uniforms?.uTime){m.uniforms.uTime.value=t;m.uniforms.uOpacity.value=energy;}
+      if(fx.customRenderer){fx.customRenderer.tick(this,fx,dt);return;}
       if(type==='shield') {
         if(t>=s.activeAt)this._emit('shield-start',fx,{activeSeconds:s.activeEnd-s.activeAt});
         if(!fx.alive)return;if(t>=s.activeEnd)this._emit('shield-end',fx);

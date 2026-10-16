@@ -127,6 +127,9 @@ test('the weapon adapter reports successful casts exactly once and ignores coold
   assert.equal(weapons.cast(99).ok, false); assert.equal(context.skillEvents, 0);
   assert.equal(weapons.cast(1).ok, true); assert.equal(context.skillEvents, 1);
   assert.equal(context.VietVillageJourney.getState().tutorials.skills, true);
+  // Côn Quét blocks overlapping casts while it plays (busy), then the cooldown remains.
+  assert.equal(weapons.cast(1).reason, 'busy'); assert.equal(context.skillEvents, 1);
+  weapons.update(context.WeaponVFXCore.getWeaponConfigs()[0].skills[0].duration + .05);
   assert.equal(weapons.cast(1).reason, 'cooldown'); assert.equal(context.skillEvents, 1);
   context.testAuthAllowed = false; context.VietVillageGame.lock();
   assert.equal(weapons.cast(2).ok, false); assert.equal(context.skillEvents, 1);

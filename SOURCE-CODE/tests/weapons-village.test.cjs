@@ -5,6 +5,24 @@ const createHarness = require('./harness.cjs');
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-6, `${actual} ≈ ${expected}`);
 // Advance at least 17 ms between rendered frames; the village caps rendering at 60 Hz.
 
+test('putting away every weapon preserves the actor, walking, map, camera and cooldowns',()=>{
+ const {run,context}=createHarness(),weapons=context.VietVillageWeapons;
+ for(const id of ['staff','sword','spear','bow','axe']){
+  weapons.equip(id);weapons.cast(1);
+  const actor=run('player'),pose=actor.position.clone(),yaw=run('yaw'),region=context.VietVillageRegions.currentId;
+  const remaining=weapons.skills()[0].remaining;
+  weapons.deactivate();weapons.deactivate();
+  assert.equal(run('localWalking&&player.visible'),true);
+  assert(actor.position.equals(pose));assert.equal(run('yaw'),yaw);assert.equal(context.VietVillageRegions.currentId,region);
+  assert.equal(actor.getObjectByName('village-local-weapon').visible,false);
+  assert.equal(weapons.state.enabled,false);assert.equal(weapons.skills()[0].remaining,remaining);
+  run('yaw=0;keys.KeyW=true;tick((last||0)+40);');assert(actor.position.distanceTo(pose)>0);
+  run('clearMotion();');
+ }
+ run('multiplayerWalking=true;');weapons.equip('sword');weapons.deactivate();assert.equal(run('multiplayerWalking&&player.visible'),true);
+ context.VietVillageGame.lock();assert.equal(run('localWalking||multiplayerWalking||player.visible'),false);
+});
+
 test('local weapons use the original player, scene and walking without an online room', () => {
   const {run, context} = createHarness();
   const scene = context.VietVillageGame.scene(), player = context.VietVillageGame.avatarTemplate();
@@ -208,9 +226,9 @@ test('idle adapter avoids DOM and whole-body work; lazily built cached equipment
   domWrites = 0;
   for (let frame = 0; frame < 60; frame++) controller.update(1/60);
   assert.ok(domWrites <= 12, `Cooldown label updates are limited to its 0.1s precision: ${domWrites}`);
-  controller.update(.21);
+  controller.update(context.StaffSkillConfig.skills[0].duration-1+.01);
   assert.equal(controller.state.active, 0);
-  controller.update(.3);
+  controller.update(context.StaffSkillConfig.skills[0].cooldown);
   assert.equal(controller.cast(1).ok, true, 'Cooldown continues after effects finish and the pool becomes idle');
   for (const id of ['sword', 'spear', 'bow', 'axe', 'staff']) controller.equip(id);
   assert.equal(builds, 1, 'Switching equipment reuses the prepared models');
@@ -308,8 +326,6 @@ test('putting the weapon away stows only the weapon: the character stays visible
   assert.ok(player.position.distanceTo(before) > 0, 'walking continues without a weapon');
   assert.equal(controller.equip('staff'), true);
   assert.equal(player.getObjectByName('village-local-weapon').visible, true);
-  controller.lock(); // leaving the village (logout) still ends roaming as before
-  assert.equal(run('localWalking'), false);
 });
 
 test('staff skills: trail sits on the equipped staff, Chấn Địa is a tap skill, shield ripples on a real HP hit', () => {
@@ -321,7 +337,7 @@ test('staff skills: trail sits on the equipped staff, Chấn Địa is a tap ski
   assert.equal(controller.cast(1).ok, true);
   const skill = context.WeaponVFXCore.getWeaponConfigs().find(config => config.weaponId === 'staff').skills[0];
   controller.update(skill.activeAt + .05); controller.update(1 / 60);
-  const world = scene.getObjectByName('staff.con-quet-vfx').getObjectByName('world-space');
+  const world = scene.getObjectByName('staff.con-quet-vfx').getObjectByName('staff-ribbon-world');
   const trail = world.children.find(child => child.isMesh && child.geometry.getAttribute('aAge'));
   assert.ok(trail && trail.visible);
   const staff = scene.getObjectByName('weapon-staff'), outer = staff.localToWorld(new T.Vector3(context.StaffVFXConfig.sweep.outer[0], 0, 0));

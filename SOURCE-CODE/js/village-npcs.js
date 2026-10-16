@@ -340,12 +340,15 @@
    }catch(e){error='Chưa tải được dân làng: '+e.message+' Game vẫn hoạt động; nhấn Thử lại.';renderDirectory();return false;}finally{loading=null;}})();
    return loading;
   }
-  function onSkillUsed(){
+  function onSkillUsed(hitWindow=null){
    const state=getState();if(!usable(state))return false;
    for(const {definition:p,root} of actors.props.values()){
     const dx=p.position.x-state.position.x,dz=p.position.z-state.position.z,distance=Math.hypot(dx,dz);
-    if(distance>p.practiceRadius||distance<.01||Math.abs(p.position.y-state.position.y)>.6)continue;
-    if((dx*Math.sin(state.yaw)+dz*Math.cos(state.yaw))/distance<p.facingDot)continue;
+    if(hitWindow){if(!hitWindow.testTarget(p.id,p.position,.25))continue;}
+    else {
+     if(distance>p.practiceRadius||distance<.01||Math.abs(p.position.y-state.position.y)>.6)continue;
+     if((dx*Math.sin(state.yaw)+dz*Math.cos(state.yaw))/distance<p.facingDot)continue;
+    }
     pulse=.35;root.rotation.z=.05;
     if(journal.record('practice-skill',p.id)){invalidateQuests();notify('Đã luyện chiêu hướng vào bia · Quay lại báo Võ sư.');}
     return true;

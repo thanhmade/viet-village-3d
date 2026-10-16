@@ -1,7 +1,7 @@
 /* StaffSkillVFX: đăng ký 3 chiêu riêng với WeaponVFXCore. */
 (function(root,factory){
   if(typeof module==='object' && module.exports)
-    module.exports=factory(require('./weapon-vfx-core.js'),require('./staff-skill-config.js'));
+    {require('./staff-sweep.js');module.exports=factory(require('./weapon-vfx-core.js'),require('./staff-skill-config.js'));}
   else root.StaffSkillVFX=factory(root.WeaponVFXCore,root.StaffSkillConfig);
 })(typeof globalThis!=='undefined'?globalThis:this,function(Core,Config){
   'use strict';

@@ -16,7 +16,7 @@ global.createImageBitmap=async blob=>{
 global.ProgressEvent=class{constructor(type,detail){this.type=type;Object.assign(this,detail);}};
 const loader=import(pathToFileURL(path.join(root,'ASSETS/vendor/gltf-r160/GLTFLoader.js')).href);
 async function asset(kind='female'){const {GLTFLoader}=await loader,bytes=kind==='male'?maleBuffer:buffer;return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');}
-function runtime(){const context={THREE:T,console,document:{}};context.window=context;vm.createContext(context);
+function runtime(){const context={THREE:T,StaffSweep:require('../js/vfx/staff-sweep.js'),console,document:{}};context.window=context;vm.createContext(context);
  for(const name of ['npc-gltf.js','player-gltf.js'])vm.runInContext(fs.readFileSync(path.join(root,'CHARACTERS',name),'utf8'),context);
  return context;
 }
@@ -25,6 +25,25 @@ async function visual(kind='female'){const gltf=await asset(kind),context=runtim
 }
 function advance(v,seconds,callback){let elapsed=0;while(elapsed<seconds){const dt=Math.min(.05,seconds-elapsed);v.update(dt);elapsed+=dt;callback?.();}}
 function close(actual,expected,tolerance=1e-5){assert(Math.abs(actual-expected)<=tolerance,`${actual} differs from ${expected} by ${Math.abs(actual-expected)}`);}
+
+test('physical jump on both real GLBs follows collider height once and returns to locomotion',async()=>{
+ for(const gender of ['male','female']){
+  const {v,gltf,actor}=await visual(gender),bounds=new T.Box3();v.setLocomotion(4.5);advance(v,.3);
+  const duration=6.4*2/18;assert(v.startJump(duration));
+  for(let frame=1;frame<=42;frame++){
+   const time=frame/60;actor.position.y=.3+6.4*time-9*time*time;v.update(1/60);bounds.setFromObject(gltf.scene,true);
+   close(bounds.min.y,actor.position.y,.025);assert.equal(v.state.clip,'jump');
+  }
+  actor.position.y=.3;v.endJump();advance(v,.4);assert.equal(v.state.clip,'walk');assert.equal(v.state.busy,false);
+  v.dispose();
+ }
+});
+
+test('speed fluctuations near run threshold do not repeatedly restart the gait',async()=>{
+ const {v}=await visual();v.setLocomotion(6.5);advance(v,.3);
+ for(let i=0;i<30;i++){v.setLocomotion(i%2?5.35:5.6);v.update(.016);assert.equal(v.state.clip,'run');}
+ assert.equal(v.state.activeActions,1);v.setLocomotion(4.5);advance(v,.3);assert.equal(v.state.clip,'walk');v.dispose();
+});
 
 test('male GLB has its own 33 named clips, matching 65-joint hierarchy, one textured mesh and no morph targets',async()=>{
  assert.equal(maleBuffer.toString('ascii',0,4),'glTF');assert.equal(maleBuffer.readUInt32LE(4),2);assert.equal(maleBuffer.readUInt32LE(8),maleBuffer.length);
@@ -263,6 +282,7 @@ test('actual preview keeps the last Male/Female selection and disposes older mod
 
 test('skill segments play only the measured part of a clip, chain with force and never cut defeat or preview',async()=>{
  const {v}=await visual();
+ assert(v.startStaffSweep());assert.equal(v.playSegment('slash',{from:1,to:2,force:true}),false,'the two-hand Côn Quét pose is not cut');v.cancelStaffSweep();v.update(.02);
  assert.equal(v.playSegment('cast_a_spell',{from:.55,to:1.75,force:true}),true);
  assert.equal(v.state.clip,'cast_a_spell');assert.equal(v.state.mode,'once');close(v.state.time,.55);
  advance(v,1.1);assert.equal(v.state.clip,'cast_a_spell');assert(v.state.time<1.75);
@@ -273,4 +293,23 @@ test('skill segments play only the measured part of a clip, chain with force and
  for(const bad of [['missing',{}],['slash',{from:3,to:2}],['slash',{from:9,to:12}]])assert.equal(v.playSegment(bad[0],{...bad[1],force:true}),false);
  assert.equal(v.preview('slash'),true);assert.equal(v.playSegment('slash',{from:1,to:2,force:true}),false,'preview untouched');
  v.dispose();assert.equal(v.playSegment('slash',{from:1,to:2,force:true}),false);
+});
+
+test('Côn quét keeps both real GLB palms on one rigid staff and restores locomotion',async()=>{
+ for(const gender of ['male','female']){
+  const {v,actor,gltf}=await visual(gender);assert(v.startStaffSweep());assert(!v.startJump(.7));
+  const before=actor.position.clone();let maxError=0;
+  for(let frame=0;frame<108;frame++){
+   v.update(1/60);assert(actor.position.equals(before));
+   if(frame>=10&&frame<=85){
+    const right=v.sockets.right.getWorldPosition(new T.Vector3()),left=v.sockets.left.getWorldPosition(new T.Vector3());
+    const expected=new T.Vector3(.44,0,0).applyQuaternion(v.sockets.right.getWorldQuaternion(new T.Quaternion())).add(right);
+    maxError=Math.max(maxError,left.distanceTo(expected));
+   }
+  }
+  assert(maxError<.065,gender+' palm drift: '+maxError);assert.equal(v.state.busy,false);
+  v.setLocomotion(4.5);advance(v,.3);assert.equal(v.state.clip,'walk');
+  assert(v.startStaffSweep());advance(v,.4);v.cancelStaffSweep();assert.equal(v.state.busy,false);v.update(.02);
+  assert.equal(v.state.activeActions,1);v.dispose();
+ }
 });

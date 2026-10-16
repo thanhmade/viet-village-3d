@@ -43,11 +43,11 @@ Kiểm thử launcher: `py -3 -B -m unittest discover -s scripts/tests -v`; ki�
 
 ### Hiệu ứng ba chiêu Côn (Claude, 16/10/2026)
 
-- **Côn Quét (phím J/1):** dải khí xanh ngọc bám đúng hai điểm trên thân côn theo hoạt ảnh quét, mép trước ánh vàng, tia lửa vàng khi côn quét nhanh, bụi nhẹ dưới chân; tan dần ngay sau đòn.
+- **Côn Quét (phím J/1):** giữ nhịp 4 pha của bản theo ảnh tham khảo (mở cung → tăng lực → khép vòng → bộc phát, 1,8 s, hồi 2,4 s, hai tay cùng nắm côn, trúng bia tập theo cửa sổ đòn thật); vệt đầu côn được thay bằng dải khí xanh ngọc bám đúng hai điểm trên thân côn, mép trước ánh vàng, tan dần trước khi sóng bộc phát.
 - **Hộ Thân (phím 2):** cầu khí trong suốt bám theo nhân vật (sáng ở viền, giữa trong), hai vòng sáng nghiêng quay chậm, hoa văn vàng nhạt; khi trúng đòn thật có gợn sóng tại đúng điểm trúng; hết hiệu lực thì tan mềm. Khiên chỉ là hình ảnh, không giảm sát thương.
 - **Chấn Địa (phím 3, chạm là dùng, không cần ngắm):** tụ khí ở đầu côn khi nâng côn, rồi đúng một cú chạm đất phía trước: chớp sáng, cột sáng thấp, hai sóng chấn động bám mặt đất, vết nứt phát sáng rồi tắt, đá văng có trọng lực và bụi thấp.
 - **Rung máy quay** khi Chấn Địa chạm đất: bật/tắt ở bảng **Thời gian & thời tiết** (lưu trên trình duyệt). Chất lượng hiệu ứng theo mục **Hình ảnh** (Ưu tiên mượt → ít hạt/đá hơn).
-- **Cất vũ khí** nay chỉ cất vũ khí: nhân vật vẫn hiển thị và đi lại bình thường (trước đây bị ẩn cả nhân vật).
+- **Cất vũ khí** chỉ cất vũ khí: nhân vật vẫn hiển thị và đi lại bình thường (lỗi ẩn cả nhân vật đã sửa).
 - Thông số màu, độ rộng, bán kính, số hạt, thời điểm, chất lượng: `SOURCE-CODE/js/vfx/staff-vfx-config.js`. Chi tiết kỹ thuật: `SOURCE-CODE/docs/weapons-vfx/README.md`.
 
 ### Chọn/tạo nhân vật, bảng Nhân vật và cụm chiêu (Claude, 16/10/2026)

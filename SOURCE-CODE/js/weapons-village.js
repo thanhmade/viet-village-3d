@@ -6,7 +6,7 @@
 // VFX hooks: getQuality() → 'low'|'medium'|'high' (applied when no effect is live),
 // onVfxEvent(event) receives the core's cast/impact/shield events (camera shake),
 // getCasterHeight() sizes body-centred effects such as the Hộ Thân shell.
-window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, stopRoaming, clearMotion, onSkillUsed, aim = null, notify = () => {},
+window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, clearMotion, onSkillUsed, onSkillHit = null, onSkillCancel = null, aim = null, notify = () => {},
   getQuality = () => 'low', onVfxEvent = null, getCasterHeight = () => 2.35}) {
   const el = id => document.getElementById(id);
   const panel = el('weaponsPanel'), bar = el('weaponSkillBar');
@@ -62,7 +62,10 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     for (const model of models.models.values()) model.group.removeFromParent();
     manager = new window.WeaponVFXCore({THREE: T, scene, quality: qualityName(), maxActive: 4,
       getGroundY, getEquippedWeapon: () => weaponId,
-      onEvent: event => { try { onVfxEvent?.(event); } catch (_) { /* Camera/UI reactions never break the effect. */ } }});
+      onEvent: event => {
+        if (event.type === 'hit-window') onSkillHit?.(event);
+        try { onVfxEvent?.(event); } catch (_) { /* Camera/UI reactions never break the effect. */ }
+      }});
   }
   function qualityName() { const value = getQuality?.(); return ['low', 'medium', 'high'].includes(value) ? value : 'low'; }
   // Switching quality rebuilds the pool, so it only happens while nothing is on screen.
@@ -83,7 +86,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   function showEquipped(value) { if (grip && grip.visible !== value) grip.visible = value; hide(bar, !value); showRoaming(value); }
   function setExpanded(value) { el('weaponsBtn')?.setAttribute?.('aria-expanded', String(value)); }
   function cancel() {
-    cancelAim();
+    cancelAim();onSkillCancel?.();
     if (manager?.hasActiveEffects) manager.cancelAll();
     if (poseTime || poseLength) grip?.rotation.set(0, Math.PI, 0);
     poseTime = poseLength = 0;
@@ -95,6 +98,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     return {remaining, state: !allowed ? 'blocked' : remaining > 0 ? 'cooldown' : 'ready'};
   }
   function render(allowed) {
+    allowed=allowed&&!manager?.effects.some(fx=>fx.skill.id==='staff.con-quet');
     if (nameLabel.textContent !== currentConfig.name) nameLabel.textContent = currentConfig.name;
     for (let index = 0; index < skillButtons.length; index++) {
       const button = skillButtons[index], skill = currentConfig.skills[index], part = parts[index];
@@ -189,17 +193,20 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     if (!startRoaming()) return false;
     enabled = true; update(0); render(usable()); return true;
   }
-  // Putting the weapon away only stows the weapon: the player keeps walking and
-  // stays visible. Leaving the village (lock/logout) also stops roaming.
+  // Putting the weapon away only stows the weapon: the player keeps walking and stays visible.
   function deactivate() {
     enabled = false; cancel(); showEquipped(false); closePanel();
+    // Equipment does not own the actor, walking mode, camera or map.
+    // Logout/scene exit remains the responsibility of the game controller.
     lastAllowed = false; render(false);
   }
   function cast(slot, {point = null} = {}) {
     const allowed = usable();
+    if (manager?.effects.some(fx=>fx.skill.id==='staff.con-quet'))return {ok:false,reason:'busy'};
     if (!allowed) return {ok: false, reason: 'village-unavailable'};
     const skill = currentConfig.skills.find(item => item.slot === slot);
     if (!skill) return {ok: false, reason: 'unknown-slot'};
+    if(skill.id==='staff.con-quet'&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
     // Aimed casts turn the player toward the chosen point first, so the
     // effect, the training-dummy facing check and the avatar agree.
     let target = null;
@@ -214,7 +221,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     const result = manager.cast(skill.id, {caster, weaponTip: selectedModel.tip, weapon: selectedModel.group, point: target,
       casterHeight: Number.isFinite(height) && height > 0 ? height : 2.35});
     if (result.ok) {
-      poseTime = 0; poseLength = Math.min(skill.duration, .9);
+      poseTime = 0; poseLength = skill.id==='staff.con-quet'?skill.duration:Math.min(skill.duration, .9);
       const button = skillButtons[slot - 1];
       button?.classList?.add?.('skill-fired'); setTimeout(() => button?.classList?.remove?.('skill-fired'), 260);
       try { onSkillUsed?.({weaponId, skillId: skill.id, slot}); } catch (_) { /* Progress UI cannot interrupt a successful cast. */ }
@@ -268,9 +275,14 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     if (poseLength && !avatarSocket) {
       poseTime += dt;
       const phase = Math.min(1, poseTime / poseLength);
+      if(weaponId==='staff'&&poseLength>1){
+        const pose=window.StaffSweep.sample(poseTime);
+        grip.rotation.set(0,Math.PI+pose.staffYaw,0);
+      }else {
       grip.rotation.z = Math.sin(phase * Math.PI) * (weaponId === 'bow' ? .15 : -.75);
       grip.rotation.x = Math.sin(phase * Math.PI) * (weaponId === 'spear' ? .7 : -.35);
-      if (phase === 1) poseLength = 0;
+      }
+      if (phase === 1) {poseLength = 0;grip.rotation.set(0,Math.PI,0);}
     }
     manager.update(dt);
     uiElapsed += dt;
@@ -334,12 +346,12 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
         remaining: manager?.cooldownRemaining(skill.id, caster) || 0}));
     },
     suspend() { cancel(); showEquipped(false); lastAllowed = false; render(false); },
-    lock() { deactivate(); stopRoaming(); },
+    lock() { deactivate(); },
     // A real hit on the player (world point): ripples an active Hộ Thân shell.
     onPlayerHit(point) { return !!manager && !disposed && enabled && manager.hitShield(caster, point); },
     get state() { return {enabled, weaponId, weaponName: currentConfig.name, aiming: aiming ? {slot: aiming.slot, source: aiming.source, cancel: aiming.cancel, point: {x: aiming.point.x, z: aiming.point.z}} : null, active: manager?.effects.length || 0, particles: manager?.pool.count || 0}; },
     dispose() {
-      if (disposed) return; deactivate(); stopRoaming(); disposed = true; bindings.forEach(remove => remove()); manager?.dispose();
+      if (disposed) return; deactivate(); disposed = true; bindings.forEach(remove => remove()); manager?.dispose();
       if (indicator) { indicator.group.removeFromParent(); indicator.group.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); indicator = null; }
       // The model helper owns every model, including detached cached equipment.
       if (models) { for (const model of models.models.values()) grip.add(model.group); models.dispose(); }

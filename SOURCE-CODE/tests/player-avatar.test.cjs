@@ -86,9 +86,9 @@ test('logout during asynchronous model loading cannot activate female or unlock 
 test('actual walk/run displacement drives animation, blocked movement and release use idle', async () => {
   const h = game(); assert.equal(await h.avatar.select('female'), true);
   const visual = h.calls.visuals[0];
-  h.run('yaw=0;player.position.set(0,bridgeHeight(0,10),10);keys.KeyW=true;'); h.step();
-  near(visual.speeds.at(-1), 4.5); assert.equal(visual.state.clip, 'walk');
-  h.run('keys.ShiftLeft=true;'); h.step(); near(visual.speeds.at(-1), 6.5); assert.equal(visual.state.clip, 'run');
+  h.run('yaw=0;player.position.set(5,bridgeHeight(5,20),20);keys.KeyW=true;'); h.step();
+  assert(visual.speeds.at(-1)>0&&visual.speeds.at(-1)<4.5);for(let i=0;i<20;i++)h.step();near(visual.speeds.at(-1),4.5,.001); assert.equal(visual.state.clip, 'walk');
+  h.run('keys.ShiftLeft=true;'); h.step();for(let i=0;i<20;i++)h.step(); near(visual.speeds.at(-1), 6.5,.001); assert.equal(visual.state.clip, 'run');
   h.run('clearMotion();'); h.step(); assert.equal(visual.speeds.at(-1), 0); assert.equal(visual.state.clip, 'idle');
   h.run('player.position.set(24.1,bridgeHeight(24.1,21),21);yaw=0;keys.KeyD=true;');
   const before = h.run('player.position.clone()'); h.step();
@@ -258,11 +258,23 @@ test('NPC social reactions are bounded, confirmed, cancellable and never trigger
   assert.equal(h.avatar.onInteraction({type:'npc-greeting',npcId:'teacher',clip:'bow'}),false);
 });
 
-test('Space/touch jump uses authored clip once, keeps ground collider and is blocked by overlays/death', async () => {
+test('touch jump and its following click trigger once without releasing the joystick',async()=>{
+ const h=game();await h.avatar.select('male');const v=h.calls.visuals[0];
+ h.run('yaw=0;player.position.set(5,.3,20);playerMotion.reset();joystick.y=-.8;');
+ const event={pointerType:'touch',pointerId:2,button:0,stopPropagation(){},preventDefault(){}};
+ h.fire('playerJumpBtn','pointerdown',event);h.fire('playerJumpBtn','click',{...event,detail:1});
+ assert.deepEqual(v.once,['jump']);h.step();assert.equal(h.run('joystick.y'),-.8);
+ assert(h.run('player.position.y>.3&&player.position.z<20'));
+ h.fire('playerJumpBtn','pointercancel',event);assert.equal(h.run('joystick.y'),-.8);
+ h.run('releaseGameInputs();');assert.equal(h.run('joystick.y'),0);
+});
+
+test('Space/touch jump retains held movement, raises the actor once and is blocked by overlays/death', async () => {
   const h=game();await h.avatar.select('female');const v=h.calls.visuals[0],root=h.run('player'),pose=root.position.clone();
   v.playOnce=function(name){if(this.state.busy)return false;this.once.push(name);this.state.busy=true;this.state.mode='once';this.state.clip=name;return true;};
-  assert.equal(h.avatar.jump(),true);assert.equal(h.avatar.jump(),false);
+  h.run('keys.KeyW=true;');assert.equal(h.avatar.jump(),true);assert.equal(h.avatar.jump(),false);
   assert.deepEqual(v.once,['jump']);assert(root.position.equals(pose));assert.equal(h.avatar.isJumping,true);
+  h.step();assert(root.position.y>pose.y);assert(root.position.z<pose.z);assert.equal(h.run('keys.KeyW'),true);
   h.run('const p=regionTravel.current.portal;player.position.set(p.x,bridgeHeight(p.x,p.z),p.z);regionTravel.update(1);');
   assert.equal(h.context.VietVillageRegions.isMenuOpen(),false);
   v.state.busy=false;v.state.mode='locomotion';v.state.clip='idle';
@@ -304,8 +316,8 @@ test('Male saved profile shares movement, weapons, jump, NPC and map logic while
  assert.equal(bridge.enterCharacter({newCharacter:true}),true);
  assert.equal(h.avatar.isGLTF,true);assert.equal(h.avatar.isFemale,false);
  const v=h.calls.visuals[0],actor=h.run('player');
- h.run('yaw=0;player.position.set(0,bridgeHeight(0,10),10);keys.KeyW=true;');h.step();near(v.speeds.at(-1),4.5);near(h.run('body.position.y'),0);
- h.run('keys.ShiftLeft=true;');h.step();near(v.speeds.at(-1),6.5);
+ h.run('yaw=0;player.position.set(5,bridgeHeight(5,20),20);keys.KeyW=true;');h.step();for(let i=0;i<20;i++)h.step();near(v.speeds.at(-1),4.5,.001);near(h.run('body.position.y'),0);
+ h.run('keys.ShiftLeft=true;');h.step();for(let i=0;i<20;i++)h.step();near(v.speeds.at(-1),6.5,.001);
  h.run('clearMotion();');h.step();assert.equal(v.state.clip,'idle');
  assert.equal(h.avatar.jump(),true);assert(v.once.includes('jump'));
  v.clips.push({name:'greet_01',duration:1});assert.equal(h.avatar.onInteraction({type:'npc-greeting',npcId:'guard',clip:'greet_01'}),true);
@@ -320,13 +332,16 @@ test('Male saved profile shares movement, weapons, jump, NPC and map logic while
  assert.equal(h.avatar.state.modelId,'male-base');assert.equal(h.run('player'),actor);assert.equal(weapons.state.weaponId,'spear');assert.equal(h.context.VietVillageJourney.getState().hp,hp);
 });
 
-test('staff skills play their measured clip segment (forced so skills can chain); other melee weapons keep slash', async () => {
+test('Hộ Thân/Chấn Địa play their measured clip segment, Côn Quét starts the two-hand pose; other melee weapons keep slash', async () => {
   const h = game(); await h.avatar.select('female'); const visual = h.calls.visuals[0], weapons = h.context.VietVillageWeapons;
-  const segments = []; visual.playSegment = (clip, options) => { segments.push({clip, ...options}); return true; };
+  const segments = [], sweeps = []; visual.playSegment = (clip, options) => { segments.push({clip, ...options}); return true; };
+  visual.startStaffSweep = () => { sweeps.push(true); return true; };
   weapons.equip('staff');
-  for (const slot of [1, 2, 3]) { assert.equal(weapons.cast(slot).ok, true); h.step(); }
+  assert.equal(weapons.cast(1).ok, true); assert.equal(sweeps.length, 1, 'Côn Quét → staff-sweep pose');
+  weapons.update(3); h.step();
+  for (const slot of [2, 3]) { assert.equal(weapons.cast(slot).ok, true); h.step(); }
   const animation = h.context.StaffVFXConfig.animation;
-  assert.deepEqual(plain(segments), ['staff.con-quet', 'staff.ho-than', 'staff.chan-dia'].map(id => ({...plain(animation[id]), force: true})));
-  assert.deepEqual(visual.once, [], 'the whole slash clip is no longer used for the staff');
+  assert.deepEqual(plain(segments), ['staff.ho-than', 'staff.chan-dia'].map(id => ({...plain(animation[id]), force: true})));
+  assert.deepEqual(visual.once, [], 'the whole slash clip is not used for the staff');
   weapons.equip('axe'); assert.equal(weapons.cast(1).ok, true); assert.deepEqual(visual.once, ['slash']);
 });

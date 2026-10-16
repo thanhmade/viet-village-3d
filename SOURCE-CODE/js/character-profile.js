@@ -2,6 +2,10 @@
 // changes the existing journey save, or stores Firebase credentials.
 export const characterStoragePrefix = 'viet-village:character:v1:';
 export const characterModelIds = Object.freeze(['female-base', 'male-base']);
+// One character per account and browser: EXP, journey, quest journal and learning
+// records are all keyed to the single 'primary' character. The roster shows exactly
+// this many slots; raising it needs per-character keys in those stores first.
+export const characterSlots = 1;
 const HEIGHT = 2.35;
 const OUTFIT = 'starter-default';
 

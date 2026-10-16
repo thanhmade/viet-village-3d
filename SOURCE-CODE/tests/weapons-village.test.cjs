@@ -219,3 +219,76 @@ test('idle adapter avoids DOM and whole-body work; lazily built cached equipment
   for (const count of disposalCounts.values()) assert.equal(count, 1,
     'Every cached model resource is disposed exactly once, including unequipped models');
 });
+
+test('aiming: cancel never starts a cooldown; confirm faces the clamped point and casts once; suspend keeps cooldowns', () => {
+  const {run, context} = createHarness();
+  const weapons = context.VietVillageWeapons;
+  assert.equal(weapons.equip('bow'), true);
+  const skill = weapons.skills()[0];
+  assert.equal(skill.aimed, true, 'Bow slot 1 is an aimed projectile');
+  assert.equal(weapons.beginAim(1, 'touch'), true); assert.equal(weapons.isAiming(), true);
+  assert.equal(weapons.cancelAim(), true); assert.equal(weapons.isAiming(), false);
+  assert.equal(weapons.skills()[0].remaining, 0, 'Viewing/cancelling the aim does not spend the cooldown');
+  run('player.position.set(0,bridgeHeight(0,18),18);body.rotation.y=0;');
+  assert.equal(weapons.beginAim(1, 'key'), true);
+  weapons.aimAt(new context.THREE.Vector3(100, 0, 18));
+  const point = weapons.state.aiming.point;
+  assert.ok(Math.hypot(point.x - 0, point.z - 18) <= skill.range + 1e-6, 'Aim point is clamped to the real skill range');
+  assert.equal(weapons.confirmAim().ok, true);
+  near(run('body.rotation.y'), Math.PI / 2);
+  assert.ok(weapons.skills()[0].remaining > 0, 'Only a successful cast starts the cooldown');
+  assert.equal(weapons.confirmAim().reason, 'not-aiming');
+  assert.equal(weapons.cast(1).reason, 'cooldown');
+  const before = weapons.skills()[0].remaining;
+  weapons.beginAim(2, 'touch'); weapons.suspend();
+  assert.equal(weapons.isAiming(), false, 'Menus/orientation suspension cancel aiming');
+  assert.ok(weapons.skills()[0].remaining > 0 && weapons.skills()[0].remaining <= before, 'Suspension does not reset cooldowns');
+  assert.equal(weapons.equip('sword'), true); assert.equal(weapons.equip('bow'), true);
+  assert.ok(weapons.skills()[0].remaining > 0, 'Switching skill sets keeps the cooldown');
+  const sheet = context.VietVillageGame.characterSheet();
+  assert.equal(sheet.weapon.id, 'bow'); assert.equal(sheet.weapon.skills.length, 3);
+  assert.equal(sheet.health.maxHp, context.VietVillageJourney.getState().maxHp, 'Sheet reads the live journey, not a copy');
+  assert.deepEqual({...sheet.movement}, {walk: 4.5, run: 6.5});
+});
+
+test('skill buttons: one pointer tap casts once (no click duplicate); a drag released on Hủy cancels', () => {
+  const {run, context} = createHarness();
+  const listeners = new Map(), record = (owner, name, handler) => listeners.set(owner + ':' + name, handler);
+  const elementPrototype = Object.getPrototypeOf(context.document.getElementById('weaponsPanel'));
+  elementPrototype.addEventListener = function (name, handler) { record(this.id, name, handler); };
+  const windowAdd = context.addEventListener;
+  context.addEventListener = (name, handler) => record('window', name, handler);
+  run(`villageWeapons=createVillageWeapons({THREE,scene,body,rightArm,clearMotion,startRoaming,stopRoaming,
+    aim:{fromScreen:aimFromScreen,fromDrag:aimFromDrag},
+    getGroundY:point=>bridgeHeight(point.x,point.z),
+    getState:()=>({authenticated:VietVillageAuth.isAuthenticated(),canCast:localWalking&&world.visible&&!insideHouse&&!overlays()})});`);
+  context.addEventListener = windowAdd;
+  const weapons = run('villageWeapons');
+  assert.equal(weapons.equip('sword'), true);
+  const event = (pointerId, x, y, extra = {}) => ({pointerId, pointerType: 'touch', button: 0, clientX: x, clientY: y, stopPropagation() {}, preventDefault() {}, ...extra});
+  listeners.get('weaponSkill1:pointerdown')(event(7, 50, 50));
+  listeners.get('weaponSkill1:pointerup')(event(7, 51, 50));
+  listeners.get('weaponSkill1:lostpointercapture')(event(7, 51, 50));
+  listeners.get('weaponSkill1:click')({stopPropagation() {}});
+  assert.equal(weapons.state.active, 1, 'Tap + synthetic click = one cast');
+  assert.ok(weapons.skills()[0].remaining > 0);
+  // Sword slot 3 (projectile) aims by dragging; release over the cancel zone.
+  context.document.getElementById('skillAimCancel').getBoundingClientRect = () => ({left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100});
+  listeners.get('weaponSkill3:pointerdown')(event(9, 300, 300));
+  listeners.get('weaponSkill3:pointermove')(event(9, 250, 250));
+  assert.equal(weapons.isAiming(), true);
+  listeners.get('weaponSkill3:pointermove')(event(9, 40, 40));
+  assert.equal(weapons.state.aiming.cancel, true);
+  listeners.get('weaponSkill3:pointerup')(event(9, 40, 40));
+  assert.equal(weapons.isAiming(), false);
+  assert.equal(weapons.skills()[2].remaining, 0, 'Cancelled aim casts nothing and starts no cooldown');
+  // Lost capture (app switch, cancelled touch) during aiming also cancels without casting.
+  listeners.get('weaponSkill3:pointerdown')(event(11, 300, 300));
+  listeners.get('weaponSkill3:pointermove')(event(11, 240, 260));
+  listeners.get('weaponSkill3:lostpointercapture')(event(11, 240, 260));
+  assert.equal(weapons.isAiming(), false); assert.equal(weapons.skills()[2].remaining, 0);
+  // The skill bar stops propagation: the real path is the captured button itself.
+  let stopped = 0; listeners.get('weaponSkillBar:pointermove')({type: 'pointermove', stopPropagation() { stopped++; }});
+  assert.equal(stopped, 1, 'Moves inside the cluster never reach the camera/world');
+  weapons.dispose();
+});

@@ -19,6 +19,7 @@ const store = createCharacterProfileStore({storage: {getItem: key => localStorag
   getUid: () => authenticated ? uid : null, withLock: navigator.locks?.request ? (name, operation) => navigator.locks.request(name, operation) : undefined});
 const characters = createCharacterCreation({store, getUid: () => authenticated ? uid : null, game: window.VietVillageGame, THREE: window.THREE,
   onLogout: () => signOut(), onStart: () => window.VietVillageLandscape?.requestOnStart(), onScreenChange: () => window.VietVillageLandscape?.schedule(),
+  getExperience: () => window.VietVillageExperience?.getState?.() || null,
   onReady: profile => { $('playerIdentity').textContent = 'Kiểm thử · ' + profile.name; $('play').disabled = false; }});
 window.VietVillageCharacter = characters;
 window.VietVillageAuth = Object.freeze({isAuthenticated: () => authenticated, getProfile: () => authenticated ? {uid, nickname: 'Kiểm thử'} : null,

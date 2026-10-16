@@ -24,6 +24,7 @@ const characters=createCharacterCreation({store:characterStore,
  onLogout:()=>session?.signOut(),
  // Runs inside the player's Create/Vào làng tap: phones try fullscreen + landscape lock there.
  onStart:()=>window.VietVillageLandscape?.requestOnStart(),onScreenChange:()=>window.VietVillageLandscape?.schedule(),
+ getExperience:()=>window.VietVillageExperience?.getState?.()||null,
  onReady:profile=>{$auth('playerIdentity').textContent='Đã đăng nhập · '+profile.name;$auth('play').disabled=!gameReady||!session?.isAuthenticated();}});
 window.VietVillageCharacter=characters;
 

@@ -10,6 +10,8 @@ body{--hud-edge:14px;--hud-map:148px;--hud-left:max(var(--hud-edge),env(safe-are
 .player-portrait{position:relative;flex:none;width:58px;height:58px;border-radius:50%;border:3px solid #c9a24a;background:radial-gradient(circle at 40% 35%,#fff1c9,#c99d4d);
  display:grid;place-items:center;overflow:hidden;font:800 25px system-ui;color:#4a3410;box-shadow:inset 0 0 0 2px #fff6d6}
 .player-portrait img{width:100%;height:100%;object-fit:cover}.player-portrait [hidden]{display:none}
+button.player-portrait{padding:0;cursor:pointer;touch-action:manipulation}button.player-portrait:hover{filter:brightness(1.06)}button.player-portrait:focus-visible{outline:3px solid #e8a324;outline-offset:2px}
+#playerCard{cursor:default}
 .player-card-body{flex:1;min-width:0}
 .player-card-title{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .player-card-title strong{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -67,8 +69,6 @@ body:not(.auth-locked) .climateStatus{left:auto;right:var(--hud-right);top:calc(
 #learningCollect{bottom:calc(var(--hud-bottom) + 144px)}
 #regionTravelStatus{bottom:calc(var(--hud-bottom) + 196px)}
 .player-jump{left:auto;right:calc(var(--hud-right) + 6px);bottom:calc(var(--hud-bottom) + 6px);border-radius:999px;background:#fffbeeeb;font-weight:700}
-.weapons-roaming .player-jump{bottom:calc(var(--hud-bottom) + 150px)}
-.weaponSkillBar{right:var(--hud-right);bottom:var(--hud-bottom)}
 /* ---- Touch layout ---- */
 .touch #stick{left:calc(var(--hud-left) + 10px);bottom:calc(var(--hud-bottom) + 10px);width:126px;height:126px;border:3px solid #fff5d6cc;background:radial-gradient(circle,#ffffff30,#0b2f3326)}
 .touch #knob{left:40px;top:40px;width:46px;height:46px;background:#fff6dbe6;border:2px solid #d9a93a}
@@ -78,11 +78,6 @@ body:not(.auth-locked) .climateStatus{left:auto;right:var(--hud-right);top:calc(
 .touch #learningCollect{bottom:calc(var(--hud-bottom) + 252px)}
 .touch #regionTravelStatus{bottom:calc(var(--hud-bottom) + 8px)}
 .touch .player-jump{min-width:64px;min-height:64px;padding:8px;bottom:calc(var(--hud-bottom) + 60px);font-size:13px}
-.touch.weapons-roaming .player-jump{bottom:calc(var(--hud-bottom) + 170px)}
-.touch .weaponSkillBar{padding:8px;border-radius:16px;max-width:min(420px,calc(100vw - 220px))}
-.touch .weaponSkillBar small{display:none}
-.touch .weaponSkillButtons button{min-height:56px;border-radius:28px}
-.touch.weapons-roaming .npc-interact{bottom:calc(var(--hud-bottom) + 238px)}
 /* ---- Low-height landscape (phones) ---- */
 @media(max-height:520px){
  body{--hud-edge:10px;--hud-map:96px;--hud-top:max(8px,env(safe-area-inset-top));--hud-bottom:max(8px,env(safe-area-inset-bottom))}
@@ -105,9 +100,6 @@ body:not(.auth-locked) .climateStatus{left:auto;right:var(--hud-right);top:calc(
  .touch .regionInteract{bottom:calc(var(--hud-bottom) + 160px)}
  .touch #learningCollect{bottom:calc(var(--hud-bottom) + 210px)}
  .touch .player-jump{min-width:54px;min-height:54px;bottom:calc(var(--hud-bottom) + 50px)}
- .touch .weaponSkillBar{max-width:min(360px,calc(100vw - 200px))}
- .touch .weaponSkillBar header{margin-bottom:4px}
- .touch .weaponSkillButtons button{min-height:46px}
  .help{display:none}
 }
 /* Narrow portrait windows (PC or tablet): keep the corners readable. */
@@ -142,3 +134,53 @@ body:not(.auth-locked) .climateStatus{left:auto;right:var(--hud-right);top:calc(
 @media(prefers-reduced-motion:reduce){.rotate-phone{animation:none;transform:rotate(-90deg)}}
 .rotate-banner{position:fixed;z-index:96;left:50%;top:max(6px,env(safe-area-inset-top));transform:translateX(-50%);margin:0;padding:7px 14px;border-radius:12px;background:#163f36f2;color:#fff4cb;font:700 13px system-ui;pointer-events:none;white-space:nowrap}
 .portrait-blocked #toast{z-index:98}
+
+/* ---- Skill cluster (weapons) ----
+   PC: compact row with key labels. Touch: main button (84 px) in the right-thumb
+   corner, skills 2-3 and Jump on an arc around it; aiming drags never move the
+   camera (pointer capture on the button). Cooldown = conic overlay + seconds. */
+.weaponSkillBar{right:var(--hud-right);bottom:var(--hud-bottom);padding:8px 10px;border-radius:18px;background:#fffbeee0;border:1px solid var(--hud-line);max-width:none}
+.weaponSkillBar header{gap:6px;margin-bottom:6px}
+.weaponSkillBar header strong{font-size:12px}
+.weaponSkillBar header button{min-height:34px;padding:4px 10px}
+.weaponSkillButtons{display:flex;align-items:flex-end;gap:10px}
+.weaponSkillButtons button{position:relative;display:grid;place-items:center;width:62px;height:62px;min-height:0;padding:0;border-radius:50%;border:3px solid #e2c47a;background:radial-gradient(circle at 40% 30%,#2f8a6c,#123f33);color:#fff8df;overflow:hidden;font-size:11px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.weaponSkillButtons .skill-main{width:80px;height:80px;border-color:#f6d77e;background:radial-gradient(circle at 40% 30%,#d79a35,#6f4210)}
+.weaponSkillButtons button:disabled{opacity:1;cursor:default}
+.weaponSkillButtons button[data-state=blocked]{filter:grayscale(.85);opacity:.55}
+.weaponSkillButtons button[data-state=aiming]{box-shadow:0 0 0 4px #ffd23f,0 0 18px #ffd23f}
+.weaponSkillButtons button.skill-fired{animation:skill-fired .26s ease-out}
+@keyframes skill-fired{0%{transform:scale(1)}40%{transform:scale(.88);box-shadow:0 0 0 6px #fff6c8aa}100%{transform:scale(1)}}
+.skill-icon{font-size:24px;line-height:1;margin-top:-12px}
+.skill-main .skill-icon{font-size:32px;margin-top:-14px}
+.skill-name{position:absolute;left:5px;right:5px;bottom:10px;font-size:9px;font-weight:700;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.skill-main .skill-name{font-size:10px;bottom:13px}
+.skill-key{position:absolute;top:3px;left:50%;transform:translateX(-50%);padding:0 5px;border-radius:6px;background:#0b1d1a99;font-size:9px;font-weight:800;letter-spacing:.02em}
+.skill-cd{position:absolute;inset:0;display:grid;place-items:center;border-radius:50%;font:800 18px system-ui;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none;
+ background:conic-gradient(#081815c0 calc(var(--cd,0) * 360deg),transparent 0)}
+.skill-help{display:block;margin-top:6px;font-size:10px;color:#476857;max-width:330px}
+.skill-status{position:absolute;right:0;bottom:calc(100% + 6px);margin:0;padding:5px 10px;border-radius:10px;background:#164d3ef2;color:#fff4cb;font-size:12px;white-space:nowrap;pointer-events:none}
+.skill-status[hidden]{display:none}
+.skill-aim-cancel{position:fixed;z-index:31;right:calc(var(--hud-right) + 18px);bottom:calc(var(--hud-bottom) + 262px);width:72px;height:72px;border-radius:50%;display:grid;place-items:center;align-content:center;gap:2px;background:#5a1d16d0;border:3px solid #ffb4a6;color:#fff;font:800 22px system-ui;pointer-events:none;transition:transform .12s ease,background .12s ease}
+.skill-aim-cancel small{font-size:8px;font-weight:600;max-width:62px;text-align:center;line-height:1.1}
+.skill-aim-cancel.is-hot{background:#c2412df0;transform:scale(1.14)}
+.skill-aim-cancel[hidden]{display:none!important}
+body:not(.weapons-roaming) .skill-aim-cancel{display:none!important}
+.weapons-roaming .player-jump{right:calc(var(--hud-right) + 340px);bottom:calc(var(--hud-bottom) + 6px)}
+.touch .weaponSkillBar{width:208px;height:208px;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none;pointer-events:none}
+.touch .weaponSkillBar header{position:absolute;right:calc(100% + 6px);bottom:2px;margin:0;padding:4px 6px;border-radius:12px;background:#fffbeee6;white-space:nowrap;pointer-events:auto}
+.touch .weaponSkillBar header button{min-height:40px;min-width:44px}
+.touch .weaponSkillButtons{position:absolute;inset:0;display:block}
+.touch .weaponSkillButtons button{position:absolute;pointer-events:auto}
+.touch .weaponSkillButtons .skill-main{right:0;bottom:0;width:84px;height:84px}
+.touch .skill-arc-a{right:112px;bottom:12px;width:60px;height:60px}
+.touch .skill-arc-b{right:83px;bottom:83px;width:60px;height:60px}
+.touch .skill-help{display:none}
+.touch .skill-status{right:0;bottom:calc(100% + 4px)}
+.touch.weapons-roaming .player-jump{right:calc(var(--hud-right) + 14px);bottom:calc(var(--hud-bottom) + 114px);width:56px;height:56px;min-width:0;min-height:0;padding:0;border-radius:50%;font-size:11px;line-height:1.1;white-space:normal}
+.touch.weapons-roaming .npc-interact{right:calc(var(--hud-right) + 216px);bottom:calc(var(--hud-bottom) + 58px)}
+.touch.weapons-roaming .regionInteract{right:calc(var(--hud-right) + 216px);bottom:calc(var(--hud-bottom) + 112px)}
+.touch.weapons-roaming #learningCollect{right:calc(var(--hud-right) + 216px);bottom:calc(var(--hud-bottom) + 166px)}
+.skill-aiming #view{cursor:crosshair}
+@media(max-height:330px){.touch .weaponSkillBar{transform:scale(.86);transform-origin:right bottom}.touch.weapons-roaming .player-jump{bottom:calc(var(--hud-bottom) + 98px);right:calc(var(--hud-right) + 12px)}.skill-aim-cancel{bottom:calc(var(--hud-bottom) + 220px)}}
+.touch .key-hint{display:none}

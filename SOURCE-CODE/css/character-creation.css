@@ -115,3 +115,58 @@
  .character-status { font-size:12px; }
 }
 @media(prefers-reduced-motion:reduce) { #characterCreation button { transition:none; } }
+/* ---- Roster (Hình 1), create panel, character sheet (Hình 2) ---- */
+.character-roster-panel,.character-side>section{align-self:center;max-height:100%;overflow:auto;overscroll-behavior:contain;padding:14px;background:var(--character-panel);border:1px solid #e3cf95;border-radius:18px;box-shadow:0 10px 32px #0b1d1a55}
+.character-side{display:flex;flex-direction:column;justify-content:center;min-height:0;min-width:0}
+.character-side>section[hidden],.character-roster-panel[hidden]{display:none!important}
+.character-roster-panel h2{margin:8px 0;font-size:16px;color:#3a3018}
+.character-roster{display:grid;gap:10px;margin-top:6px}
+.character-slot{display:flex;align-items:center;gap:10px;width:100%;min-height:70px;padding:8px 10px;text-align:left;border:2px solid #d8c690!important;border-radius:16px!important;background:#fff6dc!important}
+.character-slot[aria-pressed=true]{border-color:#f0c24a!important;background:linear-gradient(90deg,#fff0bf,#fffaf0)!important;box-shadow:0 0 0 3px #f0c24a66,0 6px 16px #2b1d0530}
+.character-slot-portrait,.character-info-portrait{flex:none;width:52px;height:52px;border-radius:50%;border:3px solid #c9a24a;background:radial-gradient(circle at 40% 35%,#fff1c9,#c99d4d);display:grid;place-items:center;overflow:hidden;font:800 22px system-ui;color:#4a3410}
+.character-slot-portrait img,.character-info-portrait img{width:100%;height:100%;object-fit:cover}
+.character-slot-text{display:flex;flex-direction:column;min-width:0;gap:2px}
+.character-slot-text strong{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#2a2416}
+.character-slot-text small{font-size:12px;color:#6c6450}
+.character-slot-add .character-slot-portrait{background:#fffaf0;border-style:dashed;font-size:30px;color:#a8761d}
+.character-slot-add .character-slot-text{font-weight:750;color:#5a3d0a}
+.character-roster-note{display:block;margin-top:10px;color:#6c6450;font-size:11px;line-height:1.45}
+.character-info-head{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.character-info-portrait{width:60px;height:60px}
+.character-info-head strong{display:block;font-size:18px;color:#2a2416}
+.character-info-head small{display:block;color:#6c6450;font-size:12px}
+.character-sheet-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 10px}
+.character-sheet-tabs[hidden]{display:none!important}
+.character-tab{display:flex!important;flex-direction:column;align-items:center;gap:2px;min-height:54px;padding:6px 4px!important;font-size:12px!important}
+.character-tab[aria-selected=true]{background:linear-gradient(180deg,#1f8a73,#126451)!important;color:#fffdf2!important;border-color:#f3d27a!important}
+.character-tab-icon{font-size:18px;line-height:1}
+.character-sheet:empty{display:none}
+.character-stat-list,.character-skill-list{display:grid;gap:6px}
+.character-stat{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline;padding:8px 10px;border-radius:10px;background:#fff3cf}
+.character-stat-label{color:#5d5440;font-size:12px}
+.character-stat-value{font-size:14px;text-align:right;color:#2a2416}
+.character-stat small,.character-skill small{grid-column:1/-1;display:block;color:#6c6450;font-size:11px;line-height:1.4}
+.character-skill{padding:8px 10px;border-radius:10px;background:#fff3cf}
+.character-skill strong{font-size:14px}
+.character-skill p{margin:4px 0 0;font-size:12px;line-height:1.45;color:#3f3519}
+.character-skill-cooldown{color:#8b471b!important;font-weight:700}
+.character-sheet-note{font-size:11px;color:#6c6450;margin:8px 0 0;line-height:1.45}
+#characterCreation[data-mode=profile] .character-outfit,#characterCreation[data-mode=profile] #characterExperienceScope{display:none}
+#characterCreation[data-mode=profile] .character-columns{grid-template-columns:minmax(0,1fr) minmax(300px,400px)}
+#characterCreation[data-mode=profile]{background:radial-gradient(ellipse at 38% 58%,transparent 0 30%,#17251fc0 80%),linear-gradient(180deg,#0f2a2ab0,transparent 30%,#0f201bcc),url('../../ASSETS/references/cong-truoc.png') 30% 62%/cover no-repeat,#8fd3ef}
+@media(max-height:520px) and (orientation:landscape){
+ .character-columns{grid-template-columns:minmax(160px,200px) minmax(0,1fr) minmax(190px,230px)}
+ .character-roster-panel,.character-side>section{padding:8px;border-radius:14px}
+ .character-roster-panel h2,.character-roster-panel .tag,.character-roster-note{display:none}
+ .character-slot{min-height:56px;padding:6px 8px}.character-slot-portrait{width:42px;height:42px;font-size:18px}
+ .character-info-portrait{width:44px;height:44px}.character-info-head strong{font-size:15px}
+ #characterCreation[data-mode=profile] .character-columns{grid-template-columns:minmax(0,1fr) minmax(250px,330px)}
+ .character-tab{min-height:44px;font-size:11px!important}.character-tab-icon{font-size:15px}
+ .character-stat{padding:6px 8px}.character-stat-value{font-size:13px}
+}
+@media(max-width:740px) and (orientation:portrait){
+ .character-roster-panel{order:-1;align-self:stretch;max-height:none}
+ .character-roster{grid-auto-flow:column;grid-auto-columns:minmax(180px,1fr);overflow-x:auto}
+ .character-side{order:2}.character-side>section{max-height:none;overflow:visible;align-self:stretch}
+ #characterCreation[data-mode=profile] .character-columns{display:flex}
+}

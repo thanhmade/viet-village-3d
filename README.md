@@ -41,6 +41,12 @@ Kiểm thử launcher: `py -3 -B -m unittest discover -s scripts/tests -v`; ki�
 
 ## Phần thử nghiệm trên cap-nhat
 
+### Chọn/tạo nhân vật, bảng Nhân vật và cụm chiêu (Claude, 16/10/2026)
+
+- **Chọn nhân vật:** danh sách bên trái lấy từ hồ sơ thật (chân dung chụp từ mô hình, tên, LV); mỗi tài khoản hiện lưu **1 nhân vật** nên ô **+ Tạo nhân vật mới** chỉ hiện khi còn trống. Tạo xong nhân vật được thêm vào danh sách và chọn sẵn; bấm **Vào làng** để chơi.
+- **Bảng Nhân vật:** bấm chân dung trên HUD hoặc phím **C** (Esc/C để đóng). Thẻ Thuộc tính · Trang bị · Kỹ năng · Hành trình đọc trực tiếp LV/EXP, HP, tốc độ di chuyển, vũ khí và hồi chiêu đang chạy; chưa có chỉ số công/thủ hay tài nguyên kỹ năng nên không hiển thị.
+- **Cụm chiêu (khi cầm vũ khí):** ô 1 là đòn chính (nút lớn, phím **J** hoặc **1**), ô 2–3 xếp vòng cung (phím **2**, **3**). Điện thoại: chạm để dùng, **giữ và kéo** để ngắm các chiêu ngắm hướng/vùng, thả vào **✕ Hủy** để hủy (không tốn hồi chiêu). Máy tính: phím chiêu ngắm bật vòng ngắm theo chuột, nhấp trái để dùng, Esc/chuột phải để hủy; kéo chuột phải xoay camera. Hồi chiêu hiện bằng lớp phủ và số giây; joystick và chiêu dùng được cùng lúc.
+
 ### Dấu nhiệm vụ NPC, chọn nhân vật, HUD và màn hình ngang (Claude, 15/10/2026)
 
 - **Dấu trên đầu NPC** theo tiến độ riêng của từng nhân vật: `!` vàng có thể nhận, `?` xám đang làm, `?` vàng đủ điều kiện trả đúng NPC nhận, khóa nhỏ màu dịu cho nhiệm vụ đã được phép biết nhưng chưa mở. Khung kim cương = chính tuyến, tròn = phụ tuyến, vuông bo = học tập. Dấu, hội thoại, nhật ký **Dân làng**, bảng theo dõi và minimap dùng chung một kết quả (`SOURCE-CODE/js/quest-status.js`), chỉ tính lại khi có sự kiện. Điều kiện LV, nhiệm vụ trước (đủ tất cả / một trong các) được kiểm tra lại khi nhận; trả nhiệm vụ vẫn kiểm tra đúng NPC và lưu một lần (EXP theo biên nhận).

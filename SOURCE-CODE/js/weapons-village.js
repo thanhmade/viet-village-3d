@@ -1,6 +1,9 @@
 /* Local visual effects, advanced by the village's existing frame loop. */
 'use strict';
-window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, stopRoaming, clearMotion, onSkillUsed}) {
+// Skill cluster: slot 1 is the main (largest) button; slots 2-3 form the arc.
+// Aimed skill types accept a world point (core range check); the others act
+// around the player. Aiming never starts a cooldown: only a successful cast does.
+window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, stopRoaming, clearMotion, onSkillUsed, aim = null, notify = () => {}}) {
   const el = id => document.getElementById(id);
   const panel = el('weaponsPanel'), bar = el('weaponSkillBar');
   const configs = window.WeaponVFXCore.getWeaponConfigs();
@@ -9,6 +12,22 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     config.skills.map((skill, index) => `${index + 1} · ${skill.name}`)]));
   const nameLabel = el('equippedWeaponName');
   const skillButtons = [el('weaponSkill1'), el('weaponSkill2'), el('weaponSkill3')];
+  const AIMED = new Set(['projectile', 'volley', 'rain', 'thrust', 'cleave', 'armor-break', 'slam']);
+  const GLYPHS = {sweep: '↻', combo: '⚔', thrust: '➶', projectile: '➹', volley: '⇶', rain: '☂', cleave: '⚒', 'armor-break': '✸', slam: '◎', shield: '⛨', lotus: '✿', vortex: '❂', cyclone: '✺'};
+  const KEYS = ['J', '2', '3'];
+  // Child labels are built once; render() only touches the parts that changed.
+  const parts = skillButtons.map(button => {
+    if (!button) return null;
+    const make = name => { const node = document.createElement('span'); node.className = name; return node; };
+    const part = {icon: make('skill-icon'), name: make('skill-name'), key: make('skill-key'), cd: make('skill-cd'), text: {}};
+    button.replaceChildren?.(); button.append(part.icon, part.name, part.key, part.cd);
+    return part;
+  });
+  const signatures = ['', '', ''];
+  const cancelZone = el('skillAimCancel'), status = el('skillStatus');
+  let aiming = null, indicator = null, suppressClickUntil = 0, lastMouse = null, statusTimer = null;
+  const presses = new Map();
+  const now = () => (window.performance || Date).now();
   const hiddenState = new WeakMap();
   let models = null, grip = null, manager = null, selectedModel = null, avatarSocket = null;
   function attachGrip() {
@@ -55,22 +74,95 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   function showEquipped(value) { if (grip && grip.visible !== value) grip.visible = value; hide(bar, !value); showRoaming(value); }
   function setExpanded(value) { el('weaponsBtn')?.setAttribute?.('aria-expanded', String(value)); }
   function cancel() {
+    cancelAim();
     if (manager?.hasActiveEffects) manager.cancelAll();
     if (poseTime || poseLength) grip?.rotation.set(0, Math.PI, 0);
     poseTime = poseLength = 0;
   }
   function usable() { return !disposed && enabled && focused && !document.hidden && getState().canCast; }
+  function setText(part, key, value) { if (part.text[key] !== value) { part.text[key] = value; part[key].textContent = value; } }
+  function skillState(skill, allowed) {
+    const remaining = manager?.cooldownRemaining(skill.id, caster) || 0;
+    return {remaining, state: !allowed ? 'blocked' : remaining > 0 ? 'cooldown' : 'ready'};
+  }
   function render(allowed) {
     if (nameLabel.textContent !== currentConfig.name) nameLabel.textContent = currentConfig.name;
-    const labels = skillLabels.get(weaponId);
     for (let index = 0; index < skillButtons.length; index++) {
-      const button = skillButtons[index], skill = currentConfig.skills[index];
-      const remaining = manager?.cooldownRemaining(skill.id, caster) || 0;
-      const label = labels[index] + (remaining > 0 ? ` (${remaining.toFixed(1)}s)` : '');
+      const button = skillButtons[index], skill = currentConfig.skills[index], part = parts[index];
+      if (!button || !skill || !part) continue;
+      const {remaining, state} = skillState(skill, allowed), aimed = AIMED.has(skill.type);
+      const signature = [skill.id, state, remaining > 0 ? remaining.toFixed(1) : '', aiming?.slot === skill.slot].join('|');
+      if (signatures[index] === signature) continue;
+      signatures[index] = signature;
+      setText(part, 'icon', GLYPHS[skill.type] || '✦'); setText(part, 'name', skill.name);
+      setText(part, 'key', index === 0 ? 'J · 1' : KEYS[index]); setText(part, 'cd', remaining > 0 ? remaining.toFixed(1) : '');
+      button.style?.setProperty?.('--cd', remaining > 0 ? String(Math.min(1, remaining / skill.cooldown)) : '0');
+      button.setAttribute?.('data-state', aiming?.slot === skill.slot ? 'aiming' : state);
+      button.setAttribute?.('aria-label', skill.name + ' · phím ' + (index === 0 ? 'J hoặc 1' : KEYS[index])
+        + (remaining > 0 ? ' · đang hồi ' + remaining.toFixed(1) + ' giây' : state === 'blocked' ? ' · chưa dùng được ở đây' : '')
+        + (aimed ? ' · giữ và kéo để ngắm' : ' · chạm để dùng'));
       const disabled = !allowed || remaining > 0;
-      if (button.textContent !== label) button.textContent = label;
       if (button.disabled !== disabled) button.disabled = disabled;
     }
+  }
+  function say(text) {
+    if (!status) return; status.textContent = text; status.hidden = !text;
+    clearTimeout(statusTimer); if (text) statusTimer = setTimeout(() => { status.textContent = ''; status.hidden = true; }, 1600);
+  }
+  // ---- Aiming: one shared ground indicator, created once, reused ----
+  function ensureIndicator() {
+    if (indicator) return indicator;
+    const group = new T.Group(); group.name = 'village-skill-aim'; group.userData.localOnly = true;
+    const material = (color, opacity) => new T.MeshBasicMaterial({color, transparent: true, opacity, depthWrite: false, side: T.DoubleSide});
+    const range = new T.Mesh(new T.RingGeometry(.975, 1, 72), material(0xfff2b0, .5)); range.rotation.x = -Math.PI / 2;
+    const target = new T.Mesh(new T.RingGeometry(.78, 1, 48), material(0xffd23f, .9)); target.rotation.x = -Math.PI / 2;
+    const pivot = new T.Group(), line = new T.Mesh(new T.PlaneGeometry(.14, 1), material(0xffd23f, .55));
+    line.rotation.x = -Math.PI / 2; pivot.add(line);
+    group.add(range, target, pivot); group.visible = false; scene.add(group);
+    indicator = {group, range, target, pivot, line};
+    return indicator;
+  }
+  function casterPosition() { const p = caster.getWorldPosition(new T.Vector3()); p.y = getGroundY(p); return p; }
+  function clampPoint(skill, point) {
+    const origin = casterPosition(), out = new T.Vector3(point.x, 0, point.z);
+    const dx = out.x - origin.x, dz = out.z - origin.z, distance = Math.hypot(dx, dz), max = Math.max(.5, skill.range - .01);
+    if (distance > max) { out.x = origin.x + dx / distance * max; out.z = origin.z + dz / distance * max; }
+    else if (distance < .01) { const forward = new T.Vector3(0, 0, 1).applyQuaternion(body.getWorldQuaternion(new T.Quaternion())); out.x = origin.x + forward.x * max * .6; out.z = origin.z + forward.z * max * .6; }
+    out.y = getGroundY(out); return out;
+  }
+  function drawAim() {
+    if (!aiming) return;
+    const view = ensureIndicator(), origin = casterPosition(), point = aiming.point, skill = aiming.skill;
+    view.group.position.set(origin.x, origin.y + .06, origin.z); view.group.visible = true;
+    view.range.scale.setScalar(skill.range);
+    view.target.position.set(point.x - origin.x, point.y - origin.y + .01, point.z - origin.z);
+    view.target.scale.setScalar(skill.type === 'rain' || skill.type === 'slam' ? Math.max(.6, skill.radius) : .5);
+    const dx = point.x - origin.x, dz = point.z - origin.z, length = Math.max(.01, Math.hypot(dx, dz));
+    view.pivot.rotation.y = Math.atan2(-dx, -dz); view.line.scale.y = length; view.line.position.z = -length / 2;
+    const tint = aiming.cancel ? 0xff8a7a : 0xffd23f; view.target.material.color.setHex(tint); view.line.material.color.setHex(tint);
+  }
+  function beginAim(slot, source, pointerId = null) {
+    const skill = currentConfig.skills.find(item => item.slot === slot);
+    if (!skill || !AIMED.has(skill.type) || !usable()) return false;
+    const remaining = manager?.cooldownRemaining(skill.id, caster) || 0;
+    if (remaining > 0) { say(skill.name + ' đang hồi ' + remaining.toFixed(1) + ' giây'); return false; }
+    const origin = casterPosition(), forward = new T.Vector3(0, 0, 1).applyQuaternion(body.getWorldQuaternion(new T.Quaternion()));
+    const start = origin.clone().addScaledVector(forward, Math.min(skill.range, Math.max(2.5, skill.range * .6)));
+    aiming = {slot, skill, source, pointerId, point: clampPoint(skill, start), cancel: false};
+    document.body.classList.add('skill-aiming'); if (cancelZone) cancelZone.hidden = source !== 'touch';
+    drawAim(); signatures.fill(''); render(usable()); return true;
+  }
+  function aimAt(point) { if (!aiming || !point) return false; aiming.point = clampPoint(aiming.skill, point); drawAim(); return true; }
+  function cancelAim() {
+    if (!aiming) return false;
+    aiming = null; if (indicator) indicator.group.visible = false;
+    document.body.classList.remove('skill-aiming'); if (cancelZone) { cancelZone.hidden = true; cancelZone.classList.remove('is-hot'); }
+    signatures.fill(''); return true;
+  }
+  function confirmAim() {
+    if (!aiming) return {ok: false, reason: 'not-aiming'};
+    const {slot, point} = aiming; cancelAim();
+    return cast(slot, {point});
   }
   function closePanel() { hide(panel, true); setExpanded(false); clearMotion(); }
   function openPanel() {
@@ -92,18 +184,63 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     enabled = false; cancel(); showEquipped(false); closePanel();
     stopRoaming(); lastAllowed = false; render(false);
   }
-  function cast(slot) {
+  function cast(slot, {point = null} = {}) {
     const allowed = usable();
     if (!allowed) return {ok: false, reason: 'village-unavailable'};
     const skill = currentConfig.skills.find(item => item.slot === slot);
     if (!skill) return {ok: false, reason: 'unknown-slot'};
+    // Aimed casts turn the player toward the chosen point first, so the
+    // effect, the training-dummy facing check and the avatar agree.
+    let target = null;
+    if (point && AIMED.has(skill.type)) {
+      target = clampPoint(skill, point);
+      const origin = body.getWorldPosition(new T.Vector3());
+      if (Math.hypot(target.x - origin.x, target.z - origin.z) > .05) body.rotation.y = Math.atan2(target.x - origin.x, target.z - origin.z);
+    }
     // Core reads world transforms from the caster/tip ancestor chains itself.
-    const result = manager.cast(skill.id, {caster, weaponTip: selectedModel.tip});
+    const result = manager.cast(skill.id, {caster, weaponTip: selectedModel.tip, point: target});
     if (result.ok) {
       poseTime = 0; poseLength = Math.min(skill.duration, .9);
+      const button = skillButtons[slot - 1];
+      button?.classList?.add?.('skill-fired'); setTimeout(() => button?.classList?.remove?.('skill-fired'), 260);
       try { onSkillUsed?.({weaponId, skillId: skill.id, slot}); } catch (_) { /* Progress UI cannot interrupt a successful cast. */ }
-    }
-    render(allowed); uiElapsed = 0; return result;
+    } else if (result.reason === 'cooldown') say(skill.name + ' đang hồi ' + (result.retryAfter || 0).toFixed(1) + ' giây');
+    else if (result.reason === 'capacity') say('Hiệu ứng trước chưa kết thúc. Thử lại sau giây lát.');
+    else if (result.reason === 'out-of-range') say('Điểm ngắm ngoài tầm ' + skill.range + ' m.');
+    signatures.fill(''); render(allowed); uiElapsed = 0; return result;
+  }
+  // Touch/mouse on a skill button: tap = use now (forward), hold + drag = aim
+  // (aimed types only), release over "Hủy" = cancel. One pointer per press;
+  // the click that follows a pointer press is ignored to avoid double casts.
+  function pointInside(node, x, y) { const r = node?.getBoundingClientRect?.(); return !!r && !node.hidden && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; }
+  function onPressStart(event, slot) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.stopPropagation(); if (!usable() || presses.size >= 3) return;
+    const button = skillButtons[slot - 1]; try { button.setPointerCapture?.(event.pointerId); } catch (_) { /* detached */ }
+    const r = button.getBoundingClientRect?.() || {left: event.clientX, top: event.clientY, width: 0, height: 0};
+    presses.set(event.pointerId, {slot, x: event.clientX, y: event.clientY, cx: r.left + r.width / 2, cy: r.top + r.height / 2, aiming: false, type: event.pointerType});
+  }
+  function onPressMove(event) {
+    const press = presses.get(event.pointerId); if (!press) return; event.stopPropagation();
+    const skill = currentConfig.skills.find(item => item.slot === press.slot); if (!skill || !AIMED.has(skill.type)) return;
+    if (!press.aiming && Math.hypot(event.clientX - press.x, event.clientY - press.y) < 14) return;
+    if (!press.aiming) { if (!beginAim(press.slot, press.type === 'mouse' ? 'mouse-drag' : 'touch', event.pointerId)) { presses.delete(event.pointerId); return; } press.aiming = true; }
+    const dx = event.clientX - press.cx, dy = event.clientY - press.cy, length = Math.hypot(dx, dy), reach = Math.min(1, length / 96);
+    if (length > 1) aimAt(aim?.fromDrag?.(dx / length * reach, dy / length * reach, skill.range));
+    const hot = pointInside(cancelZone, event.clientX, event.clientY);
+    if (aiming && aiming.cancel !== hot) { aiming.cancel = hot; cancelZone?.classList?.[hot ? 'add' : 'remove']?.('is-hot'); drawAim(); }
+  }
+  function onPressEnd(event) {
+    const press = presses.get(event.pointerId); if (!press) return;
+    presses.delete(event.pointerId); event.stopPropagation(); suppressClickUntil = now() + 450;
+    try { skillButtons[press.slot - 1]?.releasePointerCapture?.(event.pointerId); } catch (_) { /* already released */ }
+    if (press.aiming) { if (!aiming || aiming.pointerId !== event.pointerId) return; if (aiming.cancel) { cancelAim(); say('Đã hủy ngắm.'); render(usable()); } else confirmAim(); return; }
+    cast(press.slot);
+  }
+  function onPressCancel(event) {
+    const press = presses.get(event.pointerId); if (!press) return;
+    presses.delete(event.pointerId);
+    if (press.aiming && aiming?.pointerId === event.pointerId) { cancelAim(); render(usable()); }
   }
   function update(dt) {
     if (disposed) return;
@@ -131,7 +268,23 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   listen(el('putAwayWeapon'), 'click', deactivate);
   listen(el('changeWeapon'), 'click', openPanel);
   for (const config of configs) listen(el('equip-' + config.weaponId), 'click', () => equip(config.weaponId));
-  for (let slot = 1; slot <= 3; slot++) listen(el('weaponSkill' + slot), 'click', () => cast(slot));
+  for (let slot = 1; slot <= 3; slot++) {
+    const button = el('weaponSkill' + slot);
+    listen(button, 'pointerdown', event => onPressStart(event, slot));
+    // The press is captured by its button, and the skill bar stops propagation,
+    // so moves/releases are handled here (window listeners stay as a fallback).
+    listen(button, 'pointermove', onPressMove);
+    listen(button, 'pointerup', onPressEnd);
+    listen(button, 'pointercancel', onPressCancel);
+    listen(button, 'lostpointercapture', onPressCancel);
+    // Keyboard activation (Enter/Space) still arrives as a click without a pointer press.
+    listen(button, 'click', event => { if (now() < suppressClickUntil) return; event?.stopPropagation?.(); cast(slot); });
+    listen(button, 'contextmenu', event => event.preventDefault?.());
+  }
+  listen(window, 'pointermove', event => { if (event.pointerType === 'mouse') lastMouse = {x: event.clientX, y: event.clientY}; if (presses.has(event.pointerId)) { onPressMove(event); return; }
+    if (aiming?.source === 'key' && event.pointerType === 'mouse') aimAt(aim?.fromScreen?.(event.clientX, event.clientY)); });
+  listen(window, 'pointerup', onPressEnd);
+  listen(window, 'pointercancel', onPressCancel);
   for (const node of [panel, bar]) {
     for (const event of ['pointerdown', 'pointerup', 'pointermove', 'wheel', 'click']) {
       listen(node, event, event => { event.stopPropagation(); if (node === panel && event.type === 'pointerdown') clearMotion(); });
@@ -139,20 +292,39 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     listen(node, 'keydown', event => { event.stopPropagation(); if (event.key === 'Escape') closePanel(); });
   }
   listen(window, 'keydown', event => {
+    if (event.key === 'Escape' && aiming) { event.preventDefault(); cancelAim(); render(usable()); return; }
     if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || !usable()) return;
     if (['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'A'].includes(event.target?.tagName) || event.target?.isContentEditable) return;
-    if (/^Digit[123]$/.test(event.code)) { event.preventDefault(); cast(Number(event.code.slice(-1))); }
+    const slot = /^Digit[123]$/.test(event.code) ? Number(event.code.slice(-1)) : event.code === 'KeyJ' ? 1 : 0;
+    if (!slot) return;
+    event.preventDefault();
+    const skill = currentConfig.skills.find(item => item.slot === slot);
+    // PC: an aimed skill key opens aiming at the mouse; the same key or a left
+    // click confirms, Esc or a right click cancels. Other skills act at once.
+    if (aiming?.slot === slot) { confirmAim(); return; }
+    if (skill && AIMED.has(skill.type) && lastMouse && aim?.fromScreen) {
+      cancelAim(); if (beginAim(slot, 'key')) aimAt(aim.fromScreen(lastMouse.x, lastMouse.y)); return;
+    }
+    cancelAim(); cast(slot);
   });
   listen(window, 'blur', () => { focused = false; cancel(); update(0); });
   listen(window, 'focus', () => { focused = true; });
   listen(document, 'visibilitychange', () => { if (document.hidden) { cancel(); clearMotion(); update(0); } });
   hide(panel, true); hide(bar, true); setExpanded(false); render(false);
   return Object.freeze({equip, cast, update, openPanel, closePanel, deactivate, setAvatarSocket,
+    beginAim, aimAt, confirmAim, cancelAim, isAiming: () => !!aiming,
+    // Same configs and cooldown clock as the buttons: the character sheet reads this.
+    skills() {
+      return currentConfig.skills.map(skill => ({slot: skill.slot, id: skill.id, name: skill.name, type: skill.type, aimed: AIMED.has(skill.type),
+        cooldown: skill.cooldown, range: skill.range, radius: skill.radius, description: skill.description,
+        remaining: manager?.cooldownRemaining(skill.id, caster) || 0}));
+    },
     suspend() { cancel(); showEquipped(false); lastAllowed = false; render(false); },
     lock() { deactivate(); },
-    get state() { return {enabled, weaponId, active: manager?.effects.length || 0, particles: manager?.pool.count || 0}; },
+    get state() { return {enabled, weaponId, weaponName: currentConfig.name, aiming: aiming ? {slot: aiming.slot, source: aiming.source, cancel: aiming.cancel, point: {x: aiming.point.x, z: aiming.point.z}} : null, active: manager?.effects.length || 0, particles: manager?.pool.count || 0}; },
     dispose() {
       if (disposed) return; deactivate(); disposed = true; bindings.forEach(remove => remove()); manager?.dispose();
+      if (indicator) { indicator.group.removeFromParent(); indicator.group.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); indicator = null; }
       // The model helper owns every model, including detached cached equipment.
       if (models) { for (const model of models.models.values()) grip.add(model.group); models.dispose(); }
       caster.removeFromParent();

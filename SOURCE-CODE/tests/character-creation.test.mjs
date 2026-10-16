@@ -97,7 +97,12 @@ test('missing/legacy profiles require explicit creation after the model is ready
     f.el('characterName').value = ' Em Mới ';
     assert.equal(await f.controller.submit(), true);
     assert.deepEqual(f.calls.create, [{name: ' Em Mới ', modelId: 'female-base', customization: {}}]);
+    assert.equal(f.controller.state.mode, 'select', 'a new character is saved, listed and selected');
+    assert.equal(f.calls.enter.length, 0, 'entering the village stays an explicit tap');
+    assert.equal(await f.controller.submit(), false, 'no second save from the select screen');
+    assert.equal(await f.controller.enter(), true);
     assert.deepEqual(f.calls.enter, [{newCharacter: true}]); assert.equal(f.controller.isBlocking(), false);
+    assert.equal(f.calls.create.length, 1);
   }
 });
 
@@ -141,10 +146,22 @@ test('a failed entry keeps the saved profile, shows the error and can be retried
   assert.equal(f.calls.enter.length, 2); assert.equal(f.calls.create.length, 0);
 });
 
-test('creating a character also runs the start hook synchronously, once per accepted tap', async () => {
+test('creating saves once and selects the new character; the start hook runs only in the Vào làng tap', async () => {
   const f = fixture(); await f.controller.onAuthState(true); f.el('characterName').value = 'Bắt đầu';
-  const first = f.controller.submit(); assert.equal(f.calls.starts, 1); assert.equal(await f.controller.submit(), false);
-  assert.equal(await first, true); assert.equal(f.calls.starts, 1); assert.equal(f.calls.create.length, 1);
+  const first = f.controller.submit(); assert.equal(await f.controller.submit(), false);
+  assert.equal(await first, true); assert.equal(f.calls.starts, 0, 'creating does not request fullscreen');
+  assert.equal(f.calls.create.length, 1); assert.equal(f.controller.state.character.name, 'Bắt đầu');
+  const entering = f.controller.enter(); assert.equal(f.calls.starts, 1, 'requested synchronously inside the tap');
+  assert.equal(await f.controller.enter(), false); assert.equal(await entering, true); assert.equal(f.calls.starts, 1);
+});
+
+test('the roster offers "+" only for a free slot and Quay lại returns to the saved character', async () => {
+  const character = saved(), f = fixture({load: async () => ({status: 'ready', character})});
+  await f.controller.onAuthState(true); assert.equal(f.controller.state.slots, 1);
+  assert.equal(await f.controller.startCreate(), false, 'the single slot is used: no placeholder creation');
+  assert.equal(f.controller.state.mode, 'select'); assert.equal(f.calls.create.length, 0);
+  const empty = fixture(); await empty.controller.onAuthState(true);
+  assert.equal(empty.controller.state.mode, 'create'); assert.equal(await empty.controller.back(), false, 'nothing to go back to yet');
 });
 
 test('profile read failures disable creation until successful retry and are never treated as missing', async () => {
@@ -189,7 +206,10 @@ test('rapid create clicks make one storage request and one entry', async () => {
   const first = f.controller.submit(); assert.equal(f.el('createCharacterBtn').disabled, true);
   assert.equal(await f.controller.submit(), false); assert.equal(f.calls.create.length, 1);
   pending.resolve(saved('Một lần')); assert.equal(await first, true);
-  assert.equal(f.calls.apply.length, 1); assert.equal(f.calls.enter.length, 1); assert.equal(f.calls.ready.length, 1);
+  assert.equal(f.calls.apply.length, 0); assert.equal(f.calls.enter.length, 0);
+  const a = f.controller.enter(), b = f.controller.enter();
+  assert.equal(await a, true); assert.equal(await b, false);
+  assert.equal(f.calls.create.length, 1); assert.equal(f.calls.apply.length, 1); assert.equal(f.calls.enter.length, 1); assert.equal(f.calls.ready.length, 1);
 });
 
 test('failed profile writes retain name and selected model for a successful retry', async () => {
@@ -201,7 +221,7 @@ test('failed profile writes retain name and selected model for a successful retr
   f.handlers.create = async input => saved(input.name, input.modelId);
   assert.equal(await f.controller.retry(), true);
   assert.equal(f.calls.create.length, 2); assert.deepEqual(f.calls.create[0], f.calls.create[1]);
-  assert.deepEqual(f.calls.enter, [{newCharacter: true}]);
+  assert.equal(await f.controller.enter(), true); assert.deepEqual(f.calls.enter, [{newCharacter: true}]);
 });
 
 test('logout during profile load cancels stale results without opening creation or entering', async () => {
@@ -242,7 +262,7 @@ test('creation/profile modal blocks game input; Escape closes only a ready profi
   for (const type of ['pointerdown','pointermove','pointerup','click','wheel']) assert.equal(screen.emit(type).stopped, true);
   const escape = screen.emit('keydown', {key: 'Escape'});
   assert.equal(escape.stopped, true); assert.equal(escape.prevented, true); assert.equal(f.controller.isOpen(), true);
-  f.el('characterName').value = 'An'; await f.controller.submit(); await f.controller.openProfile();
+  f.el('characterName').value = 'An'; await f.controller.submit(); await f.controller.enter(); await f.controller.openProfile();
   assert.equal(f.controller.isBlocking(), true); screen.emit('keydown', {key: 'Escape'});
   assert.equal(f.controller.isOpen(), false); assert.equal(f.controller.isBlocking(), false); assert.ok(f.calls.clear > 0);
 });
@@ -266,7 +286,7 @@ test('both available choices pass their own URL/calibration from preview through
     assert.equal(f.calls.previewOptions.at(-1), model.visual);
     assert.equal(f.el('characterModel-' + model.id).attributes['aria-pressed'], 'true');
     f.el('characterName').value = 'Nhân vật ' + model.label;
-    assert.equal(await f.controller.submit(), true);
+    assert.equal(await f.controller.submit(), true); assert.equal(await f.controller.enter(), true);
     assert.equal(f.calls.create[0].modelId, model.id);
     assert.equal(f.calls.apply[0].modelId, model.id);
     assert.equal(f.calls.applyModels[0], model);
@@ -302,7 +322,7 @@ test('a failed final Male selection never saves or enters with the previous Fema
   assert.equal(await f.controller.submit(), false); assert.equal(f.calls.enter.length, 0);
   f.handlers.showModel = async () => true;
   await f.controller.retry(); assert.equal(f.el('characterName').value, 'Nam đang đợi');
-  assert.equal(await f.controller.submit(), true); assert.equal(f.calls.apply[0].modelId, 'male-base');
+  assert.equal(await f.controller.submit(), true); assert.equal(await f.controller.enter(), true); assert.equal(f.calls.apply[0].modelId, 'male-base');
 });
 
 test('Male identity survives a fresh controller and sign-in without writing over journey data', async () => {
@@ -312,7 +332,7 @@ test('Male identity survives a fresh controller and sign-in without writing over
   const store = createCharacterProfileStore({storage, getUid: () => 'unit-account'});
   const f = fixture({load: store.load, create: store.create});
   await f.controller.onAuthState(true); await f.controller.selectModel('male-base');
-  f.el('characterName').value = 'Nam đã lưu'; assert.equal(await f.controller.submit(), true);
+  f.el('characterName').value = 'Nam đã lưu'; assert.equal(await f.controller.submit(), true); assert.equal(await f.controller.enter(), true);
   const serialized = entries.get(characterStoragePrefix + 'unit-account');
   await f.controller.onAuthState(false); assert.equal(await f.controller.onAuthState(true), false);
   assert.equal(f.controller.state.mode, 'select'); assert.equal(await f.controller.enter(), true);

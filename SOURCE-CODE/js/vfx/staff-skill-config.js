@@ -25,15 +25,18 @@
       "localId": "con-quet",
       "name": "Côn Quét",
       "type": "sweep",
+      "sweepRadius": 2.1,
+      "containRadius": 1.65,
+      "phases": {"windup": 0.14, "openEnd": 0.36, "accelerateEnd": 0.82, "closeEnd": 1.06, "releaseAt": 1.12, "releaseEnd": 1.48},
       "slot": 1,
-      "duration": 1.2,
-      "activeAt": 0.12,
-      "activeEnd": 0.75,
-      "cooldown": 1.4,
+      "duration": 1.8,
+      "activeAt": 0.14,
+      "activeEnd": 1.48,
+      "cooldown": 2.4,
       "radius": 3.2,
       "range": 3.2,
       "forwardOffset": 0.0,
-      "description": "Quét côn ngang tạo dải khí xanh ngọc, mép vàng, bụi đất và mảnh đá quanh chân."
+      "description": "Quét ngang liên tục: mở cung, tăng lực, khép vòng; phát một sóng xanh ngọc viền vàng sát đất. Tầm côn 2,1 m; sóng 3,2 m."
     },
     {
       "id": "staff.ho-than",

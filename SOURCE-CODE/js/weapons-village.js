@@ -3,7 +3,7 @@
 // Skill cluster: slot 1 is the main (largest) button; slots 2-3 form the arc.
 // Aimed skill types accept a world point (core range check); the others act
 // around the player. Aiming never starts a cooldown: only a successful cast does.
-window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, clearMotion, onSkillUsed, aim = null, notify = () => {}}) {
+window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, clearMotion, onSkillUsed, onSkillHit = null, onSkillCancel = null, aim = null, notify = () => {}}) {
   const el = id => document.getElementById(id);
   const panel = el('weaponsPanel'), bar = el('weaponSkillBar');
   const configs = window.WeaponVFXCore.getWeaponConfigs();
@@ -56,7 +56,8 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     // Keep unequipped models out of the scene's matrix traversal.
     for (const model of models.models.values()) model.group.removeFromParent();
     manager = new window.WeaponVFXCore({THREE: T, scene, quality: 'low', maxActive: 4,
-      getGroundY, getEquippedWeapon: () => weaponId});
+      getGroundY, getEquippedWeapon: () => weaponId,
+      onEvent: event => { if(event.type==='hit-window')onSkillHit?.(event); }});
   }
   const bindings = [];
   function listen(target, name, handler) {
@@ -74,7 +75,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   function showEquipped(value) { if (grip && grip.visible !== value) grip.visible = value; hide(bar, !value); showRoaming(value); }
   function setExpanded(value) { el('weaponsBtn')?.setAttribute?.('aria-expanded', String(value)); }
   function cancel() {
-    cancelAim();
+    cancelAim();onSkillCancel?.();
     if (manager?.hasActiveEffects) manager.cancelAll();
     if (poseTime || poseLength) grip?.rotation.set(0, Math.PI, 0);
     poseTime = poseLength = 0;
@@ -86,6 +87,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     return {remaining, state: !allowed ? 'blocked' : remaining > 0 ? 'cooldown' : 'ready'};
   }
   function render(allowed) {
+    allowed=allowed&&!manager?.effects.some(fx=>fx.skill.id==='staff.con-quet');
     if (nameLabel.textContent !== currentConfig.name) nameLabel.textContent = currentConfig.name;
     for (let index = 0; index < skillButtons.length; index++) {
       const button = skillButtons[index], skill = currentConfig.skills[index], part = parts[index];
@@ -188,9 +190,11 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   }
   function cast(slot, {point = null} = {}) {
     const allowed = usable();
+    if (manager?.effects.some(fx=>fx.skill.id==='staff.con-quet'))return {ok:false,reason:'busy'};
     if (!allowed) return {ok: false, reason: 'village-unavailable'};
     const skill = currentConfig.skills.find(item => item.slot === slot);
     if (!skill) return {ok: false, reason: 'unknown-slot'};
+    if(skill.id==='staff.con-quet'&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
     // Aimed casts turn the player toward the chosen point first, so the
     // effect, the training-dummy facing check and the avatar agree.
     let target = null;
@@ -202,7 +206,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     // Core reads world transforms from the caster/tip ancestor chains itself.
     const result = manager.cast(skill.id, {caster, weaponTip: selectedModel.tip, point: target});
     if (result.ok) {
-      poseTime = 0; poseLength = Math.min(skill.duration, .9);
+      poseTime = 0; poseLength = skill.id==='staff.con-quet'?skill.duration:Math.min(skill.duration, .9);
       const button = skillButtons[slot - 1];
       button?.classList?.add?.('skill-fired'); setTimeout(() => button?.classList?.remove?.('skill-fired'), 260);
       try { onSkillUsed?.({weaponId, skillId: skill.id, slot}); } catch (_) { /* Progress UI cannot interrupt a successful cast. */ }
@@ -256,9 +260,14 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     if (poseLength && !avatarSocket) {
       poseTime += dt;
       const phase = Math.min(1, poseTime / poseLength);
+      if(weaponId==='staff'&&poseLength>1){
+        const pose=window.StaffSweep.sample(poseTime);
+        grip.rotation.set(0,Math.PI+pose.staffYaw,0);
+      }else {
       grip.rotation.z = Math.sin(phase * Math.PI) * (weaponId === 'bow' ? .15 : -.75);
       grip.rotation.x = Math.sin(phase * Math.PI) * (weaponId === 'spear' ? .7 : -.35);
-      if (phase === 1) poseLength = 0;
+      }
+      if (phase === 1) {poseLength = 0;grip.rotation.set(0,Math.PI,0);}
     }
     manager.update(dt);
     uiElapsed += dt;

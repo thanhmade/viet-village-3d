@@ -16,7 +16,7 @@ global.createImageBitmap=async blob=>{
 global.ProgressEvent=class{constructor(type,detail){this.type=type;Object.assign(this,detail);}};
 const loader=import(pathToFileURL(path.join(root,'ASSETS/vendor/gltf-r160/GLTFLoader.js')).href);
 async function asset(kind='female'){const {GLTFLoader}=await loader,bytes=kind==='male'?maleBuffer:buffer;return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');}
-function runtime(){const context={THREE:T,console,document:{}};context.window=context;vm.createContext(context);
+function runtime(){const context={THREE:T,StaffSweep:require('../js/vfx/staff-sweep.js'),console,document:{}};context.window=context;vm.createContext(context);
  for(const name of ['npc-gltf.js','player-gltf.js'])vm.runInContext(fs.readFileSync(path.join(root,'CHARACTERS',name),'utf8'),context);
  return context;
 }
@@ -278,4 +278,24 @@ test('actual preview keeps the last Male/Female selection and disposes older mod
   assert.equal(freed[2],1);assert.equal(frames.size,0);assert.equal(container.children[0].removed,true);
   assert.equal(renderDisposed,1);assert.equal(contextLost,1);preview.dispose();assert.equal(renderDisposed,1);
  }finally{preview.dispose();global.disposeVillageNPCGLTF=previousDisposer;}
+});
+
+
+test('Côn quét keeps both real GLB palms on one rigid staff and restores locomotion',async()=>{
+ for(const gender of ['male','female']){
+  const {v,actor,gltf}=await visual(gender);assert(v.startStaffSweep());assert(!v.startJump(.7));
+  const before=actor.position.clone();let maxError=0;
+  for(let frame=0;frame<108;frame++){
+   v.update(1/60);assert(actor.position.equals(before));
+   if(frame>=10&&frame<=85){
+    const right=v.sockets.right.getWorldPosition(new T.Vector3()),left=v.sockets.left.getWorldPosition(new T.Vector3());
+    const expected=new T.Vector3(.44,0,0).applyQuaternion(v.sockets.right.getWorldQuaternion(new T.Quaternion())).add(right);
+    maxError=Math.max(maxError,left.distanceTo(expected));
+   }
+  }
+  assert(maxError<.065,gender+' palm drift: '+maxError);assert.equal(v.state.busy,false);
+  v.setLocomotion(4.5);advance(v,.3);assert.equal(v.state.clip,'walk');
+  assert(v.startStaffSweep());advance(v,.4);v.cancelStaffSweep();assert.equal(v.state.busy,false);v.update(.02);
+  assert.equal(v.state.activeActions,1);v.dispose();
+ }
 });

@@ -383,7 +383,7 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
       const button=document.createElement('button');button.className='skill';button.dataset.skill=s.id;button.type='button';button.setAttribute('aria-pressed','false');
       button.innerHTML='<span class="sigil-icon"><svg viewBox="0 0 60 60" aria-hidden="true">'+skillIcons[i]+'</svg></span><span class="skill-copy"><small></small><strong></strong><span></span></span><span class="key"></span><span class="cooldown-fill"></span>';
       button.querySelector('small').textContent=['I','II','III'][i]+' · '+(skillTypes[s.id]||typeNames[s.type]||['CHIÊU THỨ NHẤT','CHIÊU THỨ HAI','CHIÊU THỨ BA'][i]);
-      button.querySelector('strong').textContent=s.name;button.querySelector('.skill-copy>span').textContent='Tụ lực · Phát chiêu · Tan dần';button.querySelector('.key').textContent=s.slot||i+1;
+      button.querySelector('strong').textContent=s.name;button.querySelector('.skill-copy>span').textContent=s.id==='staff.con-quet'?'Mở cung · Khép vòng · Bộc phát':'Tụ lực · Phát chiêu · Tan dần';button.querySelector('.key').textContent=s.slot||i+1;
       listen(button,'click',()=>cast(s.id),undefined,skillBindings);$('skills').appendChild(button);
     });
     selectSkill(config.skills[0].id);updateReference();$('active-label').textContent='Sẵn sàng · '+labels[id];animateActor(simulationTime());return true;
@@ -447,7 +447,7 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
   function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
   listen(window,'resize',resize);
   function animateActor(time){
-    rig.rotation.set(0,0,0);rig.position.y=0;torso.rotation.z=0;
+    rig.rotation.set(0,0,0);rig.position.y=0;torso.rotation.set(0,0,0);
     weaponRig.position.set(.35,1.3,-.32);weaponRig.rotation.set(0,0,-.25);
     leftHand.position.set(-.15,0,0);rightHand.position.set(0,0,0);
     if(weaponId==='staff'){weaponRig.position.set(0,1.26,-.3);weaponRig.rotation.set(0,.18,-.15);leftHand.position.x=-.39;rightHand.position.x=.39;}
@@ -468,7 +468,7 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
         if(s.type==='shield'||s.localId==='ho-than'){weaponRig.position.set(.24,1.23,-.1);weaponRig.rotation.z=-.95;rig.position.y=Math.sin(age*2)*.015;}
         else if(weaponId==='staff'){
           if(s.localId==='chan-dia'){weaponRig.rotation.set(0,0,Math.PI/2);weaponRig.position.set(0,age<s.activeAt?1.5+Math.sin(windup*Math.PI)*.7:1.4,-.2-windup);rig.position.y=age<s.activeAt?0:-Math.sin(Math.min((age-s.activeAt)*4,Math.PI))*.12;}
-          else{rig.rotation.y=progress*Math.PI*2;weaponRig.rotation.z=-.07;torso.rotation.z=Math.sin(progress*Math.PI)*.1;}
+          else{const sweep=window.StaffSweep.sample(age,s);weaponRig.rotation.set(0,sweep.staffYaw,0);weaponRig.position.set(0,sweep.handY,-sweep.handZ);torso.rotation.y=sweep.torsoYaw;}
         }else if(weaponId==='sword'){
           if(s.localId==='kiem-hoa'){rig.rotation.y=progress*Math.PI*2;weaponRig.rotation.z=-.5;}
           else{weaponRig.rotation.x=age<s.activeAt?-.4+windup*.8:.4-progress*2.2;weaponRig.position.z-=Math.sin(progress*Math.PI)*.25;}
@@ -515,7 +515,7 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
     if(pose){
       const s=bySkill.get(pose.id),age=simulationTime()-pose.start;
       $('timeline-progress').style.width=Math.min(100,age/s.duration*100)+'%';
-      $('phase-label').textContent=paused?'Đã tạm dừng':age<s.activeAt?'Tụ lực':age<s.activeEnd?s.type==='shield'?'Duy trì khiên':'Phát chiêu':'Tan dần';
+      $('phase-label').textContent=paused?'Đã tạm dừng':s.id==='staff.con-quet'?window.StaffSweep.sample(age,s).phase:age<s.activeAt?'Tụ lực':age<s.activeEnd?s.type==='shield'?'Duy trì khiên':'Phát chiêu':'Tan dần';
     }else{$('timeline-progress').style.width='0%';$('phase-label').textContent=paused?'Đã tạm dừng':'Sẵn sàng';}
     document.querySelectorAll('.skill').forEach(button=>{
       const s=bySkill.get(button.dataset.skill),cd=vfx.cooldownRemaining(s.id,actor);button.querySelector('.cooldown-fill').style.width=Math.min(100,cd/s.cooldown*100)+'%';button.querySelector('.key').textContent=cd>0?fmt(cd):s.slot;

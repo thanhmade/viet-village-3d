@@ -226,9 +226,9 @@ test('idle adapter avoids DOM and whole-body work; lazily built cached equipment
   domWrites = 0;
   for (let frame = 0; frame < 60; frame++) controller.update(1/60);
   assert.ok(domWrites <= 12, `Cooldown label updates are limited to its 0.1s precision: ${domWrites}`);
-  controller.update(.21);
+  controller.update(context.StaffSkillConfig.skills[0].duration-1+.01);
   assert.equal(controller.state.active, 0);
-  controller.update(.3);
+  controller.update(context.StaffSkillConfig.skills[0].cooldown);
   assert.equal(controller.cast(1).ok, true, 'Cooldown continues after effects finish and the pool becomes idle');
   for (const id of ['sword', 'spear', 'bow', 'axe', 'staff']) controller.equip(id);
   assert.equal(builds, 1, 'Switching equipment reuses the prepared models');

@@ -93,7 +93,8 @@
    const jumpButton=el('playerJumpBtn');if(jumpButton){jumpButton.hidden=!(motion&&s.authenticated&&s.visible&&!open&&s.canOpen);jumpButton.disabled=s.hp<=0||motion.airborne||!!visual?.state.busy;}
    lastHp=s.hp;uiTime+=dt;if(uiTime>=.1){render();uiTime=0;}
   }
-  function onSkillUsed({weaponId}={}){
+  function onSkillUsed({weaponId,skillId}={}){
+   if(skillId==='staff.con-quet'&&hasGLTF()&&getState().authenticated&&getState().hp>0&&!open)return visual.startStaffSweep?.()||false;
    if(hasGLTF()&&getState().authenticated&&getState().hp>0&&!open&&['staff','sword','spear','axe'].includes(weaponId))return visual.playOnce('slash');
    return false;
   }
@@ -156,7 +157,7 @@
   });
   listen(global,'keydown',e=>{if(open&&e.key==='Escape'){e.preventDefault();close();}});
   panel.classList.add('hidden');el('playerAnimationTests').hidden=true;message('Chọn nhân vật cho phiên chơi local. Nhân vật ban đầu luôn được giữ lại.');
-  return Object.freeze({select,open:show,close,isOpen:()=>open,update,onSkillUsed,onInteraction,jump,lock,
+  return Object.freeze({select,open:show,close,isOpen:()=>open,update,onSkillUsed,cancelStaffSweep:()=>visual?.cancelStaffSweep?.(),onInteraction,jump,lock,
    get isJumping(){return !!motion?.airborne;},
    get isFemale(){return selected==='female';},get isGLTF(){return hasGLTF();},get state(){return {selected,modelId:definition(selected)?.id||null,loading:loads.size>0,testing,animation:hasGLTF()?visual.state:null};},
    dispose(){if(disposed)return;lock();selected='original';displaySelection();disposed=true;bindings.forEach(remove=>remove());for(const item of visuals.values())item.dispose();visuals.clear();visual=null;}

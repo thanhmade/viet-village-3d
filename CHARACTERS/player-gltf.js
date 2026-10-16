@@ -78,6 +78,45 @@
     socket.scale.set(1/rootScale.x,1/rootScale.y,1/rootScale.z);socket.updateMatrixWorld(true);
    }
   }
+  // Two-hand staff pose layered over locomotion. Solve the original arm bones;
+  // sockets keep unit scale and equipment remains owned by the weapon controller.
+  const sweepBones={};
+  for(const side of ['right','left']){
+   const prefix=side==='right'?'Right':'Left';
+   sweepBones[side]={upper:findBone('mixamorig:'+prefix+'Arm'),lower:findBone('mixamorig:'+prefix+'ForeArm'),hand:hands[side]};
+  }
+  const spine=findBone('mixamorig:Spine1'),sweepRestore=new Map();
+  let staffSweep=null;
+  function restoreSweep(){for(const [bone,q] of sweepRestore)bone.quaternion.copy(q);sweepRestore.clear();}
+  function aimBone(bone,child,target){
+   const origin=bone.getWorldPosition(new T.Vector3()),from=child.getWorldPosition(new T.Vector3()).sub(origin).normalize(),to=target.clone().sub(origin).normalize();
+   const world=bone.getWorldQuaternion(new T.Quaternion()).premultiply(new T.Quaternion().setFromUnitVectors(from,to));
+   bone.quaternion.copy(bone.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(world));root.updateMatrixWorld(true);
+  }
+  function poseStaffSweep(){
+   if(!staffSweep||!global.StaffSweep)return;
+   const state=global.StaffSweep.sample(staffSweep.time),weight=state.weight;if(weight<=0)return;
+   for(const bone of [spine,...Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand])])if(bone)sweepRestore.set(bone,bone.quaternion.clone());
+   if(spine){spine.quaternion.multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),state.torsoYaw));root.updateMatrixWorld(true);}
+   const direction=new T.Vector3(Math.cos(state.staffYaw),0,-Math.sin(state.staffYaw)),center=new T.Vector3(0,state.handY,state.handZ);
+   const rotation=root.getWorldQuaternion(new T.Quaternion()).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),state.staffYaw));
+   for(const side of ['right','left']){
+    const {upper,lower,hand}=sweepBones[side];if(!upper||!lower)continue;
+    const desiredPalm=root.localToWorld(center.clone().addScaledVector(direction,side==='right'?-.22:.22));
+    const desiredHand=rotation.clone().multiply(handCalibration[side].restInverse.clone().invert());
+    const palmOffset=handCalibration[side].palm.clone().multiply(hand.getWorldScale(new T.Vector3())).applyQuaternion(desiredHand),target=desiredPalm.clone().sub(palmOffset);
+    const start=upper.getWorldPosition(new T.Vector3()),elbow=lower.getWorldPosition(new T.Vector3()),wrist=hand.getWorldPosition(new T.Vector3());
+    const a=start.distanceTo(elbow),b=elbow.distanceTo(wrist),axis=target.clone().sub(start),distance=Math.min(a+b-.00001,Math.max(Math.abs(a-b)+.00001,axis.length()));axis.normalize();
+    const pole=root.localToWorld(new T.Vector3(side==='right'?-.9:.9,.9,.05)).sub(start);pole.addScaledVector(axis,-pole.dot(axis)).normalize();
+    const x=(a*a-b*b+distance*distance)/(2*distance),y=Math.sqrt(Math.max(0,a*a-x*x));
+    const desiredElbow=start.clone().addScaledVector(axis,x).addScaledVector(pole,y);
+    aimBone(upper,lower,desiredElbow);aimBone(lower,hand,target);
+    hand.quaternion.copy(hand.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(desiredHand));root.updateMatrixWorld(true);
+    // Ease in/out without accumulating an additive rotation on successive frames.
+    for(const bone of [upper,lower,hand])bone.quaternion.slerpQuaternions(sweepRestore.get(bone),bone.quaternion.clone(),weight);
+   }
+   sync();updateSockets();
+  }
   let controllerJump=false;
   function pose(){
    hips.position.x=hipAnchor.x;hips.position.z=hipAnchor.z;facing.position.y=baseGroundY;sync();
@@ -86,7 +125,7 @@
    // During gameplay the collider supplies jump height, never add the GLB's
    // authored elevation a second time. Preview still retains authored motion.
    if(lowest<groundPoint.y||(controllerJump&&Number.isFinite(lowest))){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-lowest)/rootScale.y;sync();}
-   updateSockets();
+   updateSockets();poseStaffSweep();
   }
   let mode='locomotion',speed=0,outgoing=null,fadeEnd=0,returningUntil=0,pendingFinished=null,pausedPreview=false,disposed=false,defeatClip=null;
   const reviewedDefeats=new Set();
@@ -112,7 +151,7 @@
   }
   function finished(event){if(event.action===current)pendingFinished=event.action;}
   mixer.addEventListener('finished',finished);
-  function returnToIdle(){if(disposed)return false;speed=0;const returning=mode==='once';transition('idle','locomotion');if(returning)returningUntil=mixer.time+fadeDuration;return true;}
+  function returnToIdle(){if(disposed)return false;staffSweep=null;restoreSweep();speed=0;const returning=mode==='once';transition('idle','locomotion');if(returning)returningUntil=mixer.time+fadeDuration;return true;}
   pose();
   return {
    root,mixer,clips:Object.freeze(animations.map(clip=>Object.freeze({name:clip.name,duration:clip.duration}))),hands,sockets,
@@ -121,19 +160,22 @@
     transition(locomotion(),'locomotion');const name=current.getClip().name;
     current.setEffectiveTimeScale(name==='idle'?1:Math.max(.45,Math.min(1.35,speed/(name==='run'?6.5:4.5))));
    }return true;},
-   startJump(duration){if(disposed||mode!=='locomotion'||mixer.time<returningUntil)return false;
+   startStaffSweep(){if(disposed||mode!=='locomotion'||staffSweep||!global.StaffSweep||controllerJump)return false;staffSweep={time:0};return true;},
+   cancelStaffSweep(){if(disposed||!staffSweep)return;staffSweep=null;restoreSweep();pose();},
+   startJump(duration){if(disposed||mode!=='locomotion'||staffSweep||mixer.time<returningUntil)return false;
     controllerJump=true;transition('jump','once');current.setEffectiveTimeScale(current.getClip().duration/Math.max(.2,duration));return true;},
    endJump(){if(disposed)return;controllerJump=false;if(mode==='once'&&current.getClip().name==='jump'){transition(locomotion(),'locomotion');returningUntil=mixer.time+fadeDuration;}},
-   playOnce(name){if(disposed||mode!=='locomotion'||mixer.time<returningUntil||!clipMap.has(name))return false;return transition(name,'once');},
-   preview(name){if(disposed||!clipMap.has(name))return false;return transition(name,'preview');},
+   playOnce(name){if(disposed||staffSweep||mode!=='locomotion'||mixer.time<returningUntil||!clipMap.has(name))return false;return transition(name,'once');},
+   preview(name){if(disposed||!clipMap.has(name))return false;staffSweep=null;restoreSweep();return transition(name,'preview');},
    pausePreview(){if(disposed||mode!=='preview')return false;pausedPreview=true;return true;},
    resumePreview(){if(disposed||mode!=='preview'||current.paused)return false;pausedPreview=false;return true;},
    returnToIdle,
    setDefeatClip(name){if(disposed||!['defeat_02','defeat_03'].includes(name)||reviewedDefeats.size!==2)return false;defeatClip=name;return true;},
-   playDefeat(){if(disposed||!defeatClip)return false;if(mode==='defeat')return true;return transition(defeatClip,'defeat');},
-   get state(){return {clip:current.getClip().name,time:current.time,busy:mode!=='locomotion'||mixer.time<returningUntil,preview:mode==='preview',paused:pausedPreview||current.paused,defeatClip,reviewedDefeats:[...reviewedDefeats],mode,activeActions:[...actions.values()].filter(action=>action.isScheduled()).length};},
+   playDefeat(){if(disposed||!defeatClip)return false;staffSweep=null;restoreSweep();if(mode==='defeat')return true;return transition(defeatClip,'defeat');},
+   get state(){return {clip:current.getClip().name,time:current.time,busy:!!staffSweep||mode!=='locomotion'||mixer.time<returningUntil,preview:mode==='preview',paused:pausedPreview||current.paused,defeatClip,reviewedDefeats:[...reviewedDefeats],mode,activeActions:[...actions.values()].filter(action=>action.isScheduled()).length};},
    update(dt){
     if(disposed||!Number.isFinite(dt)||dt<0)return;
+    restoreSweep();if(staffSweep){staffSweep.time+=dt;if(staffSweep.time+1e-7>=global.StaffSweep.duration)staffSweep=null;}
     if(!pausedPreview)mixer.update(Math.min(dt,.1));
     if(outgoing&&mixer.time>=fadeEnd){outgoing.stop();outgoing=null;current.stopFading().setEffectiveWeight(1);}
     if(pendingFinished){

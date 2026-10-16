@@ -178,9 +178,10 @@ $('playerPortraitBtn')?.addEventListener('click',e=>{e.stopPropagation?.();void 
 playerMotion=window.createVillagePlayerMotion({position:player.position,body,surfaceAt:villageMovementSurface,contextKey:()=>regionTravel?.currentId+':'+insideHouse});
 window.VietVillagePlayerMotion=playerMotion;
 villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,clearMotion,startRoaming,aim:{fromScreen:aimFromScreen,fromDrag:aimFromDrag},notify:toast,
- onSkillUsed:skill=>{playerJourney?.recordSkillUse();window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
+ onSkillUsed:skill=>{playerJourney?.recordSkillUse();if(skill.skillId!=='staff.con-quet')window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
+ onSkillHit:event=>window.VietVillageNPCs?.onSkillUsed(event),onSkillCancel:()=>playerAvatar?.cancelStaffSweep?.(),
  getGroundY:point=>bridgeHeight(point.x,point.z),
- getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),
+ getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),poseBusy:!!playerAvatar?.state?.animation?.busy||!!playerMotion?.airborne,
  canCast:gameInitialized&&!!window.VietVillageAuth?.isAuthenticated()&&(localWalking||multiplayerWalking)&&world.visible&&!insideHouse&&!overlays()&&gateView<0&&houseView<0})});
 window.VietVillageWeapons=villageWeapons;
 playerAvatar=window.createVillagePlayerAvatar({THREE,body,proceduralParts:body.children.filter(part=>part.userData.proceduralAvatarPart),motion:playerMotion,

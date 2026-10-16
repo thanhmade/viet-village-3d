@@ -24,6 +24,7 @@
   "ENVIRONMENT/weather-lighting.js",
   "SOURCE-CODE/js/vfx/weapon-vfx-core.js",
   "SOURCE-CODE/js/vfx/staff-skill-config.js",
+  "SOURCE-CODE/js/vfx/staff-sweep.js",
   "SOURCE-CODE/js/vfx/staff-skill-vfx.js",
   "SOURCE-CODE/js/vfx/sword-skill-config.js",
   "SOURCE-CODE/js/vfx/sword-skill-vfx.js",

@@ -2,7 +2,9 @@
  'use strict';
  // The actor owns physics; a GLB supplies only the pose. All dimensions are metres.
  global.createVillagePlayerMotion=function({position,body,surfaceAt,contextKey=()=>'',gravity=18,jumpSpeed=6.4}){
-  const STEP=.22,EPS=.002;
+  // Highest walkable rise in the maps is the west house access floor (0.30 → 0.56 m);
+  // the lowest jump-only support (bamboo basket) is 0.53 m above its ground.
+  const STEP=.3,EPS=.002;
   let vx=0,vz=0,vy=0,airborne=false,disposed=false,key=contextKey();
   const previous={x:position.x,y:position.y,z:position.z};
   function remember(){Object.assign(previous,{x:position.x,y:position.y,z:position.z});}

@@ -52,3 +52,10 @@ test('real village low fence can be jumped but walking, pond and house walls rem
  run('player.position.set(-8.5,.3,16.5);playerMotion.reset();keys.KeyW=true;');assert(context.VietVillagePlayerAvatar.jump());
  for(let i=0;i<50;i++)run('tick((last||0)+17)');assert(run('player.position.z<14.8'));run('clearMotion();');for(let i=0;i<20;i++)run('tick((last||0)+17)');assert.equal(run('player.position.y'),.3);
 });
+test('the house access step is walkable while the lowest jump-only support still needs a jump',()=>{
+ const step=controller(x=>x>=1?.56:.3);frames(step,1,{x:1,speed:4.5});
+ assert(step.position.x>2,'0.26 m access floor is climbed by walking');assert.equal(step.position.y,.56);assert.equal(step.motion.airborne,false);
+ const basket=controller(x=>x>=1&&x<1.5?.83:.3);frames(basket,1,{x:1,speed:4.5});
+ assert(basket.position.x<1,'0.53 m basket blocks walking');
+ assert(basket.motion.jump());frames(basket,1,{x:1,speed:4.5});assert(basket.position.x>1.5,'the same basket is cleared by a jump');
+});

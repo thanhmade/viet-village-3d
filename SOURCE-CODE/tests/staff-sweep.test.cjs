@@ -18,14 +18,27 @@ test('four stages are continuous, one release and no instantaneous full-radius i
   assert.equal(events.filter(e=>e.type==='impact').length,1);assert.equal(events.filter(e=>e.type==='complete').length,1);assert.equal(core.effects.length,0);core.dispose();
  }
 });
-test('wave swept window hits each target only once even on a slow frame',()=>{
- const {core,events}=fixture();core.update(1.3);let hits=0;
- for(const event of events.filter(e=>e.type==='hit-window'))if(event.testTarget('near',{x:2.1,y:0,z:0},.05))hits++;
- core.update(.5);for(const event of events.filter(e=>e.type==='hit-window'))if(event.testTarget('near',{x:2.1,y:0,z:0},.05))hits++;
- assert.equal(hits,1);
- const wave=events.filter(e=>e.kind==='wave').at(-1);
- assert(!wave.testTarget('far',{x:3.6,y:0,z:0},.05));assert(!wave.testTarget('air',{x:2.7,y:2,z:0},.05));
- assert(wave.testTarget('outer',{x:3.1,y:0,z:0},.05));core.dispose();
+test('synchronous swept windows deduplicate targets, cover slow frames and expire after delivery',()=>{
+ const {core,events}=fixture();let hits=0,outer=0;const retained=[];
+ core.onEvent=e=>{events.push(e);if(e.type!=='hit-window')return;retained.push(e);
+  if(e.testTarget('near',{x:2.1,y:0,z:0},.05))hits++;
+  assert(!e.testTarget(null,{x:0,y:0,z:0},1));assert(!e.testTarget('bad',{x:0,y:0,z:0},-1));
+  assert(!e.testTarget('self-invalid',{x:NaN,y:0,z:0},.05));
+  if(e.kind==='wave'){
+   assert(!e.testTarget('far',{x:3.6,y:0,z:0},.05));assert(!e.testTarget('air',{x:2.7,y:2,z:0},.05));
+   if(e.testTarget('outer',{x:3.1,y:0,z:0},.05))outer++;
+  }
+ };
+ core.update(1.3);core.update(.5);assert.equal(hits,1);assert.equal(outer,1);
+ for(const e of retained)assert(!e.testTarget('late',{x:0,y:0,z:0},10),'retained callback cannot hit after its window');core.dispose();
+});
+test('slow direct swing covers its 160 degree sector, including front, without hitting behind',()=>{
+ const {core,caster}=fixture();caster.rotation.y=Math.PI;let front=0,back=0,angle=0;
+ core.onEvent=e=>{if(e.type==='hit-window'&&e.kind==='sweep'){
+  angle=e.angle;front+=Number(e.testTarget('front',{x:0,y:0,z:1.5},.05));back+=Number(e.testTarget('back',{x:0,y:0,z:-1.5},.05));
+ }};
+ // Cast orientation in the fixture was -Z; prime heading at the new orientation before activeAt.
+ core.update(.01);core.update(1.05);assert.equal(front,1);assert.equal(back,0);assert(Math.abs(angle-2.8)<1e-6);core.dispose();
 });
 test('trail newest sample follows actual weapon tip and does not rotate old history with actor',()=>{
  const {core,tip,caster}=fixture();core.update(.2);tip.position.set(2,1.2,.8);core.update(.1);

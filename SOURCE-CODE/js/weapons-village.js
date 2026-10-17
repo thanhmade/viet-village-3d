@@ -46,7 +46,23 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       grip.position.copy(selectedModel?.gripPoint || new T.Vector3()).multiplyScalar(-.7).applyQuaternion(grip.quaternion);
     } else grip.position.set(0, -.50, .28);
   }
+  // The pose publishes a temporary grip offset only for Côn Quét. Other staff skills keep their grip.
+  function syncSweepGrip() {
+    if (!grip || !selectedModel || weaponId !== 'staff') return;
+    const active = manager?.effects.find(fx => fx.skill.id === 'staff.con-quet');
+    const x = avatarSocket ? avatarSocket.userData.staffSweepGripX : active ? window.StaffSweep.sample(poseTime).gripX : undefined;
+    const desired = Number.isFinite(x) ? x : selectedModel.gripPoint.x;
+    selectedModel.group.userData.staffSweepGripX = desired;
+    if (avatarSocket) {
+      grip.position.copy(selectedModel.gripPoint); grip.position.x = desired;
+      grip.position.multiplyScalar(-.7).applyQuaternion(grip.quaternion);
+    } else {
+      const offset = new T.Vector3(desired * -.7, 0, 0).applyQuaternion(grip.quaternion);
+      grip.position.set(0, -.50, .28).add(offset);
+    }
+  }
   function setAvatarSocket(socket) { cancel(); avatarSocket = socket || null; attachGrip(); }
+
   // The village avatar faces +Z; the VFX contract faces -Z.
   const caster = new T.Object3D(); caster.name = 'village-weapon-caster';
   caster.rotation.y = Math.PI; caster.userData.localOnly = true; body.add(caster);
@@ -90,7 +106,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     cancelAim();guard.cancel();onSkillCancel?.();
     if (manager?.hasActiveEffects) manager.cancelAll();
     if (poseTime || poseLength) grip?.rotation.set(0, Math.PI, 0);
-    poseTime = poseLength = 0;
+    poseTime = poseLength = 0; syncSweepGrip();
   }
   function usable() { return !disposed && enabled && focused && !document.hidden && getState().canCast; }
   function setText(part, key, value) { if (part.text[key] !== value) { part.text[key] = value; part[key].textContent = value; } }
@@ -221,7 +237,8 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     // Core reads world transforms from the caster/tip/staff ancestor chains itself.
     syncQuality();
     const height = Number(getCasterHeight?.());
-    const result = manager.cast(skill.id, {caster, weaponTip: selectedModel.tip, weapon: selectedModel.group, point: target,
+    const strikeTip = skill.id === 'staff.con-quet' ? selectedModel.sweepTip || selectedModel.tip : selectedModel.tip;
+    const result = manager.cast(skill.id, {caster, weaponTip: strikeTip, weapon: selectedModel.group, point: target,
       casterHeight: Number.isFinite(height) && height > 0 ? height : 2.35});
     if (result.ok) {
       if (skill.id === 'staff.ho-than') { const state = getState(); guard.start(skill, {maxHp: state.maxHp, ownerId: state.uid || null, handle: result.handle}); }
@@ -299,7 +316,9 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       }
     }
     guard.advance(dt);
+    syncSweepGrip();
     manager.update(dt);
+    if (!manager.effects.some(fx => fx.skill.id === 'staff.con-quet')) syncSweepGrip();
     uiElapsed += dt;
     // Match the tenths-of-a-second label precision, not the display refresh rate.
     if (changed || uiElapsed >= .1) { render(allowed); uiElapsed = 0; }

@@ -303,7 +303,7 @@ test('Côn quét keeps both real GLB palms on one rigid staff and restores locom
    v.update(1/60);assert(actor.position.equals(before));
    if(frame>=10&&frame<=85){
     const right=v.sockets.right.getWorldPosition(new T.Vector3()),left=v.sockets.left.getWorldPosition(new T.Vector3());
-    const expected=new T.Vector3(.44,0,0).applyQuaternion(v.sockets.right.getWorldQuaternion(new T.Quaternion())).add(right);
+    const expected=new T.Vector3(.322,0,0).applyQuaternion(v.sockets.right.getWorldQuaternion(new T.Quaternion())).add(right);
     maxError=Math.max(maxError,left.distanceTo(expected));
    }
   }

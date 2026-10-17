@@ -55,6 +55,9 @@ window.createVillageWeaponModels = function (T) {
       tube(m.group, [[side * .42, .053, .025], [side * .65, .015, .054], [side * .83, -.043, .03], [side * 1.05, .035, .04]], .008, gold);
     }
     m.tip.position.x = 1.4;
+    // Côn Quét grips +X near the butt; its striking end is the opposite end.
+    m.sweepTip = new T.Object3D(); m.sweepTip.name = 'staff-sweep-striking-tip';
+    m.sweepTip.position.x = -1.4; m.group.add(m.sweepTip);
   }
   {
     const m = newModel('sword');

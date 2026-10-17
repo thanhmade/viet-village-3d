@@ -338,7 +338,8 @@
     function reset() { for (const trail of trails) { trail.count = 0; trail.last.valid = false; } pose.valid = false; }
     function sampleStaff(t) {
       fx.weapon.updateWorldMatrix(true, false); fx.weapon.matrixWorld.decompose(pose.p, pose.q, pose.s);
-      const reach = Math.abs(cfg.outer[0]) * pose.s.x;
+      const gripX = Number.isFinite(fx.weapon.userData.staffSweepGripX) ? fx.weapon.userData.staffSweepGripX : 0;
+      const reach = Math.abs(cfg.outer[0] - gripX) * Math.abs(pose.s.x);
       if (pose.valid) {
         place(cfg.outer, pose.lp, pose.lq, pose.ls, c); place(cfg.outer, pose.p, pose.q, pose.s, d);
         if (c.distanceTo(d) > cfg.teleportFactor * reach) reset();
@@ -365,7 +366,7 @@
       const trail = trails[0];
       fx.caster.getWorldPosition(centre); centre.y = tip.y; b.copy(tip);
       const towards = centre.sub(tip), length = towards.length();
-      a.copy(tip).addScaledVector(towards, length > 1e-6 ? Math.min(cfg.outer[0] - cfg.inner[0], length) / length : 0);
+      a.copy(tip).addScaledVector(towards, length > 1e-6 ? Math.min(Math.abs(cfg.outer[0] - cfg.inner[0]), length) / length : 0);
       if (trail.last.valid && b.distanceTo(trail.last.outer) > cfg.teleportFactor * Math.abs(cfg.outer[0])) reset();
       if (!trail.last.valid) pushSample(trail, a, b, t);
       else {

@@ -20,7 +20,7 @@
     colors: Object.freeze({jade: '#2fe0b8', jadeDeep: '#0f8f76', gold: '#ffd36b', goldDeep: '#d9962b', core: '#f2fff9', dust: '#b49a76', rock: '#8c7a62'}),
     // Global brightness cap: additive layers stay below full white on the character.
     intensity: 1.0,
-    cameraShake: Object.freeze({enabled: true, slam: 0.075, decay: 11}),
+    cameraShake: Object.freeze({enabled: true, sweep: 0.035, slam: 0.075, decay: 11}),
     quality: Object.freeze({
       low: {trailSamples: 28, sparks: 10, dust: 14, rocks: 8, ringSegments: 48, crackGrid: 10, sphereSegments: 28},
       medium: {trailSamples: 40, sparks: 18, dust: 24, rocks: 14, ringSegments: 72, crackGrid: 14, sphereSegments: 40},
@@ -38,15 +38,15 @@
     // Côn Quét staff ribbon (sparks, ground band, wave, grit and light: staff-sweep.js).
     // Spec: SKILL-THAM-CHIEU/CON_QUET_DAC_TA_VFX (BODY_RIBBON, LEADING_RIM, FLOW_FILAMENTS, STAFF_GLOW).
     sweep: Object.freeze({
-      // Two branches on the held staff, weapon-local metres (staff spans x −1.4…+1.4).
-      // Measured on the player GLBs during the sweep: right palm at x 0 (handle centre),
-      // left palm at x −0.63, so neither branch runs through a hand.
-      inner: Object.freeze([0.15, 0, 0]), outer: Object.freeze([1.42, 0, 0]),
-      mirror: true,            // second, fainter branch on the other end of the staff
+      // One branch on the long end of the held staff, weapon-local metres (staff spans x −1.4…+1.4).
+      // End grip: right palm +1.08, left palm +0.62. Only the long striking side emits.
+      // The .40 start clears both hands; the short butt emits no mirrored attack ribbon.
+      inner: Object.freeze([0.40, 0, 0]), outer: Object.freeze([-1.42, 0, 0]),
+      mirror: false,            // no ribbon on the short butt beside the hands
       mirrorInner: Object.freeze([-0.78, 0, 0]), mirrorOuter: Object.freeze([-1.42, 0, 0]),
       // Starting values from the spec (not a colour measurement): jade body, pale inner light, warm white rim.
       colors: Object.freeze({body: '#65cdbd', inner: '#c5ffe9', rim: '#fff0bf'}),
-      filaments: 0.55,         // lengthwise flow lines inside the band
+      filaments: 0.72,         // lengthwise flow lines inside the band
       glow: Object.freeze({radius: 0.07, opacity: 0.5}), // thin light layer on the active staff segment
       life: 0.32,              // seconds a trail sample stays visible
       maxStep: 0.12,           // metres between inserted samples (fast swings)

@@ -47,8 +47,8 @@ test('Hộ Thân returns to locomotion after gathering; Chấn Địa retains it
 test('Côn Quét: the ribbon is built from two real points on the staff during the sweep phases only', () => {
   const {scene, caster, hand, weapon, tip, events, vfx} = rig(), s = skill('staff.con-quet'), p = s.phases;
   assert.equal(vfx.cast(s.id, {caster, weapon, weaponTip: tip}).ok, true);
-  const fx = vfx.effects[0], ribbon = fx.sweep.ribbon, [trail, mirror] = ribbon.trails;
-  assert.ok(trail && mirror, 'staff ribbon and a fainter mirror from the other end');
+  const fx = vfx.effects[0], ribbon = fx.sweep.ribbon, [trail] = ribbon.trails;
+  assert.ok(trail); assert.equal(ribbon.trails.length, 1, 'one long striking end; no mirrored band over the hands');
   assert.deepEqual(fx.sweep.ribbons, ribbon.meshes, 'the sweep renderer owns exactly these ribbons');
   vfx.update(p.windup * .5);
   assert.equal(trail.mesh.visible, false); assert.equal(trail.count, 0);
@@ -65,12 +65,10 @@ test('Côn Quét: the ribbon is built from two real points on the staff during t
     assert.equal(trail.mesh.visible, true);
     closeVector(vertex(trail.mesh, trail.position, 1), staffPoint(weapon, VFX.sweep.outer[0]), 'newest outer vertex sits on the staff');
     closeVector(vertex(trail.mesh, trail.position, 0), staffPoint(weapon, VFX.sweep.inner[0]), 'newest inner vertex sits on the staff');
-    closeVector(vertex(mirror.mesh, mirror.position, 1), staffPoint(weapon, VFX.sweep.mirrorOuter[0]), 'mirror follows the other end');
-    closeVector(vertex(mirror.mesh, mirror.position, 0), staffPoint(weapon, VFX.sweep.mirrorInner[0]), 'mirror starts beyond the left hand');
     for (let i = 1; i < trail.count; i++) {
       assert.ok(trail.age[i * 2] >= trail.age[(i - 1) * 2], 'newest first, older samples fade');
       const a = vertex(trail.mesh, trail.position, i * 2 + 1), b = vertex(trail.mesh, trail.position, (i - 1) * 2 + 1);
-      assert.ok(a.distanceTo(b) < VFX.sweep.teleportFactor * VFX.sweep.outer[0], 'no segment spans a jump');
+      assert.ok(a.distanceTo(b) < VFX.sweep.teleportFactor * Math.abs(VFX.sweep.outer[0]), 'no segment spans a jump');
     }
   }
   assert.ok(teleported);
@@ -231,9 +229,9 @@ test('shaders never raise a possibly negative base with pow() (undefined in GLSL
 });
 
 test('Côn Quét spec (CON_QUET_DAC_TA_VFX): branches avoid the hands, palette and filaments from the spec', () => {
-  // Measured on the player GLBs: right palm at staff x 0, left palm at x −0.63.
-  const hands = [0, -0.63], margin = .1;
-  for (const [inner, outer] of [[VFX.sweep.inner, VFX.sweep.outer], [VFX.sweep.mirrorInner, VFX.sweep.mirrorOuter]]) {
+  // Measured on the player GLBs: right palm at staff x +1.08, left palm at x +0.62.
+  const hands = [1.08, .62], margin = .1;
+  for (const [inner, outer] of [[VFX.sweep.inner, VFX.sweep.outer]]) {
     const lo = Math.min(inner[0], outer[0]), hi = Math.max(inner[0], outer[0]);
     for (const h of hands) assert.ok(h < lo - margin || h > hi + margin, `branch ${lo}…${hi} clears the hand at ${h}`);
     assert.ok(Math.abs(outer[0]) <= 1.42 && Math.abs(inner[0]) < Math.abs(outer[0]));
@@ -257,7 +255,7 @@ test('Côn Quét: a fast swing is filled in along its arc (pose slerp), not alon
   assert.ok(trail.count >= 6, 'samples were inserted between the two poses: ' + trail.count);
   for (let i = 0; i < trail.count; i++) {
     const outer = vertex(trail.mesh, trail.position, i * 2 + 1);
-    close(outer.distanceTo(pivot), VFX.sweep.outer[0], 'sample ' + i + ' stays on the tip circle', 1e-3);
+    close(outer.distanceTo(pivot), Math.abs(VFX.sweep.outer[0]), 'sample ' + i + ' stays on the tip circle', 1e-3);
   }
   vfx.dispose();
 });
@@ -266,7 +264,7 @@ test('Côn Quét: live bounds keep the band culled correctly; the staff glow fol
   const {caster, hand, weapon, tip, vfx} = rig(), s = skill('staff.con-quet'), p = s.phases;
   vfx.cast(s.id, {caster, weapon, weaponTip: tip});
   const ribbon = vfx.effects[0].sweep.ribbon;
-  assert.equal(ribbon.glows.length, 2);
+  assert.equal(ribbon.glows.length, 1);
   vfx.update(p.windup * .5);
   for (const glow of ribbon.glows) assert.equal(glow.mesh.visible, false, 'no glow before the staff sweeps');
   for (let t = 0; t < .4; t += 1 / 60) { hand.rotation.y += 5 / 60; vfx.update(1 / 60); }

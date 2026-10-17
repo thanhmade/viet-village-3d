@@ -85,37 +85,77 @@
    const prefix=side==='right'?'Right':'Left';
    sweepBones[side]={upper:findBone('mixamorig:'+prefix+'Arm'),lower:findBone('mixamorig:'+prefix+'ForeArm'),hand:hands[side]};
   }
-  const spine=findBone('mixamorig:Spine1'),sweepRestore=new Map();
+  const spine=findBone('mixamorig:Spine1'),sweepRestore=new Map(),sweepPositions=new Map();
+  const sweepLegs={};
+  for(const side of ['right','left']){
+   const prefix=side==='right'?'Right':'Left';
+   sweepLegs[side]={upper:findBone('mixamorig:'+prefix+'UpLeg'),lower:findBone('mixamorig:'+prefix+'Leg'),foot:findBone('mixamorig:'+prefix+'Foot')};
+  }
+  facing.name='player-facing-pose';
   let staffSweep=null;
-  function restoreSweep(){for(const [bone,q] of sweepRestore)bone.quaternion.copy(q);sweepRestore.clear();}
+  function restoreSweep(){
+   for(const [bone,q] of sweepRestore)bone.quaternion.copy(q);sweepRestore.clear();
+   for(const [bone,p] of sweepPositions)bone.position.copy(p);sweepPositions.clear();
+   facing.rotation.y=forwardYaw;delete sockets.right.userData.staffSweepGripX;
+  }
+
   function aimBone(bone,child,target){
    const origin=bone.getWorldPosition(new T.Vector3()),from=child.getWorldPosition(new T.Vector3()).sub(origin).normalize(),to=target.clone().sub(origin).normalize();
    const world=bone.getWorldQuaternion(new T.Quaternion()).premultiply(new T.Quaternion().setFromUnitVectors(from,to));
    bone.quaternion.copy(bone.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(world));root.updateMatrixWorld(true);
   }
+  // Analytic two-bone IK, preserving bone lengths; the original mixer remains authoritative.
+  function solveSweepLimb(upper,lower,end,target,polePoint,desiredRotation,weight){
+   const start=upper.getWorldPosition(new T.Vector3()),elbow=lower.getWorldPosition(new T.Vector3()),wrist=end.getWorldPosition(new T.Vector3());
+   const a=start.distanceTo(elbow),b=elbow.distanceTo(wrist),axis=target.clone().sub(start);
+   const distance=Math.min(a+b-.00001,Math.max(Math.abs(a-b)+.00001,axis.length()));axis.normalize();
+   const pole=polePoint.clone().sub(start);pole.addScaledVector(axis,-pole.dot(axis));
+   if(pole.lengthSq()<1e-8)pole.set(1,0,0).addScaledVector(axis,-axis.x);pole.normalize();
+   const x=(a*a-b*b+distance*distance)/(2*distance),y=Math.sqrt(Math.max(0,a*a-x*x));
+   const targetElbow=start.clone().addScaledVector(axis,x).addScaledVector(pole,y);
+   aimBone(upper,lower,targetElbow);aimBone(lower,end,target);
+   end.quaternion.copy(end.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(desiredRotation));root.updateMatrixWorld(true);
+   for(const bone of [upper,lower,end])bone.quaternion.slerpQuaternions(sweepRestore.get(bone),bone.quaternion.clone(),weight);
+   sync();
+  }
   function poseStaffSweep(){
    if(!staffSweep||!global.StaffSweep)return;
    const state=global.StaffSweep.sample(staffSweep.time),weight=state.weight;if(weight<=0)return;
-   for(const bone of [spine,...Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand])])if(bone)sweepRestore.set(bone,bone.quaternion.clone());
-   if(spine){spine.quaternion.multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),state.torsoYaw));root.updateMatrixWorld(true);}
-   const direction=new T.Vector3(Math.cos(state.staffYaw),0,-Math.sin(state.staffYaw)),center=new T.Vector3(0,state.handY,state.handZ);
-   const rotation=root.getWorldQuaternion(new T.Quaternion()).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),state.staffYaw));
+   const up=new T.Vector3(0,1,0),baseFeet={};
+   for(const [side,leg] of Object.entries(sweepLegs))if(leg.foot){
+    baseFeet[side]={position:root.worldToLocal(leg.foot.getWorldPosition(new T.Vector3())),rotation:leg.foot.getWorldQuaternion(new T.Quaternion())};
+   }
+   for(const bone of [spine,...Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand]),...Object.values(sweepLegs).flatMap(a=>[a.upper,a.lower,a.foot])])
+    if(bone)sweepRestore.set(bone,bone.quaternion.clone());
+   sweepPositions.set(hips,hips.position.clone());
+   hips.position.y-=state.crouch/hips.parent.getWorldScale(new T.Vector3()).y;
+   facing.rotation.y=forwardYaw+state.bodyYaw;
+   if(spine)spine.quaternion.multiply(new T.Quaternion().setFromAxisAngle(up,state.torsoYaw));sync();
+   // Alternate short steps as the body turns; one foot can support while the other lifts.
+   const smooth=(a,b,x)=>{const k=Math.max(0,Math.min(1,(x-a)/(b-a)));return k*k*(3-2*k);};
+   for(const [side,leg] of Object.entries(sweepLegs)){
+    if(!leg.upper||!leg.lower||!leg.foot)continue;
+    const ranges=side==='right'?[[.12,.38],[.60,.88]]:[[0,.18],[.38,.64]];
+    let progress=0,lift=0;
+    for(const [a,b] of ranges){const k=Math.max(0,Math.min(1,(state.turn-a)/(b-a)));progress+=.5*smooth(a,b,state.turn);lift+=Math.sin(Math.PI*k)*.055;}
+    const yaw=(-1.05+2.8*progress)*weight,base=baseFeet[side];
+    const target=base.position.clone().applyAxisAngle(up,yaw);target.y+=lift*weight;
+    const pole=new T.Vector3(side==='right'?-.25:.25,.55,1).applyAxisAngle(up,forwardYaw+state.bodyYaw);
+    const worldYaw=root.getWorldQuaternion(new T.Quaternion()).multiply(new T.Quaternion().setFromAxisAngle(up,yaw)).multiply(root.getWorldQuaternion(new T.Quaternion()).invert());
+    solveSweepLimb(leg.upper,leg.lower,leg.foot,root.localToWorld(target),root.localToWorld(pole),worldYaw.multiply(base.rotation),weight);
+   }
+   const direction=new T.Vector3(Math.cos(state.staffYaw),0,-Math.sin(state.staffYaw)).applyAxisAngle(up,forwardYaw);
+   const center=new T.Vector3(0,state.handY,state.handZ).applyAxisAngle(up,forwardYaw+state.bodyYaw);
+   const rotation=root.getWorldQuaternion(new T.Quaternion()).multiply(new T.Quaternion().setFromAxisAngle(up,forwardYaw+state.staffYaw));
    for(const side of ['right','left']){
     const {upper,lower,hand}=sweepBones[side];if(!upper||!lower)continue;
-    const desiredPalm=root.localToWorld(center.clone().addScaledVector(direction,side==='right'?-.22:.22));
+    const desiredPalm=root.localToWorld(center.clone().addScaledVector(direction,(side==='right'?-.5:.5)*state.handSpacing));
     const desiredHand=rotation.clone().multiply(handCalibration[side].restInverse.clone().invert());
     const palmOffset=handCalibration[side].palm.clone().multiply(hand.getWorldScale(new T.Vector3())).applyQuaternion(desiredHand),target=desiredPalm.clone().sub(palmOffset);
-    const start=upper.getWorldPosition(new T.Vector3()),elbow=lower.getWorldPosition(new T.Vector3()),wrist=hand.getWorldPosition(new T.Vector3());
-    const a=start.distanceTo(elbow),b=elbow.distanceTo(wrist),axis=target.clone().sub(start),distance=Math.min(a+b-.00001,Math.max(Math.abs(a-b)+.00001,axis.length()));axis.normalize();
-    const pole=root.localToWorld(new T.Vector3(side==='right'?-.9:.9,.9,.05)).sub(start);pole.addScaledVector(axis,-pole.dot(axis)).normalize();
-    const x=(a*a-b*b+distance*distance)/(2*distance),y=Math.sqrt(Math.max(0,a*a-x*x));
-    const desiredElbow=start.clone().addScaledVector(axis,x).addScaledVector(pole,y);
-    aimBone(upper,lower,desiredElbow);aimBone(lower,hand,target);
-    hand.quaternion.copy(hand.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(desiredHand));root.updateMatrixWorld(true);
-    // Ease in/out without accumulating an additive rotation on successive frames.
-    for(const bone of [upper,lower,hand])bone.quaternion.slerpQuaternions(sweepRestore.get(bone),bone.quaternion.clone(),weight);
+    const pole=new T.Vector3(side==='right'?-.9:.9,.85,.10).applyAxisAngle(up,forwardYaw+state.bodyYaw);
+    solveSweepLimb(upper,lower,hand,target,root.localToWorld(pole),desiredHand,weight);
    }
-   sync();updateSockets();
+   sync();updateSockets();sockets.right.userData.staffSweepGripX=state.gripX;
   }
   let controllerJump=false;
   function pose(){
@@ -126,6 +166,10 @@
    // authored elevation a second time. Preview still retains authored motion.
    if(lowest<groundPoint.y||(controllerJump&&Number.isFinite(lowest))){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-lowest)/rootScale.y;sync();}
    updateSockets();poseStaffSweep();
+   if(staffSweep){
+    let minimum=Infinity;for(const sole of soles){sole.mesh.getVertexPosition(sole.index,point).applyMatrix4(sole.mesh.matrixWorld);minimum=Math.min(minimum,point.y);}
+    if(minimum<groundPoint.y){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-minimum)/rootScale.y;sync();updateSockets();}
+   }
   }
   let mode='locomotion',speed=0,outgoing=null,fadeEnd=0,returningUntil=0,pendingFinished=null,pausedPreview=false,disposed=false,defeatClip=null,segmentEnd=Infinity;
   const reviewedDefeats=new Set();

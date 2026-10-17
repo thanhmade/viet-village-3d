@@ -1,25 +1,29 @@
 /* Côn quét: one continuous sweep, one ground release. Units: metres/seconds.
- * Reference: supplied Vk-Côn.jpg (top row) + four 10-second analysis prompts.
+ * Reference: supplied Côn Quét image; end grip and whole-body turn requested by the author.
  * No renderer, RAF, camera, damage authority or network state is owned here.
  * The trail is the band swept by two points on the held staff
  * (StaffSkillEffects.createStaffRibbon, looked up at cast time because the page
  * loads staff-skill-effects.js after this file).
  */
 (function(root,factory){
-  if(typeof module==='object'&&module.exports)module.exports=factory(require('./weapon-vfx-core.js'),require('./staff-skill-config.js'),()=>require('./staff-skill-effects.js'));
-  else root.StaffSweep=factory(root.WeaponVFXCore,root.StaffSkillConfig,()=>root.StaffSkillEffects);
-})(typeof globalThis!=='undefined'?globalThis:this,function(Core,Config,effects){
+  if(typeof module==='object'&&module.exports)module.exports=factory(require('./weapon-vfx-core.js'),require('./staff-skill-config.js'),()=>require('./staff-skill-effects.js'),()=>require('./staff-vfx-config.js'));
+  else root.StaffSweep=factory(root.WeaponVFXCore,root.StaffSkillConfig,()=>root.StaffSkillEffects,()=>root.StaffVFXConfig);
+})(typeof globalThis!=='undefined'?globalThis:this,function(Core,Config,effects,visualConfig){
   'use strict';
   const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));
   const ease=(a,b,x)=>{const p=clamp((x-a)/(b-a));return p*p*(3-2*p);};
   const skill=()=>Config.skills[0];
+  // Both palms grip the same end. Coordinates are in the original 2.8 m staff mesh.
+  const grip=Object.freeze({rightX:1.08,leftX:.62,tipX:-1.4,weaponScale:.7});
   function sample(time,s=skill()){
     const t=Math.max(0,time),p=s.phases;
     const turn=t<p.openEnd?.18*ease(p.windup,p.openEnd,t):t<p.accelerateEnd?.18+.64*ease(p.openEnd,p.accelerateEnd,t):.82+.18*ease(p.accelerateEnd,p.closeEnd,t);
     const recovery=ease(p.releaseEnd,s.duration,t),weight=ease(0,p.windup,t)*(1-recovery);
     return {phase:t<p.openEnd?'Mở cung':t<p.accelerateEnd?'Tăng lực':t<p.releaseAt?'Khép vòng':t<p.releaseEnd?'Bộc phát':'Thu chiêu',
-      turn,weight,staffYaw:(-1.05+turn*2.8)*weight,torsoYaw:(-.3+turn*.65)*weight,
-      handY:1.50-.12*ease(p.accelerateEnd,p.releaseAt,t),handZ:.34,
+      turn,weight,sweepAngle:-1.05+turn*2.8,
+      staffYaw:(-Math.PI/2-1.05+turn*2.8)*weight,bodyYaw:(-1.05+turn*2.8)*weight,torsoYaw:.10*Math.sin(turn*Math.PI)*weight,
+      gripX:grip.rightX*weight,handSpacing:(grip.rightX-grip.leftX)*grip.weaponScale,
+      handY:1.42-.08*ease(p.accelerateEnd,p.releaseAt,t),handZ:.30,crouch:.075*weight,
       ringRadius:s.containRadius+(s.radius-s.containRadius)*clamp((t-p.releaseAt)/(p.releaseEnd-p.releaseAt)),
       released:t>=p.releaseAt};
   }
@@ -50,7 +54,7 @@
       gl_FragColor=vec4(uColor,pow(max(0.0,1.0-d),2.0)*wisps*uOpacity);}`;
   function build(core,fx){
     const T=core.THREE;
-    fx.sweep={previous:0,tip:new T.Vector3(),lastTip:new T.Vector3(),samples:[],ribbons:[],hitTargets:new Set(),lastAngle:null};
+    fx.sweep={previous:0,tip:new T.Vector3(),lastTip:new T.Vector3(),samples:[],ribbons:[],hitTargets:new Set(),heading:Math.atan2(fx.direction.x,fx.direction.z)};
     const state=fx.sweep;
     // Staff ribbon: jade body, gold leading edge, bright core line, dissolving tail.
     state.ribbon=effects()?.createStaffRibbon?.(core,fx)||null;
@@ -76,7 +80,7 @@
     const T=core.THREE,s=fx.skill,p=s.phases,state=fx.sweep,t=fx.age,previous=state.previous,pose=sample(t,s);
     const {tip,lastTip,samples}=state;
     if(fx.weaponTip)fx.weaponTip.getWorldPosition(tip);
-    else {const a=-1.05+pose.turn*2.8;tip.set(Math.cos(a)*1.65,pose.handY,-Math.sin(a)*1.65).applyAxisAngle(new T.Vector3(0,1,0),fx.group.rotation.y).add(fx.group.position);}
+    else {const direction=core._pose(fx.caster).d,a=Math.atan2(direction.x,direction.z)+pose.sweepAngle;tip.set(Math.sin(a)*1.875,pose.handY,Math.cos(a)*1.875).add(fx.group.position);}
     const moving=t>=p.windup&&previous<p.closeEnd;
     if(moving&&t<s.duration){
       // Interpolate actual tip samples at 120 Hz. No orbiting substitute trail.
@@ -101,25 +105,33 @@
       mesh.scale.set(pose.ringRadius,1,pose.ringRadius);core._opacity(mesh,t>=p.releaseAt&&t<p.releaseEnd?alpha*(1-waveProgress):0);
     }
     if(t>=p.releaseAt&&!fx.emitted.has('release')){
-      fx.impactLocked=true;core._emit('impact',fx,{phase:'release',radius:s.radius,hitIndex:0},'release');
+      fx.impactLocked=true;core._emit('impact',fx,{phase:'release',radius:s.radius,hitIndex:0,shake:visualConfig()?.cameraShake?.enabled?visualConfig().cameraShake.sweep||0:0},'release');
       if(!fx.alive)return;
     }
     // Send swept windows rather than a full-radius hit at cast time. Callers
     // choose targets, wall occlusion and server-authoritative HP themselves.
     for(const span of windows(previous,t,s)){
       const targetPosition=fx.group.position.clone(),start=sample(span.from,s),end=sample(span.to,s);
-      const baseAngle=state.lastAngle??Math.atan2(lastTip.x-targetPosition.x,lastTip.z-targetPosition.z);
-      let endAngle=Math.atan2(tip.x-targetPosition.x,tip.z-targetPosition.z),angle=((endAngle-baseAngle)%TAU+TAU)%TAU;
-      // Discontinuous animation/teleport must not become a whole-circle hit.
-      if(angle>Math.PI)angle=0;
+      // The same authored angular curve drives the real GLB and this swept window.
+      // Clip to the active interval, including when one frame crosses the whole swing.
+      const heading=core._pose(fx.caster).d,currentHeading=Math.atan2(heading.x,heading.z);
+      const headingDelta=Math.atan2(Math.sin(currentHeading-state.heading),Math.cos(currentHeading-state.heading));
+      const fromAngle=state.heading+headingDelta*clamp((span.from-previous)/Math.max(dt,.0001))+start.sweepAngle;
+      const toAngle=state.heading+headingDelta*clamp((span.to-previous)/Math.max(dt,.0001))+end.sweepAngle;
+      const baseAngle=Math.min(fromAngle,toAngle),angle=Math.min(Math.PI,Math.abs(toAngle-fromAngle));
       const event={type:'hit-window',handle:fx.handle,skillId:s.id,weaponId:s.weaponId,caster:fx.caster,time:core.time,
         kind:span.kind,position:targetPosition,height:span.kind==='wave'?.45:1.45,
         innerRadius:span.kind==='wave'?start.ringRadius:0,outerRadius:span.kind==='wave'?end.ringRadius:s.sweepRadius,
         startAngle:baseAngle,angle,hitTargets:state.hitTargets};
-      event.testTarget=(id,point,radius=0)=>{if(state.hitTargets.has(id)||!intersects(event,point,radius))return false;state.hitTargets.add(id);return true;};
-      core.onEvent?.(event);if(!fx.alive)return;
+      let accepting=true;
+      event.testTarget=(id,point,radius=0)=>{
+        if(!accepting||!fx.alive||id===null||id===undefined||id===fx.caster.uuid||radius<0||!Number.isFinite(radius)||state.hitTargets.has(id)||!intersects(event,point,radius))return false;
+        state.hitTargets.add(id);return true;
+      };
+      try{core.onEvent?.(event);}finally{accepting=false;}
+      if(!fx.alive)return;
     }
-    state.lastAngle=Math.atan2(tip.x-fx.group.position.x,tip.z-fx.group.position.z);
+    const heading=core._pose(fx.caster).d;state.heading=Math.atan2(heading.x,heading.z);
     const d=fx.dummy;
     state.dust.visible=fx.rocks.visible=t>=p.releaseAt&&t<s.duration;
     for(let i=0;i<fx.rockState.length;i++){
@@ -139,5 +151,5 @@
     state.previous=t;lastTip.copy(tip);
   }
   Core.registerSkillRenderer('staff.con-quet',{build,tick});
-  return {sample,windows,intersects,duration:skill().duration};
+  return {sample,windows,intersects,grip,duration:skill().duration};
 });

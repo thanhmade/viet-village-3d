@@ -61,6 +61,20 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       grip.position.set(0, -.50, .28).add(offset);
     }
   }
+  // Original procedural avatar: rotate only its visual parts; caster, collider and camera stay put.
+  let sweepPivot=null;
+  function startFallbackSpin(){
+    if(avatarSocket||sweepPivot)return;
+    const parts=body.children.filter(part=>part.userData.proceduralAvatarPart);
+    if(!parts.length)return;
+    sweepPivot=new T.Group();sweepPivot.name='village-staff-sweep-pose';body.add(sweepPivot);
+    for(const part of parts)sweepPivot.add(part);
+  }
+  function stopFallbackSpin(){
+    if(!sweepPivot)return;
+    for(const part of [...sweepPivot.children])body.add(part);
+    sweepPivot.removeFromParent();sweepPivot=null;
+  }
   function setAvatarSocket(socket) { cancel(); avatarSocket = socket || null; attachGrip(); }
 
   // The village avatar faces +Z; the VFX contract faces -Z.
@@ -106,6 +120,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     cancelAim();guard.cancel();onSkillCancel?.();
     if (manager?.hasActiveEffects) manager.cancelAll();
     if (poseTime || poseLength) grip?.rotation.set(0, Math.PI, 0);
+    stopFallbackSpin();
     poseTime = poseLength = 0; syncSweepGrip();
   }
   function usable() { return !disposed && enabled && focused && !document.hidden && getState().canCast; }
@@ -246,6 +261,14 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       const button = skillButtons[slot - 1];
       button?.classList?.add?.('skill-fired'); setTimeout(() => button?.classList?.remove?.('skill-fired'), 260);
       try { onSkillUsed?.({weaponId, skillId: skill.id, slot}); } catch (_) { /* Progress UI cannot interrupt a successful cast. */ }
+      if(skill.id==='staff.con-quet'){
+        startFallbackSpin();
+        if(!avatarSocket)grip.rotation.set(0,Math.PI+window.StaffSweep.sample(0).staffYaw,0);
+        syncSweepGrip();
+        const fx=manager.effects.find(effect=>effect.handle===result.handle);
+        // Seed after the avatar IK and end grip are in place, at the activation instant.
+        fx?.sweep?.ribbon?.update(0,{emitting:true,opacity:1,spinAngle:0,spinPivot:caster.getWorldPosition(new T.Vector3())});
+      }
     } else if (result.reason === 'cooldown') say(skill.name + ' đang hồi ' + (result.retryAfter || 0).toFixed(1) + ' giây');
     else if (result.reason === 'capacity') say('Hiệu ứng trước chưa kết thúc. Thử lại sau giây lát.');
     else if (result.reason === 'out-of-range') say('Điểm ngắm ngoài tầm ' + skill.range + ' m.');
@@ -298,12 +321,13 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       const phase = Math.min(1, poseTime / poseLength);
       if(weaponId==='staff'&&poseLength>1){
         const pose=window.StaffSweep.sample(poseTime);
-        grip.rotation.set(0,Math.PI+pose.staffYaw,0);
+        if(sweepPivot)sweepPivot.rotation.y=pose.bodyYaw;
+        grip.rotation.set(0,Math.PI+pose.staffYaw-(sweepPivot?pose.bodyYaw:0),0);
       }else {
       grip.rotation.z = Math.sin(phase * Math.PI) * (weaponId === 'bow' ? .15 : -.75);
       grip.rotation.x = Math.sin(phase * Math.PI) * (weaponId === 'spear' ? .7 : -.35);
       }
-      if (phase === 1) {poseLength = 0;grip.rotation.set(0,Math.PI,0);}
+      if (phase === 1) {poseLength = 0;stopFallbackSpin();grip.rotation.set(0,Math.PI,0);}
     }
     // A jump during anticipation cancels only this strike; an existing shield survives.
     if (getState().airborne) {

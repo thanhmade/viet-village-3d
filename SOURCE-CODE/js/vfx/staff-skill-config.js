@@ -1,6 +1,6 @@
 /* VIET VILLAGE 3D — Côn / Gậy: 3 kỹ năng riêng.
  * Thời gian: giây; khoảng cách: mét (quy ước 1 đơn vị Three.js = 1 mét).
- * Côn Quét: nhịp 4 pha do thiết kế (staff-sweep.js, docs/staff-sweep-20261016.md).
+ * Côn Quét: 6 vòng 360° liên tục trong 1,8 giây, từ kích hoạt đến hết chiêu; nhịp sóng phụ (staff-sweep.js, docs/con-quet-360-20261017.md).
  * Hộ Thân giữ thời gian 3 s; động tác tụ khí 0,7 s độc lập thời gian bảo vệ.
  * Chấn Địa: activeAt/activeEnd khớp đoạn hoạt ảnh GLB trong staff-vfx-config.js
  * (đo từ clip thật: thế thủ, điểm côn chạm đất); các trị số khác là mặc định thiết kế,
@@ -34,13 +34,14 @@
       "phases": {"windup": 0.14, "openEnd": 0.36, "accelerateEnd": 0.82, "closeEnd": 1.06, "releaseAt": 1.12, "releaseEnd": 1.48},
       "slot": 1,
       "duration": 1.8,
-      "activeAt": 0.14,
-      "activeEnd": 1.48,
+      "spinTurns": 6,
+      "activeAt": 0,
+      "activeEnd": 1.8,
       "cooldown": 2.4,
       "radius": 3.2,
       "range": 3.2,
       "forwardOffset": 0.0,
-      "description": "Quét ngang liên tục: mở cung, tăng lực, khép vòng — dải khí xanh ngọc bám theo thân côn, mép vàng; rồi phát một sóng xanh ngọc viền vàng sát đất. Tầm côn 2,1 m; sóng 3,2 m."
+      "description": "Xoay toàn thân và côn 6 vòng 360° liên tục trong 1,8 giây ngay khi kích hoạt (1.200°/giây), hai tay cầm gần một đầu côn. Dải khí xanh ngọc viền vàng duy trì đến hết chiêu; phát một sóng phụ sát đất. Tầm côn 2,1 m; sóng 3,2 m."
     },
     {
       "id": "staff.ho-than",

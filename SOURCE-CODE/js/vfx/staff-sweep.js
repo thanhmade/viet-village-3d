@@ -1,4 +1,4 @@
-/* Côn quét: one continuous sweep, one ground release. Units: metres/seconds.
+/* Côn quét: six continuous full turns, one auxiliary ground release. Units: metres/seconds.
  * Reference: supplied Côn Quét image; end grip and whole-body turn requested by the author.
  * No renderer, RAF, camera, damage authority or network state is owned here.
  * The trail is the band swept by two points on the held staff
@@ -16,21 +16,21 @@
   // Both palms grip the same end. Coordinates are in the original 2.8 m staff mesh.
   const grip=Object.freeze({rightX:1.08,leftX:.62,tipX:-1.4,weaponScale:.7});
   function sample(time,s=skill()){
-    const t=Math.max(0,time),p=s.phases;
-    const turn=t<p.openEnd?.18*ease(p.windup,p.openEnd,t):t<p.accelerateEnd?.18+.64*ease(p.openEnd,p.accelerateEnd,t):.82+.18*ease(p.accelerateEnd,p.closeEnd,t);
-    const recovery=ease(p.releaseEnd,s.duration,t),weight=ease(0,p.windup,t)*(1-recovery);
-    return {phase:t<p.openEnd?'Mở cung':t<p.accelerateEnd?'Tăng lực':t<p.releaseAt?'Khép vòng':t<p.releaseEnd?'Bộc phát':'Thu chiêu',
-      turn,weight,sweepAngle:-1.05+turn*2.8,
-      staffYaw:(-Math.PI/2-1.05+turn*2.8)*weight,bodyYaw:(-1.05+turn*2.8)*weight,torsoYaw:.10*Math.sin(turn*Math.PI)*weight,
+    const t=Math.max(0,time),p=s.phases,turn=clamp(t/s.duration);
+    // Unwrapped angle is shared by pose, swept hit windows and trail interpolation.
+    // Never ease the angle back to zero: six full turns end facing the start direction.
+    const spinAngle=TAU*s.spinTurns*turn,weight=t<s.duration?1:0;
+    return {phase:weight?'Xoay liên tục':'Kết thúc',turn,spinAngle,weight,sweepAngle:spinAngle,
+      staffYaw:(-Math.PI/2+spinAngle)*weight,bodyYaw:spinAngle*weight,torsoYaw:0,
       gripX:grip.rightX*weight,handSpacing:(grip.rightX-grip.leftX)*grip.weaponScale,
-      handY:1.42-.08*ease(p.accelerateEnd,p.releaseAt,t),handZ:.30,crouch:.075*weight,
+      handY:1.42,handZ:.26,crouch:.075*weight,
       ringRadius:s.containRadius+(s.radius-s.containRadius)*clamp((t-p.releaseAt)/(p.releaseEnd-p.releaseAt)),
       released:t>=p.releaseAt};
   }
   // Closed interval overlap: a slow frame must not skip an entire hit window.
   function windows(previous,current,s=skill()){
     const out=[],p=s.phases;
-    if(current>=s.activeAt&&previous<p.closeEnd)out.push({kind:'sweep',from:Math.max(previous,s.activeAt),to:Math.min(current,p.closeEnd)});
+    if(current>=s.activeAt&&previous<s.activeEnd)out.push({kind:'sweep',from:Math.max(previous,s.activeAt),to:Math.min(current,s.activeEnd)});
     if(current>=p.releaseAt&&previous<p.releaseEnd)out.push({kind:'wave',from:Math.max(previous,p.releaseAt),to:Math.min(current,p.releaseEnd)});
     return out;
   }
@@ -81,10 +81,10 @@
     const {tip,lastTip,samples}=state;
     if(fx.weaponTip)fx.weaponTip.getWorldPosition(tip);
     else {const direction=core._pose(fx.caster).d,a=Math.atan2(direction.x,direction.z)+pose.sweepAngle;tip.set(Math.sin(a)*1.875,pose.handY,Math.cos(a)*1.875).add(fx.group.position);}
-    const moving=t>=p.windup&&previous<p.closeEnd;
+    const moving=t>=s.activeAt&&previous<s.activeEnd;
     if(moving&&t<s.duration){
       // Interpolate actual tip samples at 120 Hz. No orbiting substitute trail.
-      const from=Math.max(previous,p.windup),to=Math.min(t,p.closeEnd),steps=Math.max(1,Math.ceil((to-from)*120));
+      const from=Math.max(previous,s.activeAt),to=Math.min(t,s.activeEnd),steps=Math.max(1,Math.ceil((to-from)*120));
       for(let i=1;i<=steps;i++){
         const age=from+(to-from)*i/steps,point=lastTip.clone().lerp(tip,clamp((age-previous)/Math.max(dt,.0001)));
         samples.push({time:age,point});
@@ -94,9 +94,9 @@
     if(samples.length>80)samples.splice(0,samples.length-80);
     fx.group.updateWorldMatrix(true,false);
     const inverse=new T.Matrix4().copy(fx.group.matrixWorld).invert();
-    // Ribbon emits while the staff sweeps (windup → close) and fades before the release.
+    // Emission follows the whole cast, including the last rotation after the ground wave.
     state.ribbon?.update(t,{emitting:moving&&t<s.duration,tip,
-      opacity:ease(p.windup-.02,p.windup+.06,t)*(1-ease(p.closeEnd,p.releaseAt+.14,t))});
+      opacity:pose.weight,spinAngle:pose.spinAngle,spinPivot:core._pose(fx.caster).p});
     const contain=ease(p.accelerateEnd,p.closeEnd,t)*(1-ease(p.releaseAt,p.releaseAt+.10,t));
     state.band.geometry.setDrawRange(0,Math.floor(ease(p.accelerateEnd,p.closeEnd,t)*fx.quality.segments)*6);
     state.band.scale.set(s.containRadius,1,s.containRadius);core._opacity(state.band,contain*.62);
@@ -111,14 +111,15 @@
     // Send swept windows rather than a full-radius hit at cast time. Callers
     // choose targets, wall occlusion and server-authoritative HP themselves.
     for(const span of windows(previous,t,s)){
-      const targetPosition=fx.group.position.clone(),start=sample(span.from,s),end=sample(span.to,s);
+      const targetPosition=span.kind==='sweep'?core._pose(fx.caster).p:fx.group.position.clone(),start=sample(span.from,s),end=sample(span.to,s);
+      if(span.kind==='sweep')targetPosition.y=core._ground(targetPosition);
       // The same authored angular curve drives the real GLB and this swept window.
       // Clip to the active interval, including when one frame crosses the whole swing.
       const heading=core._pose(fx.caster).d,currentHeading=Math.atan2(heading.x,heading.z);
       const headingDelta=Math.atan2(Math.sin(currentHeading-state.heading),Math.cos(currentHeading-state.heading));
       const fromAngle=state.heading+headingDelta*clamp((span.from-previous)/Math.max(dt,.0001))+start.sweepAngle;
       const toAngle=state.heading+headingDelta*clamp((span.to-previous)/Math.max(dt,.0001))+end.sweepAngle;
-      const baseAngle=Math.min(fromAngle,toAngle),angle=Math.min(Math.PI,Math.abs(toAngle-fromAngle));
+      const baseAngle=Math.min(fromAngle,toAngle),angle=Math.min(TAU,Math.abs(toAngle-fromAngle));
       const event={type:'hit-window',handle:fx.handle,skillId:s.id,weaponId:s.weaponId,caster:fx.caster,time:core.time,
         kind:span.kind,position:targetPosition,height:span.kind==='wave'?.45:1.45,
         innerRadius:span.kind==='wave'?start.ringRadius:0,outerRadius:span.kind==='wave'?end.ringRadius:s.sweepRadius,

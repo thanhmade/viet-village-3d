@@ -132,13 +132,11 @@
    facing.rotation.y=forwardYaw+state.bodyYaw;
    if(spine)spine.quaternion.multiply(new T.Quaternion().setFromAxisAngle(up,state.torsoYaw));sync();
    // Alternate short steps as the body turns; one foot can support while the other lifts.
-   const smooth=(a,b,x)=>{const k=Math.max(0,Math.min(1,(x-a)/(b-a)));return k*k*(3-2*k);};
    for(const [side,leg] of Object.entries(sweepLegs)){
     if(!leg.upper||!leg.lower||!leg.foot)continue;
-    const ranges=side==='right'?[[.12,.38],[.60,.88]]:[[0,.18],[.38,.64]];
-    let progress=0,lift=0;
-    for(const [a,b] of ranges){const k=Math.max(0,Math.min(1,(state.turn-a)/(b-a)));progress+=.5*smooth(a,b,state.turn);lift+=Math.sin(Math.PI*k)*.055;}
-    const yaw=(-1.05+2.8*progress)*weight,base=baseFeet[side];
+    // Repeat the footwork throughout all six revolutions, without winding legs backwards.
+    const lift=.035*Math.max(0,Math.sin(state.spinAngle*2+(side==='right'?0:Math.PI)));
+    const yaw=state.bodyYaw,base=baseFeet[side];
     const target=base.position.clone().applyAxisAngle(up,yaw);target.y+=lift*weight;
     const pole=new T.Vector3(side==='right'?-.25:.25,.55,1).applyAxisAngle(up,forwardYaw+state.bodyYaw);
     const worldYaw=root.getWorldQuaternion(new T.Quaternion()).multiply(new T.Quaternion().setFromAxisAngle(up,yaw)).multiply(root.getWorldQuaternion(new T.Quaternion()).invert());
@@ -205,7 +203,7 @@
     transition(locomotion(),'locomotion');const name=current.getClip().name;
     current.setEffectiveTimeScale(name==='idle'?1:Math.max(.45,Math.min(1.35,speed/(name==='run'?6.5:4.5))));
    }return true;},
-   startStaffSweep(){if(disposed||mode!=='locomotion'||staffSweep||!global.StaffSweep||controllerJump)return false;staffSweep={time:0};return true;},
+   startStaffSweep(){if(disposed||mode!=='locomotion'||staffSweep||!global.StaffSweep||controllerJump)return false;staffSweep={time:0};pose();return true;},
    cancelStaffSweep(){if(disposed||!staffSweep)return;staffSweep=null;restoreSweep();pose();},
    startJump(duration){if(disposed||mode!=='locomotion'||staffSweep||mixer.time<returningUntil)return false;
     controllerJump=true;transition('jump','once');current.setEffectiveTimeScale(current.getClip().duration/Math.max(.2,duration));return true;},

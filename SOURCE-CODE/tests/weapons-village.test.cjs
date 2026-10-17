@@ -393,3 +393,18 @@ test('Hộ Thân: identity change never transfers remaining protection',()=>{
  c.VietVillageAuth.getProfile=()=>({uid:'second-student'});
  j.takeDamage(10);assert.equal(j.getState().hp,90);assert.equal(w.state.guard,null);
 });
+
+
+test('original avatar spins all visual parts at constant speed without rotating its controller, and restores on cancel/end',()=>{
+ const h=require('./harness.cjs')(),w=h.context.VietVillageWeapons;
+ assert(w.equip('staff'));const parts=h.run('body.children.filter(p=>p.userData.proceduralAvatarPart)'),origin=h.run('body.quaternion.clone()');
+ assert(parts.length>0);assert(w.cast(1).ok);
+ const pivot=h.run("body.getObjectByName('village-staff-sweep-pose')");assert(pivot);
+ for(let frame=1;frame<=17;frame++){
+  w.update(.1);assert(Math.abs(pivot.rotation.y-frame*.1*1200*Math.PI/180)<1e-6);
+  assert(h.run('body.quaternion').equals(origin));for(const part of parts)assert.equal(part.parent,pivot);
+ }
+ w.update(.11);assert.equal(pivot.parent,null);for(const part of parts)assert.equal(part.parent,h.run('body'));
+ w.update(1);assert(w.cast(1).ok);w.update(.11);w.suspend();assert.equal(h.run("body.getObjectByName('village-staff-sweep-pose')"),undefined);
+ for(const part of parts)assert.equal(part.parent,h.run('body'));h.context.VietVillageGame.lock();
+});

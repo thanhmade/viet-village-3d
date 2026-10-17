@@ -44,14 +44,14 @@ test('Hộ Thân returns to locomotion after gathering; Chấn Địa retains it
   for (const tier of ['low', 'medium', 'high']) assert.ok(VFX.quality[tier].trailSamples > 0 && VFX.quality[tier].rocks > 0);
 });
 
-test('Côn Quét: the ribbon is built from two real points on the staff during the sweep phases only', () => {
+test('Côn Quét: the ribbon is built from two real points on the staff throughout the full cast', () => {
   const {scene, caster, hand, weapon, tip, events, vfx} = rig(), s = skill('staff.con-quet'), p = s.phases;
   assert.equal(vfx.cast(s.id, {caster, weapon, weaponTip: tip}).ok, true);
   const fx = vfx.effects[0], ribbon = fx.sweep.ribbon, [trail] = ribbon.trails;
   assert.ok(trail); assert.equal(ribbon.trails.length, 1, 'one long striking end; no mirrored band over the hands');
   assert.deepEqual(fx.sweep.ribbons, ribbon.meshes, 'the sweep renderer owns exactly these ribbons');
   vfx.update(p.windup * .5);
-  assert.equal(trail.mesh.visible, false); assert.equal(trail.count, 0);
+  assert.equal(trail.count, 1); // emission begins on the first frame
   let teleported = false;
   for (let t = p.windup * .5; t < p.closeEnd - .05; t += 1 / 60) {
     hand.rotation.y += 6 / 60; caster.rotation.y += .4 / 60; // the actor turns too: history must not turn with it
@@ -73,7 +73,7 @@ test('Côn Quét: the ribbon is built from two real points on the staff during t
   }
   assert.ok(teleported);
   vfx.update(p.releaseAt + .14 - fx.age + .01);
-  assert.equal(trail.mesh.visible, false, 'ribbon gone before the wave release completes');
+  assert.equal(trail.mesh.visible, true, 'ribbon continues after the auxiliary wave');
   vfx.update(5);
   assert.equal(byType(events, 'impact').length, 1, 'one release'); assert.equal(vfx.stats.active, 0); assert.equal(fx.group.parent, null);
   vfx.dispose(); assert.deepEqual(scene.children, [caster]);
@@ -248,9 +248,10 @@ test('Côn Quét spec (CON_QUET_DAC_TA_VFX): branches avoid the hands, palette a
 test('Côn Quét: a fast swing is filled in along its arc (pose slerp), not along a straight chord', () => {
   const {caster, hand, weapon, tip, vfx} = rig(), s = skill('staff.con-quet');
   vfx.cast(s.id, {caster, weapon, weaponTip: tip});
-  vfx.update(s.phases.windup + .02); // first emitted sample
+  const ribbon=vfx.effects[0].sweep.ribbon;
+  ribbon.update(0,{emitting:true,opacity:1}); // generic interpolation, no authored spin
   hand.rotation.y += Math.PI / 2;    // one slow frame: a quarter turn of the staff
-  vfx.update(1 / 30);
+  ribbon.update(1/30,{emitting:true,opacity:1});
   const trail = vfx.effects[0].sweep.ribbon.trails[0], pivot = weapon.getWorldPosition(new THREE.Vector3());
   assert.ok(trail.count >= 6, 'samples were inserted between the two poses: ' + trail.count);
   for (let i = 0; i < trail.count; i++) {
@@ -266,7 +267,7 @@ test('Côn Quét: live bounds keep the band culled correctly; the staff glow fol
   const ribbon = vfx.effects[0].sweep.ribbon;
   assert.equal(ribbon.glows.length, 1);
   vfx.update(p.windup * .5);
-  for (const glow of ribbon.glows) assert.equal(glow.mesh.visible, false, 'no glow before the staff sweeps');
+  for (const glow of ribbon.glows) assert.equal(glow.mesh.visible, true, 'glow starts with the first frame');
   for (let t = 0; t < .4; t += 1 / 60) { hand.rotation.y += 5 / 60; vfx.update(1 / 60); }
   for (const trail of ribbon.trails) {
     assert.equal(trail.mesh.frustumCulled, true);
@@ -281,7 +282,7 @@ test('Côn Quét: live bounds keep the band culled correctly; the staff glow fol
     closeVector(end, staffPoint(weapon, branch[1][0]), 'glow ends at the branch outer point');
   });
   vfx.update(p.releaseAt - vfx.effects[0].age + .2);
-  for (const glow of ribbon.glows) assert.equal(glow.mesh.visible, false, 'glow off once the sweep closes');
+  for (const glow of ribbon.glows) assert.equal(glow.mesh.visible, true, 'glow remains active through the final rotation');
   vfx.dispose();
 });
 
@@ -322,4 +323,25 @@ test('Hộ Thân: three tilted bands, meridians, jumping anchor and depletion re
 test('Hộ Thân: a hit exactly at activeEnd is rejected', () => {
  const {caster,vfx} = rig(); vfx.cast('staff.ho-than',{caster}); vfx.update(2.65);
  assert.equal(vfx.hitShield(caster,new THREE.Vector3(1,1,0)),false);vfx.dispose();
+});
+
+
+test('unwrapped spin trail retains the correct direction when a frame spans 300 or 360 degrees',()=>{
+ for(const degrees of [300,360]){
+  const {caster,hand,weapon,tip,vfx}=rig({quality:'high'}),s=skill('staff.con-quet');
+  hand.position.set(0,1.4,0);vfx.cast(s.id,{caster,weapon,weaponTip:tip});
+  const ribbon=vfx.effects[0].sweep.ribbon,pivot=new THREE.Vector3(),angle=degrees*Math.PI/180;
+  ribbon.update(0,{emitting:true,opacity:1,spinAngle:0,spinPivot:pivot});
+  hand.rotation.y=angle;ribbon.update(degrees/1200,{emitting:true,opacity:1,spinAngle:angle,spinPivot:pivot});
+  const trail=ribbon.trails[0];assert(trail.count>=12);
+  let travelled=0,last=null;
+  for(let i=trail.count-1;i>=0;i--){
+   const p=new THREE.Vector3().fromArray(trail.position,(i*2+1)*3),a=Math.atan2(-p.z,p.x);
+   close(Math.hypot(p.x,p.z),1.42,'constant radius',1e-4);
+   if(last!==null){const delta=Math.atan2(Math.sin(a-last),Math.cos(a-last));assert(delta>0,'no reversed interpolation');travelled+=delta;}
+   last=a;
+  }
+  assert(travelled>Math.PI,'more than a half-turn survives in visible history');
+  closeVector(vertex(trail.mesh,trail.position,1),staffPoint(weapon,-1.42),'ends at actual staff');vfx.dispose();
+ }
 });

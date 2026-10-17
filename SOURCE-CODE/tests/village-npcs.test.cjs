@@ -288,14 +288,14 @@ test('tracking is stored per character, survives reload and is not rewritten for
 });
 
 
-test('staff practice waits for the real sweep/wave hit and a cancelled windup cannot complete the quest',async()=>{
+test('staff practice waits for a swept hit; cancelling before the first update cannot complete the quest',async()=>{
  const h=await game(),n=h.context.VietVillageNPCs,w=h.context.VietVillageWeapons;
  stand(h,7.6,21.6);n.interact('NPC_LANG_VIET_TUAN_DINH');h.run(`$('npcQuests').children[0].children.find(b=>b.id==='accept-QUEST_LV_01').onclick()`);n.lock();
  stand(h,2,-10.9);n.interact('NPC_LANG_VIET_LY_TRUONG');h.run(`$('npcQuests').children[0].children.find(b=>b.id==='finish-QUEST_LV_01').onclick()`);n.lock();
  stand(h,8.1,-14.6);n.interact('NPC_LANG_VIET_VO_SU');h.run(`$('npcQuests').children[0].children.find(b=>b.id==='accept-QUEST_LV_02').onclick()`);n.lock();
  w.equip('staff');stand(h,10.7,-14.3,Math.PI);assert(w.cast(1).ok);
  assert.equal(n.status.quests.QUEST_LV_02,'active','Pressing the button alone is not a hit');
- w.update(.05);w.deactivate();assert.equal(n.status.quests.QUEST_LV_02,'active');
+ w.deactivate();w.update(.05);assert.equal(n.status.quests.QUEST_LV_02,'active');
  w.equip('staff');w.update(3);assert(w.cast(1).ok);w.update(1.5);
  assert.equal(n.status.quests.QUEST_LV_02,'ready');assert.equal(h.run('progress.score'),0);
 });

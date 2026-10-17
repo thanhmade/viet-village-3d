@@ -37,15 +37,16 @@ for(const gender of ['male','female'])test('end grip, whole-body turn, foot cont
   v.sockets.right.add(mount);mount.scale.setScalar(.7);mount.rotation.y=Math.PI;
   const origin=actor.position.clone(),orientation=actor.quaternion.clone(),facing=v.root.getObjectByName('player-facing-pose');
   const lengths=new Map();gltf.scene.traverse(o=>{if(o.isBone&&o.parent?.isBone)lengths.set(o,o.position.length());});
-  assert(v.startStaffSweep());let maxGap=0,firstYaw=null,lastYaw=null;
+  assert(v.startStaffSweep());let maxGap=0,firstYaw=0,lastYaw=0;
+  close(v.sockets.right.userData.staffSweepGripX,1.08);
   for(let frame=1;frame<=Math.ceil(1.8*fps);frame++){
-   v.update(1/fps);const age=frame/fps,pose=Motion.sample(age);
+   v.update(1/fps);const age=frame/fps;
    const x=v.sockets.right.userData.staffSweepGripX||0;
    mount.position.set(x*-.7,0,0).applyQuaternion(mount.quaternion);actor.updateMatrixWorld(true);
    assert(actor.position.equals(origin));assert(actor.quaternion.equals(orientation));
-   close(facing.rotation.y,pose.bodyYaw,1e-5);
+   close(facing.rotation.y,age<1.8-1e-7?age*1200*Math.PI/180:0,1e-5);
    for(const [bone,length] of lengths)close(bone.position.length(),length,1e-6);
-   if(age>=.15&&age<=1.45){
+   if(age<1.8-1e-7){
     close(x,1.08);const right=v.sockets.right.getWorldPosition(new T.Vector3()),left=v.sockets.left.getWorldPosition(new T.Vector3());
     const rightGrip=staff.group.localToWorld(new T.Vector3(1.08,0,0)),leftGrip=staff.group.localToWorld(new T.Vector3(.62,0,0));
     maxGap=Math.max(maxGap,right.distanceTo(rightGrip),left.distanceTo(leftGrip));
@@ -55,7 +56,7 @@ for(const gender of ['male','female'])test('end grip, whole-body turn, foot cont
     firstYaw??=facing.rotation.y;lastYaw=facing.rotation.y;
    }
   }
-  assert(maxGap<.001,gender+' at '+fps+' Hz palm gap '+maxGap);assert(lastYaw-firstYaw>2.7,'body rotates with the 160 degree swing');
+  assert(maxGap<.001,gender+' at '+fps+' Hz palm gap '+maxGap);assert(lastYaw-firstYaw>Math.PI*11.7,'body completes six continuous turns through the last frame');
   assert.equal(v.sockets.right.userData.staffSweepGripX,undefined);assert.equal(v.state.busy,false);
   close(facing.rotation.y,0);assert(v.startStaffSweep());advance(v,.45);v.cancelStaffSweep();
   assert.equal(v.sockets.right.userData.staffSweepGripX,undefined);close(facing.rotation.y,0);

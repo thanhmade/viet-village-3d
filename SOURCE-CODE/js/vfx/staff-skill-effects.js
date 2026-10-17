@@ -311,7 +311,8 @@
    * Two branches on the held staff (fx.weapon, sweep.inner/outer and mirrorInner/mirrorOuter in
    * weapon-local metres) are sampled after this frame's animation/IK. Between frames the staff
    * pose is interpolated (position lerp + rotation slerp), so a fast swing fills in along its
-   * arc rather than along a straight chord. A jump larger than teleportFactor × the tip's
+   * arc rather than along a straight chord. Optional spinAngle/spinPivot retain unwrapped
+   * whole-body rotation when a frame spans more than half a turn. A jump larger than teleportFactor × the tip's
    * distance from the grip restarts the history. Vertices are in world space under a layer that
    * cancels fx.group's transform, so the history never turns or slides with the caster.
    * Without a staff model the band runs from the given tip toward the caster.
@@ -336,7 +337,9 @@
       ip: new T.Vector3(), iq: new T.Quaternion(), is: new T.Vector3(), valid: false};
     const place = (local, p, rotation, s, out) => out.set(local[0] * s.x, local[1] * s.y, local[2] * s.z).applyQuaternion(rotation).add(p);
     function reset() { for (const trail of trails) { trail.count = 0; trail.last.valid = false; } pose.valid = false; }
-    function sampleStaff(t) {
+    const spin = {previous: null, pivot: new T.Vector3(), inverse: new T.Quaternion(), lastInverse: new T.Quaternion(),
+      rotation: new T.Quaternion(), fromP: new T.Vector3(), toP: new T.Vector3(), fromQ: new T.Quaternion(), toQ: new T.Quaternion(), pivotAt: new T.Vector3()};
+    function sampleStaff(t, spinAngle, spinPivot) {
       fx.weapon.updateWorldMatrix(true, false); fx.weapon.matrixWorld.decompose(pose.p, pose.q, pose.s);
       const gripX = Number.isFinite(fx.weapon.userData.staffSweepGripX) ? fx.weapon.userData.staffSweepGripX : 0;
       const reach = Math.abs(cfg.outer[0] - gripX) * Math.abs(pose.s.x);
@@ -349,10 +352,31 @@
           pushSample(trail, a, b, t); trail.last.time = t; trail.last.valid = true; });
       } else {
         place(cfg.outer, pose.lp, pose.lq, pose.ls, c); place(cfg.outer, pose.p, pose.q, pose.s, d);
-        const steps = Math.min(cfg.maxInsertPerFrame, Math.max(1, Math.ceil(c.distanceTo(d) / cfg.maxStep)));
+        // Strip the known whole-body rotation before slerping the residual pose.
+        // Plain quaternion slerp loses winding for frames crossing >180° or a complete turn.
+        const winding = Number.isFinite(spinAngle) && Number.isFinite(spin.previous) && spinPivot;
+        const delta = winding ? spinAngle - spin.previous : 0;
+        if (winding) {
+          spin.lastInverse.setFromAxisAngle(up, -spin.previous); spin.inverse.setFromAxisAngle(up, -spinAngle);
+          spin.fromP.copy(pose.lp).sub(spin.pivot).applyQuaternion(spin.lastInverse);
+          spin.toP.copy(pose.p).sub(spinPivot).applyQuaternion(spin.inverse);
+          spin.fromQ.copy(spin.lastInverse).multiply(pose.lq); spin.toQ.copy(spin.inverse).multiply(pose.q);
+        }
+        const frameTime = t - trails[0].last.time;
+        const first = frameTime > cfg.life ? 1 - cfg.life / frameTime : 0;
+        const travel = Math.max(c.distanceTo(d), winding ? Math.abs(delta) * Math.max(c.distanceTo(spin.pivot), d.distanceTo(spinPivot)) : 0);
+        const steps = Math.min(cfg.maxInsertPerFrame, Math.max(1, Math.ceil(travel * (1 - first) / cfg.maxStep)));
         for (let i = 1; i <= steps; i++) {
-          const k = i / steps;
-          pose.ip.lerpVectors(pose.lp, pose.p, k); pose.iq.slerpQuaternions(pose.lq, pose.q, k); pose.is.lerpVectors(pose.ls, pose.s, k);
+          const k = first + (1 - first) * i / steps;
+          pose.is.lerpVectors(pose.ls, pose.s, k);
+          if (winding) {
+            spin.rotation.setFromAxisAngle(up, spin.previous + delta * k);
+            spin.pivotAt.lerpVectors(spin.pivot, spinPivot, k);
+            pose.ip.lerpVectors(spin.fromP, spin.toP, k).applyQuaternion(spin.rotation).add(spin.pivotAt);
+            pose.iq.slerpQuaternions(spin.fromQ, spin.toQ, k).premultiply(spin.rotation);
+          } else {
+            pose.ip.lerpVectors(pose.lp, pose.p, k); pose.iq.slerpQuaternions(pose.lq, pose.q, k);
+          }
           trails.forEach((trail, j) => {
             place(branches[j].inner, pose.ip, pose.iq, pose.is, a); place(branches[j].outer, pose.ip, pose.iq, pose.is, b);
             pushSample(trail, a, b, trail.last.time + (t - trail.last.time) * k);
@@ -360,6 +384,8 @@
         }
         for (const trail of trails) trail.last.time = t;
       }
+      spin.previous = Number.isFinite(spinAngle) && spinPivot ? spinAngle : null;
+      if (spinPivot) spin.pivot.copy(spinPivot);
       pose.lp.copy(pose.p); pose.lq.copy(pose.q); pose.ls.copy(pose.s); pose.valid = true;
     }
     function sampleTip(t, tip) {
@@ -380,11 +406,11 @@
     }
     return {
       trails, glows, meshes: trails.map(trail => trail.mesh), reset,
-      update(t, {emitting = false, opacity = 0, tip = null} = {}) {
+      update(t, {emitting = false, opacity = 0, tip = null, spinAngle = null, spinPivot = null} = {}) {
         fx.group.updateWorldMatrix(true, false); layer.matrix.copy(fx.group.matrixWorld).invert(); layer.matrixWorldNeedsUpdate = true;
         const envelope = clamp(opacity) * VFX.intensity;
         for (const trail of trails) { const u = trail.material.uniforms; u.uTime.value = t; u.uOpacity.value = envelope * cfg.opacity * trail.opacityScale; }
-        if (emitting) { if (fx.weapon) sampleStaff(t); else if (tip) sampleTip(t, tip); }
+        if (emitting) { if (fx.weapon) sampleStaff(t, spinAngle, spinPivot); else if (tip) sampleTip(t, tip); }
         for (const trail of trails) writeTrail(trail, t, cfg.life);
         // STAFF_GLOW: only while the staff is actually sweeping.
         for (const glow of glows) {

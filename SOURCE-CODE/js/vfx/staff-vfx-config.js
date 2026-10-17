@@ -48,9 +48,9 @@
       colors: Object.freeze({body: '#65cdbd', inner: '#c5ffe9', rim: '#fff0bf'}),
       filaments: 0.72,         // lengthwise flow lines inside the band
       glow: Object.freeze({radius: 0.07, opacity: 0.5}), // thin light layer on the active staff segment
-      life: 0.32,              // seconds a trail sample stays visible
+      life: 0.18,              // seconds a trail sample stays visible
       maxStep: 0.12,           // metres between inserted samples (fast swings)
-      maxInsertPerFrame: 8,
+      maxInsertPerFrame: 48,
       // A frame-to-frame jump of the tip larger than this many times its distance from the
       // grip (world metres, from the actual staff scale) is a teleport: the history restarts.
       teleportFactor: 2.5,

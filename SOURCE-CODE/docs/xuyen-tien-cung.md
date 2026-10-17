@@ -28,7 +28,7 @@ Không tự tạo vụ nổ ở cuối tầm khi bắn hụt. Không ép xoay ca
 
 VFX không tự thay HP. Hệ chiến đấu chủ quản gọi `event.testTarget(id, feetPosition, radius, height)` trong sự kiện đồng bộ `hit-window`, rồi mới áp dụng tác động của mình nếu trả về `true`. Callback hết hiệu lực khi sự kiện kết thúc. Hệ hiện tại chỉ nối tới bia luyện tập, chưa có sát thương quái trong bản thay đổi này.
 
-Vật cản hiện lấy từ `travelCameraBounds` của map và mặt đất. Những mesh chưa có bounds không tự động trở thành vật cản; cần đăng ký bounds đúng nếu muốn chúng chặn tên. Kiểm tra mục tiêu là thể tích đứng đơn giản, không phải va chạm từng tam giác hoặc từng bộ phận cơ thể.
+Vật cản hiện lấy từ `travelCameraBounds` của map và mặt đất. Ngoài sân Làng Việt, `projectileBounds()` trong `house-travel.js` thêm hai hộp chỉ dành cho tên: tường đình (x ±5,5 m, z −20,4…−17,35, cao 0,9–4 m) và thân cây đa (±1 m quanh gốc); số đo lấy từ GLB đã đặt trong cảnh, hộp camera giữ nguyên. Những mesh chưa có bounds (cột và vách cổng làng, hàng rào thấp, rễ phụ cây đa) không tự động trở thành vật cản; cần đăng ký bounds đúng nếu muốn chúng chặn tên. Kiểm tra mục tiêu là thể tích đứng đơn giản, không phải va chạm từng tam giác hoặc từng bộ phận cơ thể.
 
 ## Kiểm chứng và xem thử
 

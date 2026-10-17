@@ -1,12 +1,14 @@
 'use strict';
 let housePortalSystem=null,houseTravelFocused=true;
 const travelCameraRay=new THREE.Ray(),travelCameraDirection=new THREE.Vector3(),travelCameraHit=new THREE.Vector3(),travelCameraCandidate=new THREE.Vector3();
-let travelCameraBounds=[];
+let travelCameraBounds=[],villageArrowObstacles=[];
 function initializeHouseTravel(){
   configureHousePortals();configureInteriorPortals();
   travelCameraBounds=village.houses.map(h=>new THREE.Box3(new THREE.Vector3(h.x-3.75,.2,h.z-2.85),new THREE.Vector3(h.x+3.75,5.3,h.z+2.85)));
   // The gate roof can otherwise hide the player at the initial village spawn.
   travelCameraBounds.push(new THREE.Box3(new THREE.Vector3(-4.8,3.4,22),new THREE.Vector3(4.8,7.2,26)));
+  // Arrows also stop at the đình walls and the banyan trunk (measured on the placed GLBs); the camera keeps its own boxes.
+  villageArrowObstacles=[new THREE.Box3(new THREE.Vector3(-5.5,.9,-20.4),new THREE.Vector3(5.5,4,-17.35)),new THREE.Box3(new THREE.Vector3(-1,.25,-1),new THREE.Vector3(1,6,1))];
   housePortalSystem=window.createHousePortals({THREE,world,interiorRoot,entries:housePortalConfigs,
     getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),
       enabled:!window.VietVillagePlayerAvatar?.isJumping&&(insideHouse||!window.VietVillageRegions||window.VietVillageRegions.currentId==='lang-viet')&&houseTravelFocused&&!document.hidden&&!overlays()&&(insideHouse||gateView<0&&houseView<0&&world.visible&&(active||localWalking||multiplayerWalking)),
@@ -19,6 +21,10 @@ function initializeHouseTravel(){
   addEventListener('blur',()=>{houseTravelFocused=false;housePortalSystem.reset();});
   addEventListener('focus',()=>{houseTravelFocused=true;});
   document.addEventListener('visibilitychange',()=>housePortalSystem.reset());
+}
+// Xuyên Tiễn stops at the map's registered boxes; outdoors in the village also at the đình and the banyan trunk.
+function projectileBounds(){
+  return !insideHouse&&(window.VietVillageRegions?.currentId??'lang-viet')==='lang-viet'?travelCameraBounds.concat(villageArrowObstacles):travelCameraBounds;
 }
 function resetHouseTravel(){housePortalSystem?.reset();}
 function approachHouse(index){

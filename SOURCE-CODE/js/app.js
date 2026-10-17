@@ -193,7 +193,7 @@ window.VietVillagePlayerMotion=playerMotion;
 villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,leftArm,leftLeg,rightLeg,clearMotion,startRoaming,aim:{fromScreen:aimFromScreen,fromDrag:aimFromDrag},notify:toast,
  getQuality:()=>{const level=window.VillagePerformance?.policy?.level;return level>=3?'high':level>=2?'medium':'low';},
  getCasterHeight:()=>playerAvatar?.height||2.35,
- getProjectileBounds:()=>travelCameraBounds,
+ getProjectileBounds:projectileBounds,
  onVfxEvent:event=>{if(event.type==='impact'&&event.shake>0)addCameraShake(event.shake);},
  onSkillUsed:skill=>{playerJourney?.recordSkillUse();if(!['staff.con-quet','staff.chan-dia','bow.xuyen-tien'].includes(skill.skillId))window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
  onSkillHit:event=>window.VietVillageNPCs?.onSkillUsed(event),onSkillCancel:()=>playerAvatar?.cancelSkillPose?.(),

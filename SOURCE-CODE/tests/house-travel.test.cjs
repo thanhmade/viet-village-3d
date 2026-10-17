@@ -149,3 +149,15 @@ test('walking camera has an unobstructed ray at the gate and all six return spaw
  assert(run('sidePosition.distanceTo(sideLook)>8.4'),'an enclosing conservative box must not snap the camera to its nearby exit face');
  assert(run('yaw===Math.PI/2&&pitch===.57&&sceneryRadius===8.5'));
 });
+
+test('Xuyên Tiễn stops at the đình walls and the banyan trunk outdoors while the camera boxes stay unchanged',()=>{
+ const {run}=game();
+ assert.equal(run('travelCameraBounds.length'),7);
+ assert(run('projectileBounds().length===travelCameraBounds.length+2&&!travelCameraBounds.includes(villageArrowObstacles[0])'));
+ const stop=(from,to)=>JSON.parse(run(`(()=>{const hit=BowPiercing.traceWorld(THREE,new THREE.Vector3(${from}),new THREE.Vector3(${to}),.26,projectileBounds(),p=>bridgeHeight(p.x,p.z));return JSON.stringify(hit&&[+hit.point.x.toFixed(2),+hit.point.z.toFixed(2)]);})()`));
+ assert.deepEqual(stop('0,2.06,-12','0,2.06,-24'),[0,-17.09],'front of the đình');
+ assert.deepEqual(stop('-12,2.06,-19','0,2.06,-19'),[-5.76,-19],'side wall of the đình');
+ assert.deepEqual(stop('0,2.06,8','0,2.06,-4'),[0,1.26],'banyan trunk');
+ assert.equal(stop('5,2.06,-6','5,2.06,6'),null,'open yard beside the banyan');
+ run('enterHouse(0);');assert(run('insideHouse&&projectileBounds()===travelCameraBounds'));run('leaveHouse();');
+});

@@ -80,7 +80,7 @@ test('a time jump switches to the target hour light set at once while intensitie
 test('background warm-up compiles each other hourly light set once and restores the live scene',async()=>{
  const harness=night(),{run}=harness;
  harness.context.setTimeout=fn=>{fn();return 1;};
- run("window.isVillageContentLoading=()=>false;renderer.compiled=[];renderer.extensions={has:name=>name==='KHR_parallel_shader_compile'};renderer.compileAsync=s=>{renderer.compiled.push(climateLightSignature()+'@'+climate.hour.toFixed(1));return Promise.resolve(s);};");
+ run("window.isVillageContentLoading=()=>false;renderer.compiled=[];renderer.extensions={has:name=>name==='KHR_parallel_shader_compile'};renderer.properties={get:()=>({currentProgram:{isReady:()=>true}})};renderer.compile=()=>{renderer.compiled.push(climateLightSignature()+'@'+climate.hour.toFixed(1));return new Set([{}]);};");
  const live=()=>run("JSON.stringify({clock:climate.clock,hour:climate.hour,set:climateLightSignature(),moon:moonLight.visible,lamps:villageLights.map(l=>l.root.visible)})");
  const before=live();
  assert.equal(await run('warmClimateShaders()'),false,'the first check only waits for a settled context');
@@ -91,4 +91,17 @@ test('background warm-up compiles each other hourly light set once and restores 
  assert.equal(await run('warmClimateShaders()'),false,'a warmed context is not compiled again');
  run("renderer.extensions={has:()=>false};VillagePerformance.setMode('low');updateClimate(1,true);");
  assert.equal(await run('warmClimateShaders()'),false,'without parallel compile the old behaviour is kept');
+});
+
+test('warm-up settles when a material is disposed while its shader compiles (three r160 compileAsync race)',async()=>{
+ const harness=night(),{run}=harness;
+ harness.context.setTimeout=fn=>{fn();return 1;};
+ // `gone` lost its program (disposed skill effect); `slow` needs two extra polls.
+ run("window.isVillageContentLoading=()=>false;renderer.extensions={has:name=>name==='KHR_parallel_shader_compile'};"
+  +"var slow={},gone={},polls=new Map();renderer.properties={get:m=>m===gone?{}:{currentProgram:{isReady:()=>{const n=(polls.get(m)||0)+1;polls.set(m,n);return m!==slow||n>2;}}}};"
+  +"renderer.compileCalls=0;renderer.compile=()=>{renderer.compileCalls++;return new Set([slow,gone,{}]);};");
+ assert.equal(await run('warmClimateShaders()'),false,'the first check only waits for a settled context');
+ const variants=await run('warmClimateShaders()');
+ assert(variants>=2);assert.equal(run('renderer.compileCalls'),variants,'every light set settles despite the disposed material');
+ assert.equal(run('climateWarmup.busy'),false,'warm-up is free to run again for the next context');
 });

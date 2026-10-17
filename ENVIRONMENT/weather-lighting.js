@@ -73,8 +73,14 @@ function atClimateHours(hours,visit){
  try{climate.clock='manual';for(const h of hours){climate.hour=h;updateClimate(0,true);visit(h);}}
  finally{climate.clock=clock;climate.hour=hour;updateClimate(0,true);}
 }
+// three r160's compileAsync throws inside its own timer, and never settles, when a material is
+// disposed while it polls (a skill effect ending mid warm-up). Poll here and drop materials whose program is gone.
+function compileClimateLightSet(){
+ const materials=renderer.compile(scene,camera);
+ return new Promise(resolve=>{(function poll(){for(const material of materials){const program=renderer.properties.get(material).currentProgram;if(!program||program.isReady())materials.delete(material);}if(materials.size)setTimeout(poll,10);else resolve();})();});
+}
 async function warmClimateShaders(){
- if(climateWarmup.busy||!climateReady||document.hidden||typeof renderer==='undefined'||typeof renderer?.compileAsync!=='function'||!renderer.extensions.has('KHR_parallel_shader_compile'))return false;
+ if(climateWarmup.busy||!climateReady||document.hidden||typeof renderer==='undefined'||typeof renderer?.compile!=='function'||!renderer.extensions.has('KHR_parallel_shader_compile'))return false;
  if(window.VietVillageRegions?.status.transitioning||housePortalSystem?.status?.pending)return false;
  // Same context on two checks: loading finished and lighting fades have converged.
  const context=climateWarmupContext();
@@ -86,7 +92,7 @@ async function warmClimateShaders(){
   for(const h of hours){
    // One light set per task keeps each main-thread slice short; the GPU driver compiles in parallel.
    if(document.hidden||climateWarmupContext()!==context)return false;
-   let pending;atClimateHours([h],()=>{pending=renderer.compileAsync(scene,camera);});
+   let pending;atClimateHours([h],()=>{pending=compileClimateLightSet();});
    await pending;await new Promise(resolve=>setTimeout(resolve,300));
   }
   climateWarmup.done.add(context);return hours.length;

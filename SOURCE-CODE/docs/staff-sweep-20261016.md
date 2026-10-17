@@ -78,3 +78,18 @@ Theo lựa chọn của chủ dự án khi gộp nhánh: giữ nguyên timeline 
 - Đỉnh nằm trong không gian thế giới (lớp có ma trận nghịch đảo của nhóm hiệu ứng), nên lịch sử không xoay/trượt theo người. `fx.sweep.samples` (lịch sử đầu côn) vẫn được ghi như cũ; `fx.sweep.ribbons` nay là các mesh dải khí.
 - Không có mô hình côn (sân luyện/kiểm thử thiếu `weapon`) thì dải chạy từ đầu côn vào phía người.
 - Hộ Thân và Chấn Địa thiết kế riêng trong `staff-skill-effects.js` (xem `SOURCE-CODE/docs/weapons-vfx/README.md`).
+
+
+## Đối chiếu đặc tả CON_QUET_DAC_TA_VFX (RUN-20261016-235805-31b740be, 17/10/2026)
+
+Nguồn: `H:\CHAT GPT\3D-GAME\SKILL-THAM-CHIEU\CON_QUET_DAC_TA_VFX` (ảnh tham chiếu, đặc tả, JSON thiết kế — không phải mã, không nhập JSON vào runtime). Giữ nguyên timeline 1,8 s, hồi 2,4 s, IK hai tay, cửa sổ trúng bia, sóng bộc phát một lần; không thêm damage, tầm, nhịp hay đồng hồ mới. Chỉ đổi phần hình ảnh của dải khí (`createStaffRibbon`):
+
+- **Không xuyên tay:** đo trên GLB thật trong lúc quét — tay phải ở x 0 (tâm cán), tay trái ở x −0,63 (hệ trục côn −1,4…+1,4). Nhánh chính giữ +0,15 → +1,42; nhánh phụ dời từ −0,15 → −1,42 thành **−0,78 → −1,42** (trước đó đi qua tay trái).
+- **Bảng màu khởi điểm của đặc tả:** thân `#65CDBD`, sáng trong `#C5FFE9`, viền `#FFF0BF` (giá trị đề xuất, cần duyệt dưới ánh sáng game).
+- **LEADING_RIM / FLOW_FILAMENTS:** viền trắng-vàng mảnh ở mép ngoài + đầu dải; các sợi khí chạy dọc dải, uốn theo nhiễu và trượt theo thời gian (`sweep.filaments`).
+- **STAFF_GLOW:** ống sáng mỏng bám đoạn côn A→B của mỗi nhánh, chỉ hiện khi côn đang quét (`sweep.glow`), dùng chung hình trụ, không thêm đèn.
+- **Pose trung gian:** giữa hai khung, tư thế côn được nội suy (vị trí lerp + quay slerp) nên khung chậm vẫn lấp mẫu theo cung, không theo dây cung thẳng.
+- **Bước nhảy bất thường theo côn thật:** ngưỡng = `teleportFactor` (2,5) × khoảng cách đầu côn tới tay cầm theo tỷ lệ thế giới của côn (thay ngưỡng cố định 2,5 m).
+- **Culling:** giới hạn bao của dải cập nhật theo các mẫu đang vẽ mỗi khung; bỏ `frustumCulled = false`.
+
+Kiểm thử: `staff-skill-effects.test.cjs` +4 ca (nhánh không đè tay + bảng màu/filament, cung slerp, giới hạn bao + lớp sáng, ngưỡng theo tỷ lệ côn); 5 ca `staff-sweep.test.cjs` giữ nguyên và đạt.

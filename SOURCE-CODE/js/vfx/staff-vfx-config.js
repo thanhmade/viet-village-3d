@@ -33,14 +33,24 @@
       'staff.chan-dia': Object.freeze({clip: 'slash', from: 1.45, to: 3.25})
     }),
     // Côn Quét staff ribbon (sparks, ground band, wave, grit and light: staff-sweep.js).
+    // Spec: SKILL-THAM-CHIEU/CON_QUET_DAC_TA_VFX (BODY_RIBBON, LEADING_RIM, FLOW_FILAMENTS, STAFF_GLOW).
     sweep: Object.freeze({
-      // Two points on the staff in weapon-local metres (staff spans x −1.4…+1.4).
+      // Two branches on the held staff, weapon-local metres (staff spans x −1.4…+1.4).
+      // Measured on the player GLBs during the sweep: right palm at x 0 (handle centre),
+      // left palm at x −0.63, so neither branch runs through a hand.
       inner: Object.freeze([0.15, 0, 0]), outer: Object.freeze([1.42, 0, 0]),
-      mirror: true,            // second, fainter trail from the other end
+      mirror: true,            // second, fainter branch on the other end of the staff
+      mirrorInner: Object.freeze([-0.78, 0, 0]), mirrorOuter: Object.freeze([-1.42, 0, 0]),
+      // Starting values from the spec (not a colour measurement): jade body, pale inner light, warm white rim.
+      colors: Object.freeze({body: '#65cdbd', inner: '#c5ffe9', rim: '#fff0bf'}),
+      filaments: 0.55,         // lengthwise flow lines inside the band
+      glow: Object.freeze({radius: 0.07, opacity: 0.5}), // thin light layer on the active staff segment
       life: 0.32,              // seconds a trail sample stays visible
       maxStep: 0.12,           // metres between inserted samples (fast swings)
       maxInsertPerFrame: 8,
-      teleportDistance: 2.5,   // a jump larger than this resets the history
+      // A frame-to-frame jump of the tip larger than this many times its distance from the
+      // grip (world metres, from the actual staff scale) is a teleport: the history restarts.
+      teleportFactor: 2.5,
       opacity: 0.95, mirrorOpacity: 0.45
     }),
     shield: Object.freeze({

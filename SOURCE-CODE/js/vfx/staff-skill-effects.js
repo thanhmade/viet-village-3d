@@ -173,21 +173,29 @@
   const GLOW_FRAGMENT = 'uniform sampler2D uMap;uniform vec3 uColor,uCore;uniform float uOpacity;varying vec2 vUv;void main(){float a=texture2D(uMap,vUv).a;gl_FragColor=vec4(mix(uColor,uCore,smoothstep(.5,1.,a)),a*uOpacity);}';
   const TRAIL_VERTEX = 'attribute float aAge;attribute float aSide;varying float vAge;varying float vSide;varying float vHeight;void main(){vAge=aAge;vSide=aSide;vec4 w=modelMatrix*vec4(position,1.);vHeight=w.y;gl_Position=projectionMatrix*viewMatrix*w;}';
   // side 0 = inner staff point, 1 = tip. Age 0 = newest sample (leading edge).
-  const TRAIL_FRAGMENT = `uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uTime;uniform sampler2D uNoise;
+  const TRAIL_FRAGMENT = `uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uTime,uFilament;uniform sampler2D uNoise;
     varying float vAge;varying float vSide;varying float vHeight;
     void main(){
       float age=clamp(vAge,0.,1.),side=clamp(vSide,0.,1.);
       float body=smoothstep(0.,.45,side)*(1.-.4*smoothstep(.96,1.,side));
       float d=(side-.86)/.06;float coreLine=exp(-d*d); // x*x: GLSL pow() is undefined for x<0
+      float r=(side-.965)/.022;float rim=exp(-r*r);      // thin warm-white leading rim
       float lead=1.-smoothstep(0.,.28,age);
       float n=texture2D(uNoise,vec2(age*1.7+uTime*.45,side*1.3+vHeight*.2)).r;
+      float wobble=texture2D(uNoise,vec2(side*.9+uTime*.07,age*.6)).g;
+      // Flow filaments run along the band (constant side), drift with age and time.
+      float fil=pow(.5+.5*sin((side+(wobble-.5)*.08)*6.2831*6.+age*2.5-uTime*3.),10.)*smoothstep(.08,.35,side)*(1.-smoothstep(.9,.98,side));
       float dissolve=smoothstep(age-.12,age+.1,n*1.2);
       float fade=pow(1.-age,1.5);
-      vec3 col=mix(uJade,uGold,clamp(lead*.85+smoothstep(.9,1.,side)*.5,0.,1.));
-      col=mix(col,uCore,coreLine*.6);
-      float a=(body*.62+coreLine*.95+lead*.4*smoothstep(.5,1.,side))*fade*dissolve*uOpacity;
+      vec3 col=mix(uJade,uCore,clamp(coreLine*.6+fil*.35,0.,1.));
+      col=mix(col,uGold,clamp(rim*.9+lead*.5,0.,1.));
+      float a=(body*.55+coreLine*.85+fil*uFilament*.5+rim*.8+lead*.35*smoothstep(.5,1.,side))*fade*dissolve*uOpacity;
       gl_FragColor=vec4(col,min(a,.95));
     }`;
+  // Thin light layer on the active staff segment (STAFF_GLOW): brighter where the tube faces the camera.
+  const STAFF_GLOW_FRAGMENT = `uniform vec3 uColor,uCore;uniform float uOpacity;varying vec3 vN;varying vec3 vView;varying vec3 vLocal;
+    void main(){float facing=abs(dot(normalize(vN),normalize(vView)));float centre=facing*facing;
+      gl_FragColor=vec4(mix(uColor,uCore,centre),(centre*.7+(1.-facing)*.25)*uOpacity);}`;
   const SHELL_VERTEX = 'varying vec3 vN;varying vec3 vView;varying vec3 vLocal;void main(){vLocal=normalize(position);vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vView=-mv.xyz;gl_Position=projectionMatrix*mv;}';
   // uHits[i] = (direction in shell space, start time; w < 0 = unused slot).
   const SHELL_FRAGMENT = `uniform vec3 uJade,uGold;uniform float uOpacity,uTime,uDissolve,uRimPower,uRim,uBase,uPattern,uRippleSpeed,uRippleLife;
@@ -240,15 +248,18 @@
   // Used by staff-sweep.js (Côn Quét timeline, hit windows, wave): the ribbon replaces a
   // single-point tip trail with the band swept by the staff itself.
   function makeTrail(core, fx, samples, opacityScale, parent) {
-    const T = core.THREE, g = new T.BufferGeometry(), c = palette(T);
+    const T = core.THREE, g = new T.BufferGeometry(), c = VFX.sweep.colors;
     const position = new Float32Array(samples * 6), age = new Float32Array(samples * 2), side = new Float32Array(samples * 2), index = [];
     for (let i = 0; i < samples; i++) { side[i * 2 + 1] = 1; if (i < samples - 1) { const j = i * 2; index.push(j, j + 1, j + 2, j + 1, j + 3, j + 2); } }
     g.setAttribute('position', new T.BufferAttribute(position, 3).setUsage(T.DynamicDrawUsage));
     g.setAttribute('aAge', new T.BufferAttribute(age, 1).setUsage(T.DynamicDrawUsage));
     g.setAttribute('aSide', new T.BufferAttribute(side, 1)); g.setIndex(index); g.setDrawRange(0, 0); fx.geometries.add(g);
-    const m = material(core, fx, {uniforms: {uJade: {value: c.jade}, uGold: {value: c.gold}, uCore: {value: c.core}, uOpacity: {value: 0}, uTime: {value: 0}, uNoise: {value: sharedFor(core).noise}},
+    // Bounds follow the live samples each frame, so the band can stay frustum-culled.
+    g.boundingSphere = new T.Sphere();
+    const m = material(core, fx, {uniforms: {uJade: {value: new T.Color(c.body)}, uGold: {value: new T.Color(c.rim)}, uCore: {value: new T.Color(c.inner)},
+      uOpacity: {value: 0}, uTime: {value: 0}, uFilament: {value: VFX.sweep.filaments}, uNoise: {value: sharedFor(core).noise}},
       vertexShader: TRAIL_VERTEX, fragmentShader: TRAIL_FRAGMENT});
-    const n = mesh(core, fx, g, m, parent, 11); n.frustumCulled = false; n.visible = false;
+    const n = mesh(core, fx, g, m, parent, 11); n.visible = false;
     return {mesh: n, geometry: g, material: m, position, age, opacityScale, head: 0, count: 0,
       ring: Array.from({length: samples}, () => ({inner: new T.Vector3(), outer: new T.Vector3(), time: 0})),
       last: {inner: new T.Vector3(), outer: new T.Vector3(), time: 0, valid: false}};
@@ -259,66 +270,117 @@
   }
   // Newest sample first; samples older than `life` are dropped from the history.
   function writeTrail(trail, now, life) {
-    const total = trail.ring.length; let n = 0;
+    const total = trail.ring.length, p = trail.position; let n = 0;
+    let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
     for (let k = 0; k < trail.count; k++) {
       const s = trail.ring[(trail.head - 1 - k + total) % total], a = (now - s.time) / life;
       if (a > 1) break;
-      const j = n * 6; trail.position[j] = s.inner.x; trail.position[j + 1] = s.inner.y; trail.position[j + 2] = s.inner.z;
-      trail.position[j + 3] = s.outer.x; trail.position[j + 4] = s.outer.y; trail.position[j + 5] = s.outer.z;
+      const j = n * 6; p[j] = s.inner.x; p[j + 1] = s.inner.y; p[j + 2] = s.inner.z;
+      p[j + 3] = s.outer.x; p[j + 4] = s.outer.y; p[j + 5] = s.outer.z;
+      for (let o = 0; o < 6; o += 3) {
+        minX = Math.min(minX, p[j + o]); minY = Math.min(minY, p[j + o + 1]); minZ = Math.min(minZ, p[j + o + 2]);
+        maxX = Math.max(maxX, p[j + o]); maxY = Math.max(maxY, p[j + o + 1]); maxZ = Math.max(maxZ, p[j + o + 2]);
+      }
       trail.age[n * 2] = trail.age[n * 2 + 1] = clamp(a); n++;
     }
     trail.count = n; trail.mesh.visible = n >= 2 && trail.material.uniforms.uOpacity.value > 0;
+    const sphere = trail.geometry.boundingSphere;
+    if (n) {
+      sphere.center.set((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
+      sphere.radius = Math.hypot(maxX - minX, maxY - minY, maxZ - minZ) / 2 + .01;
+    } else sphere.radius = 0;
     trail.geometry.setDrawRange(0, Math.max(0, n - 1) * 6);
     trail.geometry.attributes.position.needsUpdate = trail.geometry.attributes.aAge.needsUpdate = true;
   }
-  /* createStaffRibbon(core, fx) → {trails, meshes, update(t, {emitting, opacity, tip})}
+  /* createStaffRibbon(core, fx) → {trails, glows, meshes, update(t, {emitting, opacity, tip})}
    * `opacity` is a 0…1 envelope from the caller's timeline (× sweep.opacity).
-   * Two points on the held staff (fx.weapon, sweep.inner/outer in weapon-local metres)
-   * are sampled after this frame's animation/IK; fast swings get interpolated samples,
-   * a jump larger than teleportDistance restarts the history. Vertices are in world
-   * space under a layer that cancels fx.group's transform, so the history never turns
-   * or slides with the caster. Without a staff model the band runs from the given tip
-   * toward the caster. Buffers/materials belong to fx and are disposed with it. */
+   * Two branches on the held staff (fx.weapon, sweep.inner/outer and mirrorInner/mirrorOuter in
+   * weapon-local metres) are sampled after this frame's animation/IK. Between frames the staff
+   * pose is interpolated (position lerp + rotation slerp), so a fast swing fills in along its
+   * arc rather than along a straight chord. A jump larger than teleportFactor × the tip's
+   * distance from the grip restarts the history. Vertices are in world space under a layer that
+   * cancels fx.group's transform, so the history never turns or slides with the caster.
+   * Without a staff model the band runs from the given tip toward the caster.
+   * Buffers/materials belong to fx and are disposed with it. */
   function createStaffRibbon(core, fx) {
-    const T = core.THREE, q = tier(core), cfg = VFX.sweep;
+    const T = core.THREE, q = tier(core), cfg = VFX.sweep, shared = sharedFor(core);
     const layer = new T.Group(); layer.name = 'staff-ribbon-world'; layer.matrixAutoUpdate = false; fx.group.add(layer);
-    const trails = [makeTrail(core, fx, q.trailSamples, 1, layer)];
-    if (cfg.mirror && fx.weapon) trails.push(makeTrail(core, fx, q.trailSamples, cfg.mirrorOpacity, layer));
-    const a = new T.Vector3(), b = new T.Vector3(), c = new T.Vector3(), d = new T.Vector3(), centre = new T.Vector3();
-    function points(mirrored, inner, outer, tip) {
-      const sign = mirrored ? -1 : 1;
-      if (fx.weapon) {
-        fx.weapon.updateWorldMatrix(true, false);
-        fx.weapon.localToWorld(inner.set(cfg.inner[0] * sign, cfg.inner[1], cfg.inner[2]));
-        fx.weapon.localToWorld(outer.set(cfg.outer[0] * sign, cfg.outer[1], cfg.outer[2]));
-        return true;
+    const branches = [{inner: cfg.inner, outer: cfg.outer, scale: 1}];
+    if (cfg.mirror && fx.weapon) branches.push({inner: cfg.mirrorInner, outer: cfg.mirrorOuter, scale: cfg.mirrorOpacity});
+    const trails = branches.map(branch => makeTrail(core, fx, q.trailSamples, branch.scale, layer));
+    const glowMaterial = material(core, fx, {uniforms: {uColor: {value: new T.Color(cfg.colors.body)}, uCore: {value: new T.Color(cfg.colors.inner)}, uOpacity: {value: 0}},
+      vertexShader: SHELL_VERTEX, fragmentShader: STAFF_GLOW_FRAGMENT});
+    const glows = fx.weapon ? branches.map(branch => {
+      const m = branch.scale === 1 ? glowMaterial : material(core, fx, {uniforms: {uColor: glowMaterial.uniforms.uColor, uCore: glowMaterial.uniforms.uCore, uOpacity: {value: 0}},
+        vertexShader: SHELL_VERTEX, fragmentShader: STAFF_GLOW_FRAGMENT});
+      const tube = mesh(core, fx, shared.column, m, layer, 12); tube.visible = false; tube.name = 'staff-ribbon-glow';
+      return {mesh: tube, material: m, branch};
+    }) : [];
+    const a = new T.Vector3(), b = new T.Vector3(), c = new T.Vector3(), d = new T.Vector3(), centre = new T.Vector3(), up = new T.Vector3(0, 1, 0);
+    // Staff pose history (world): current, previous, interpolated.
+    const pose = {p: new T.Vector3(), q: new T.Quaternion(), s: new T.Vector3(), lp: new T.Vector3(), lq: new T.Quaternion(), ls: new T.Vector3(),
+      ip: new T.Vector3(), iq: new T.Quaternion(), is: new T.Vector3(), valid: false};
+    const place = (local, p, rotation, s, out) => out.set(local[0] * s.x, local[1] * s.y, local[2] * s.z).applyQuaternion(rotation).add(p);
+    function reset() { for (const trail of trails) { trail.count = 0; trail.last.valid = false; } pose.valid = false; }
+    function sampleStaff(t) {
+      fx.weapon.updateWorldMatrix(true, false); fx.weapon.matrixWorld.decompose(pose.p, pose.q, pose.s);
+      const reach = Math.abs(cfg.outer[0]) * pose.s.x;
+      if (pose.valid) {
+        place(cfg.outer, pose.lp, pose.lq, pose.ls, c); place(cfg.outer, pose.p, pose.q, pose.s, d);
+        if (c.distanceTo(d) > cfg.teleportFactor * reach) reset();
       }
-      if (!tip) return false;
-      fx.caster.getWorldPosition(centre); centre.y = tip.y; outer.copy(tip);
+      if (!pose.valid) {
+        trails.forEach((trail, i) => { place(branches[i].inner, pose.p, pose.q, pose.s, a); place(branches[i].outer, pose.p, pose.q, pose.s, b);
+          pushSample(trail, a, b, t); trail.last.time = t; trail.last.valid = true; });
+      } else {
+        place(cfg.outer, pose.lp, pose.lq, pose.ls, c); place(cfg.outer, pose.p, pose.q, pose.s, d);
+        const steps = Math.min(cfg.maxInsertPerFrame, Math.max(1, Math.ceil(c.distanceTo(d) / cfg.maxStep)));
+        for (let i = 1; i <= steps; i++) {
+          const k = i / steps;
+          pose.ip.lerpVectors(pose.lp, pose.p, k); pose.iq.slerpQuaternions(pose.lq, pose.q, k); pose.is.lerpVectors(pose.ls, pose.s, k);
+          trails.forEach((trail, j) => {
+            place(branches[j].inner, pose.ip, pose.iq, pose.is, a); place(branches[j].outer, pose.ip, pose.iq, pose.is, b);
+            pushSample(trail, a, b, trail.last.time + (t - trail.last.time) * k);
+          });
+        }
+        for (const trail of trails) trail.last.time = t;
+      }
+      pose.lp.copy(pose.p); pose.lq.copy(pose.q); pose.ls.copy(pose.s); pose.valid = true;
+    }
+    function sampleTip(t, tip) {
+      const trail = trails[0];
+      fx.caster.getWorldPosition(centre); centre.y = tip.y; b.copy(tip);
       const towards = centre.sub(tip), length = towards.length();
-      inner.copy(tip).addScaledVector(towards, length > 1e-6 ? Math.min(cfg.outer[0] - cfg.inner[0], length) / length : 0);
-      return true;
+      a.copy(tip).addScaledVector(towards, length > 1e-6 ? Math.min(cfg.outer[0] - cfg.inner[0], length) / length : 0);
+      if (trail.last.valid && b.distanceTo(trail.last.outer) > cfg.teleportFactor * Math.abs(cfg.outer[0])) reset();
+      if (!trail.last.valid) pushSample(trail, a, b, t);
+      else {
+        const steps = Math.min(cfg.maxInsertPerFrame, Math.max(1, Math.ceil(b.distanceTo(trail.last.outer) / cfg.maxStep)));
+        for (let i = 1; i <= steps; i++) {
+          const k = i / steps; c.lerpVectors(trail.last.inner, a, k); d.lerpVectors(trail.last.outer, b, k);
+          pushSample(trail, c, d, trail.last.time + (t - trail.last.time) * k);
+        }
+      }
+      trail.last.inner.copy(a); trail.last.outer.copy(b); trail.last.time = t; trail.last.valid = true;
     }
     return {
-      trails, meshes: trails.map(trail => trail.mesh),
+      trails, glows, meshes: trails.map(trail => trail.mesh), reset,
       update(t, {emitting = false, opacity = 0, tip = null} = {}) {
         fx.group.updateWorldMatrix(true, false); layer.matrix.copy(fx.group.matrixWorld).invert(); layer.matrixWorldNeedsUpdate = true;
-        trails.forEach((trail, index) => {
-          const u = trail.material.uniforms; u.uTime.value = t; u.uOpacity.value = clamp(opacity) * cfg.opacity * trail.opacityScale * VFX.intensity;
-          if (emitting && points(index === 1, a, b, tip)) {
-            if (trail.last.valid && b.distanceTo(trail.last.outer) > cfg.teleportDistance) { trail.count = 0; trail.last.valid = false; }
-            if (!trail.last.valid) pushSample(trail, a, b, t);
-            else {
-              const steps = Math.min(cfg.maxInsertPerFrame, Math.max(1, Math.ceil(b.distanceTo(trail.last.outer) / cfg.maxStep)));
-              for (let i = 1; i <= steps; i++) {
-                const k = i / steps; c.lerpVectors(trail.last.inner, a, k); d.lerpVectors(trail.last.outer, b, k);
-                pushSample(trail, c, d, trail.last.time + (t - trail.last.time) * k);
-              }
-            }
-            trail.last.inner.copy(a); trail.last.outer.copy(b); trail.last.time = t; trail.last.valid = true;
-          }
-          writeTrail(trail, t, cfg.life);
-        });
+        const envelope = clamp(opacity) * VFX.intensity;
+        for (const trail of trails) { const u = trail.material.uniforms; u.uTime.value = t; u.uOpacity.value = envelope * cfg.opacity * trail.opacityScale; }
+        if (emitting) { if (fx.weapon) sampleStaff(t); else if (tip) sampleTip(t, tip); }
+        for (const trail of trails) writeTrail(trail, t, cfg.life);
+        // STAFF_GLOW: only while the staff is actually sweeping.
+        for (const glow of glows) {
+          const show = emitting && envelope > 0 && pose.valid;
+          glow.mesh.visible = show; glow.material.uniforms.uOpacity.value = show ? envelope * cfg.glow.opacity * glow.branch.scale : 0;
+          if (!show) continue;
+          place(glow.branch.inner, pose.p, pose.q, pose.s, a); place(glow.branch.outer, pose.p, pose.q, pose.s, b);
+          const radius = cfg.glow.radius * pose.s.x, length = a.distanceTo(b);
+          glow.mesh.position.copy(a); glow.mesh.quaternion.setFromUnitVectors(up, d.subVectors(b, a).normalize());
+          glow.mesh.scale.set(radius, length, radius);
+        }
       }
     };
   }

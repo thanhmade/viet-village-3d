@@ -65,11 +65,12 @@ test('Côn Quét: the ribbon is built from two real points on the staff during t
     assert.equal(trail.mesh.visible, true);
     closeVector(vertex(trail.mesh, trail.position, 1), staffPoint(weapon, VFX.sweep.outer[0]), 'newest outer vertex sits on the staff');
     closeVector(vertex(trail.mesh, trail.position, 0), staffPoint(weapon, VFX.sweep.inner[0]), 'newest inner vertex sits on the staff');
-    closeVector(vertex(mirror.mesh, mirror.position, 1), staffPoint(weapon, -VFX.sweep.outer[0]), 'mirror follows the other end');
+    closeVector(vertex(mirror.mesh, mirror.position, 1), staffPoint(weapon, VFX.sweep.mirrorOuter[0]), 'mirror follows the other end');
+    closeVector(vertex(mirror.mesh, mirror.position, 0), staffPoint(weapon, VFX.sweep.mirrorInner[0]), 'mirror starts beyond the left hand');
     for (let i = 1; i < trail.count; i++) {
       assert.ok(trail.age[i * 2] >= trail.age[(i - 1) * 2], 'newest first, older samples fade');
       const a = vertex(trail.mesh, trail.position, i * 2 + 1), b = vertex(trail.mesh, trail.position, (i - 1) * 2 + 1);
-      assert.ok(a.distanceTo(b) < VFX.sweep.teleportDistance, 'no segment spans a jump');
+      assert.ok(a.distanceTo(b) < VFX.sweep.teleportFactor * VFX.sweep.outer[0], 'no segment spans a jump');
     }
   }
   assert.ok(teleported);
@@ -226,5 +227,76 @@ test('shaders never raise a possibly negative base with pow() (undefined in GLSL
   for (const match of source.matchAll(/(?<!Math\.)pow\(([^,)]+),/g)) {
     const base = match[1].trim();
     assert.ok(/^(1\.-|\.5\+\.5\*|fract\(|leading$|max\()/.test(base) || /^[a-z]+$/i.test(base) && base !== 'd', 'pow base must be non-negative: ' + base);
+  }
+});
+
+test('Côn Quét spec (CON_QUET_DAC_TA_VFX): branches avoid the hands, palette and filaments from the spec', () => {
+  // Measured on the player GLBs: right palm at staff x 0, left palm at x −0.63.
+  const hands = [0, -0.63], margin = .1;
+  for (const [inner, outer] of [[VFX.sweep.inner, VFX.sweep.outer], [VFX.sweep.mirrorInner, VFX.sweep.mirrorOuter]]) {
+    const lo = Math.min(inner[0], outer[0]), hi = Math.max(inner[0], outer[0]);
+    for (const h of hands) assert.ok(h < lo - margin || h > hi + margin, `branch ${lo}…${hi} clears the hand at ${h}`);
+    assert.ok(Math.abs(outer[0]) <= 1.42 && Math.abs(inner[0]) < Math.abs(outer[0]));
+  }
+  assert.deepEqual({...VFX.sweep.colors}, {body: '#65cdbd', inner: '#c5ffe9', rim: '#fff0bf'});
+  const {caster, weapon, tip, vfx} = rig();
+  vfx.cast('staff.con-quet', {caster, weapon, weaponTip: tip});
+  const u = vfx.effects[0].sweep.ribbon.trails[0].material.uniforms;
+  assert.equal(u.uJade.value.getHexString(), '65cdbd'); assert.equal(u.uCore.value.getHexString(), 'c5ffe9'); assert.equal(u.uGold.value.getHexString(), 'fff0bf');
+  assert.ok(u.uFilament.value > 0, 'flow filaments enabled');
+  vfx.dispose();
+});
+
+test('Côn Quét: a fast swing is filled in along its arc (pose slerp), not along a straight chord', () => {
+  const {caster, hand, weapon, tip, vfx} = rig(), s = skill('staff.con-quet');
+  vfx.cast(s.id, {caster, weapon, weaponTip: tip});
+  vfx.update(s.phases.windup + .02); // first emitted sample
+  hand.rotation.y += Math.PI / 2;    // one slow frame: a quarter turn of the staff
+  vfx.update(1 / 30);
+  const trail = vfx.effects[0].sweep.ribbon.trails[0], pivot = weapon.getWorldPosition(new THREE.Vector3());
+  assert.ok(trail.count >= 6, 'samples were inserted between the two poses: ' + trail.count);
+  for (let i = 0; i < trail.count; i++) {
+    const outer = vertex(trail.mesh, trail.position, i * 2 + 1);
+    close(outer.distanceTo(pivot), VFX.sweep.outer[0], 'sample ' + i + ' stays on the tip circle', 1e-3);
+  }
+  vfx.dispose();
+});
+
+test('Côn Quét: live bounds keep the band culled correctly; the staff glow follows the active segment', () => {
+  const {caster, hand, weapon, tip, vfx} = rig(), s = skill('staff.con-quet'), p = s.phases;
+  vfx.cast(s.id, {caster, weapon, weaponTip: tip});
+  const ribbon = vfx.effects[0].sweep.ribbon;
+  assert.equal(ribbon.glows.length, 2);
+  vfx.update(p.windup * .5);
+  for (const glow of ribbon.glows) assert.equal(glow.mesh.visible, false, 'no glow before the staff sweeps');
+  for (let t = 0; t < .4; t += 1 / 60) { hand.rotation.y += 5 / 60; vfx.update(1 / 60); }
+  for (const trail of ribbon.trails) {
+    assert.equal(trail.mesh.frustumCulled, true);
+    const sphere = trail.geometry.boundingSphere;
+    for (let i = 0; i < trail.count * 2; i++) assert.ok(new THREE.Vector3().fromArray(trail.position, i * 3).distanceTo(sphere.center) <= sphere.radius + 1e-6, 'vertex inside bounds');
+  }
+  ribbon.glows.forEach((glow, i) => {
+    const branch = i ? [VFX.sweep.mirrorInner, VFX.sweep.mirrorOuter] : [VFX.sweep.inner, VFX.sweep.outer];
+    assert.equal(glow.mesh.visible, true);
+    const base = glow.mesh.localToWorld(new THREE.Vector3(0, 0, 0)), end = glow.mesh.localToWorld(new THREE.Vector3(0, 1, 0));
+    closeVector(base, staffPoint(weapon, branch[0][0]), 'glow starts at the branch inner point');
+    closeVector(end, staffPoint(weapon, branch[1][0]), 'glow ends at the branch outer point');
+  });
+  vfx.update(p.releaseAt - vfx.effects[0].age + .2);
+  for (const glow of ribbon.glows) assert.equal(glow.mesh.visible, false, 'glow off once the sweep closes');
+  vfx.dispose();
+});
+
+test('Côn Quét: the teleport threshold follows the real staff size', () => {
+  for (const [scale, expectReset] of [[1, false], [.5, true]]) {
+    const {caster, hand, weapon, tip, vfx} = rig(), s = skill('staff.con-quet');
+    weapon.scale.setScalar(scale);
+    vfx.cast(s.id, {caster, weapon, weaponTip: tip});
+    vfx.update(s.phases.windup + .1); vfx.update(1 / 60);
+    const trail = vfx.effects[0].sweep.ribbon.trails[0], before = trail.count;
+    hand.position.x += 2.2; // 2.2 m in one frame: below 2.5 × 1.42 m, above 2.5 × 0.71 m
+    vfx.update(1 / 60);
+    assert.equal(trail.count === 1, expectReset, `scale ${scale}: count ${before} → ${trail.count}`);
+    vfx.dispose();
   }
 });

@@ -31,7 +31,9 @@
     animation: Object.freeze({
       // Gathering pose ends after 0.7 s; locomotion resumes while the shield holds.
       'staff.ho-than': Object.freeze({clip: 'cast_a_spell', from: 1.95, to: 2.65}),
-      'staff.chan-dia': Object.freeze({clip: 'slash', from: 1.45, to: 3.25})
+      // Shifted +0.09 s (was 1.45–3.25): on both player GLBs the striking staff end is lowest
+      // at clip 2.25–2.27 s, i.e. at the 0.72 s ground contact (measured in game, 17/10/2026).
+      'staff.chan-dia': Object.freeze({clip: 'slash', from: 1.54, to: 3.34})
     }),
     // Côn Quét staff ribbon (sparks, ground band, wave, grit and light: staff-sweep.js).
     // Spec: SKILL-THAM-CHIEU/CON_QUET_DAC_TA_VFX (BODY_RIBBON, LEADING_RIM, FLOW_FILAMENTS, STAFF_GLOW).
@@ -65,13 +67,17 @@
       fadeOut: 0.32            // seconds after activeEnd to dissolve
     }),
     slam: Object.freeze({
-      // Striking (lower) staff end: metres from the feet; outside this, ground ahead of the feet.
+      // Art proposal from the Chấn Địa still; gameplay timings/radius remain in StaffSkillConfig.
       staffEnd: 1.4, contactMin: 0.35, contactMax: 2.3, contactFallback: 1.35,
-      chargeRadius: 0.24, flash: 0.14, columnHeight: 1.7, columnLife: 0.42,
-      waveRadius: 3.8, waveLife: 0.9, waveWidth: 0.42, secondWaveDelay: 0.11,
-      crackRadius: 2.1, crackLife: 1.25, decalLift: 0.035,
-      rockSpeed: [1.4, 3.4], rockUp: [2.2, 4.4], rockSize: [0.03, 0.085], rockLife: [0.9, 1.35], gravity: 9.8, bounce: 0.28,
-      dustLife: [0.8, 1.4]
+      chargeRadius: 0.3, flash: 0.12, columnHeight: 4.2, columnLife: 0.52,
+      waveRadius: 4.5, waveLife: 0.78, waveWidth: 0.5, secondWaveDelay: 0.1,
+      crackRadius: 3.4, crackLife: 1.02, decalLift: 0.035,
+      rockSpeed: [1.8, 4.0], rockUp: [3.0, 6.0], rockSize: [0.07, 0.20], rockLife: [0.75, 1.03], gravity: 13.5, bounce: 0.2,
+      dustLife: [0.65, 1.0],
+      slabs: Object.freeze({low: 16, medium: 28, high: 40}),
+      slabRadius: 2.9, slabHeight: 0.45, slabLife: 1.02,
+      hitHeight: 0.8, // target feet tolerance above their sampled terrain; no HP changes in the VFX
+      reducedFlash: 0.65
     })
   });
 });

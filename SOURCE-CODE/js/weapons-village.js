@@ -205,11 +205,11 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   }
   function cast(slot, {point = null} = {}) {
     const allowed = usable();
-    if (manager?.effects.some(fx=>fx.skill.id==='staff.con-quet'))return {ok:false,reason:'busy'};
+    if (manager?.effects.some(fx=>fx.skill.id==='staff.con-quet'||(fx.skill.id==='staff.chan-dia'&&fx.age<fx.skill.activeAt)))return {ok:false,reason:'busy'};
     if (!allowed) return {ok: false, reason: 'village-unavailable'};
     const skill = currentConfig.skills.find(item => item.slot === slot);
     if (!skill) return {ok: false, reason: 'unknown-slot'};
-    if(skill.id==='staff.con-quet'&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
+    if(['staff.con-quet','staff.chan-dia'].includes(skill.id)&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
     // Aimed casts turn the player toward the chosen point first, so the
     // effect, the training-dummy facing check and the avatar agree.
     let target = null;
@@ -287,6 +287,16 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       grip.rotation.x = Math.sin(phase * Math.PI) * (weaponId === 'spear' ? .7 : -.35);
       }
       if (phase === 1) {poseLength = 0;grip.rotation.set(0,Math.PI,0);}
+    }
+    // A jump during anticipation cancels only this strike; an existing shield survives.
+    if (getState().airborne) {
+      const pending = manager.effects.filter(fx => fx.skill.id === 'staff.chan-dia' && fx.age < fx.skill.activeAt);
+      if (pending.length) {
+        pending.forEach(fx => manager.cancel(fx.handle));
+        cancelAim(); onSkillCancel?.();
+        if (poseTime || poseLength) grip?.rotation.set(0, Math.PI, 0);
+        poseTime = poseLength = 0;
+      }
     }
     guard.advance(dt);
     manager.update(dt);

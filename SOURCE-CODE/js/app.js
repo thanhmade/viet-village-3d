@@ -194,10 +194,10 @@ villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,clearMotio
  getQuality:()=>{const level=window.VillagePerformance?.policy?.level;return level>=3?'high':level>=2?'medium':'low';},
  getCasterHeight:()=>playerAvatar?.height||2.35,
  onVfxEvent:event=>{if(event.type==='impact'&&event.shake>0)addCameraShake(event.shake);},
- onSkillUsed:skill=>{playerJourney?.recordSkillUse();if(skill.skillId!=='staff.con-quet')window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
+ onSkillUsed:skill=>{playerJourney?.recordSkillUse();if(!['staff.con-quet','staff.chan-dia'].includes(skill.skillId))window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
  onSkillHit:event=>window.VietVillageNPCs?.onSkillUsed(event),onSkillCancel:()=>playerAvatar?.cancelSkillPose?.(),
  getGroundY:point=>bridgeHeight(point.x,point.z),
- getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),uid:window.VietVillageAuth?.getProfile?.()?.uid||null,maxHp:playerJourney?.getState().maxHp,poseBusy:!!playerAvatar?.state?.animation?.busy||!!playerMotion?.airborne,
+ getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),uid:window.VietVillageAuth?.getProfile?.()?.uid||null,maxHp:playerJourney?.getState().maxHp,airborne:!!playerMotion?.airborne,poseBusy:!!playerAvatar?.state?.animation?.busy||!!playerMotion?.airborne,
  // HP 0 (defeat) blocks casting; update() then cancels any live skill visuals.
  canCast:gameInitialized&&!!window.VietVillageAuth?.isAuthenticated()&&playerJourney?.getState().alive!==false&&(localWalking||multiplayerWalking)&&world.visible&&!insideHouse&&!overlays()&&gateView<0&&houseView<0})});
 window.VietVillageWeapons=villageWeapons;

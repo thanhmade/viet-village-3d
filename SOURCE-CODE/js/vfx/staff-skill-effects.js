@@ -243,19 +243,20 @@
       gl_FragColor=vec4(mix(uJade,uGold,clamp(rings+strokes,0.,1.)),alpha);}`;
   const COLUMN_FRAGMENT = `uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uTime;uniform sampler2D uNoise;varying vec2 vUv;
     void main(){float h=vUv.y;float n=texture2D(uNoise,vec2(vUv.x*3.,h*1.2-uTime*1.8)).r;
-      float streak=smoothstep(.45,.95,n);float fade=(1.-h)*(1.-h)*smoothstep(0.,.08,h);
+      float streak=smoothstep(.42,.86,n);float filament=pow(.5+.5*sin(vUv.x*6.2831*11.+h*2.-uTime*4.),16.);float fade=pow(1.-h,.8)*smoothstep(0.,.045,h);
       vec3 c=mix(uJade,uCore,streak*.6+(1.-h)*.3);c=mix(c,uGold,smoothstep(.75,1.,1.-h)*.35);
-      gl_FragColor=vec4(c,(.25+.75*streak)*fade*uOpacity);}`;
+      gl_FragColor=vec4(c,(.12+.42*streak+.7*filament)*fade*uOpacity);}`;
   // uv.y: 0 inner edge → 1 leading (outer) edge of the shock ring.
   const RING_FRAGMENT = `uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uTime;uniform sampler2D uNoise;varying vec2 vUv;
     void main(){float across=vUv.y;float leading=smoothstep(.55,1.,across)*(1.-smoothstep(.93,1.,across));
       float body=smoothstep(0.,.6,across)*(1.-smoothstep(.93,1.,across));float n=texture2D(uNoise,vec2(vUv.x*8.,uTime*.5)).r;
       vec3 c=mix(uJade,uGold,leading);c=mix(c,uCore,pow(leading,4.)*.5);
       gl_FragColor=vec4(c,(body*.45+leading*.8)*(.7+.3*n)*uOpacity);}`;
-  const CRACK_FRAGMENT = `uniform sampler2D uMap;uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uHeat,uRot;varying vec2 vUv;
+  const CRACK_FRAGMENT = `uniform sampler2D uMap;uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uHeat,uRot,uReveal;varying vec2 vUv;
     void main(){vec2 p=vUv-.5;float c=cos(uRot),s=sin(uRot);p=vec2(c*p.x-s*p.y,s*p.x+c*p.y)+.5;
       vec4 m=texture2D(uMap,p);float line=m.r,halo=m.g;vec3 col=mix(uJade,uGold,line*uHeat);col=mix(col,uCore,line*line*uHeat*.6);
-      gl_FragColor=vec4(col,(line*.75+halo*.22)*m.a*uOpacity);}`;
+      float radius=length(vUv-.5)*2.;float reveal=1.-smoothstep(uReveal-.08,uReveal+.06,radius);
+      gl_FragColor=vec4(col,(line*.75+halo*.22)*m.a*uOpacity*reveal);}`;
 
   // ---------------- Côn Quét: ribbon trail bound to two points on the staff ----------------
   // Used by staff-sweep.js (Côn Quét timeline, hit windows, wave): the ribbon replaces a
@@ -517,6 +518,46 @@
     }
     ring.geometry.attributes.position.needsUpdate = true;
   }
+  // Ground slabs are temporary VFX meshes, never edits to terrain/collision/navmesh.
+  function slamSlabs(core, fx) {
+    const T = core.THREE, cfg = VFX.slam, count = cfg.slabs[core.quality] || cfg.slabs.medium;
+    const shared = sharedFor(core);
+    const mesh = new T.InstancedMesh(shared.rock, shared.rockMaterial, count);
+    for (let i = 0; i < count; i++) mesh.setColorAt(i, new T.Color().setScalar(rand(core, .55, .8)));
+    mesh.name = 'chan-dia-lifted-stone-plates'; mesh.visible = false; mesh.frustumCulled = false; fx.world.add(mesh);
+    const state = Array.from({length: count}, (_, i) => {
+      const a = i / count * TAU * 2 + rand(core, -.12, .12);
+      const r = cfg.slabRadius * (i % 2 ? .8 : .46) * rand(core, .88, 1.12);
+      return {a, r, x: 0, y: 0, z: 0, width: rand(core, .28, .53), depth: rand(core, .2, .4), lift: rand(core, .22, cfg.slabHeight), tilt: rand(core, .2, .65)};
+    });
+    return {mesh, state, dummy: new T.Object3D()};
+  }
+  // Identical radius progression drives the visible leading wave and swept hit windows.
+  function slamRadius(age, skill) {
+    const k = clamp((age - skill.activeAt) / Math.max(.001, skill.activeEnd - skill.activeAt));
+    return skill.radius * (1 - (1 - k) * (1 - k));
+  }
+  function slamHitWindow(core, fx, previous, current) {
+    const s = fx.skill, sl = fx.slam;
+    if (current < s.activeAt || previous >= s.activeEnd || !fx.alive) return;
+    const from = Math.max(previous, s.activeAt), to = Math.min(current, s.activeEnd);
+    const e = {type: 'hit-window', kind: 'ground-wave', handle: fx.handle, skillId: s.id, weaponId: s.weaponId,
+      caster: fx.caster, time: core.time, position: sl.contact.clone(), hitIndex: 0,
+      innerRadius: slamRadius(from, s), outerRadius: slamRadius(to, s), height: VFX.slam.hitHeight,
+      hitTargets: sl.hitTargets};
+    let accepting = true;
+    e.testTarget = (id, point, radius = 0) => {
+      if (!accepting || !fx.alive || id == null || id === fx.caster.uuid || sl.hitTargets.has(id) ||
+          !point || ![point.x, point.y, point.z, radius].every(Number.isFinite) || radius < 0) return false;
+      const d = Math.hypot(point.x - e.position.x, point.z - e.position.z);
+      if (d + radius < e.innerRadius || d - radius > e.outerRadius) return false;
+      sl.p.set(point.x, point.y, point.z);
+      if (Math.abs(point.y - core._ground(sl.p)) > e.height) return false;
+      // Owner checks team, target validity and occlusion BEFORE consuming this test.
+      sl.hitTargets.add(id); return true;
+    };
+    try { core.onEvent?.(e); } finally { accepting = false; }
+  }
   const GroundSlamEffect = {
     build(core, fx) {
       const T = core.THREE, q = tier(core), shared = sharedFor(core), c = palette(T), cfg = VFX.slam; worldLayer(core, fx);
@@ -535,11 +576,12 @@
       });
       // Crack decal: a small terrain-following grid, heights sampled once at contact.
       const crackGeometry = new T.PlaneGeometry(cfg.crackRadius * 2, cfg.crackRadius * 2, q.crackGrid, q.crackGrid); crackGeometry.rotateX(-Math.PI / 2); fx.geometries.add(crackGeometry);
-      const crackMaterial = material(core, fx, {uniforms: {uMap: {value: shared.crack}, uJade: {value: c.jade}, uGold: {value: c.gold}, uCore: {value: c.core}, uOpacity: {value: 0}, uHeat: {value: 1}, uRot: {value: core.random() * TAU}},
+      const crackMaterial = material(core, fx, {uniforms: {uMap: {value: shared.crack}, uJade: {value: c.jade}, uGold: {value: c.gold}, uCore: {value: c.core}, uOpacity: {value: 0}, uHeat: {value: 1}, uRot: {value: core.random() * TAU}, uReveal: {value: 0}},
         vertexShader: UV_VERTEX, fragmentShader: CRACK_FRAGMENT, side: T.FrontSide, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3});
       const cracks = mesh(core, fx, crackGeometry, crackMaterial, fx.world, 8); cracks.visible = false; cracks.frustumCulled = false;
       const rocks = new T.InstancedMesh(shared.rock, shared.rockMaterial, q.rocks); rocks.visible = false; rocks.frustumCulled = false; fx.world.add(rocks);
       fx.slam = {orb, orbMaterial, impact, flash, flashMaterial, columnMaterial, waves, cracks, crackMaterial, crackGeometry, rocks,
+        slabs: slamSlabs(core, fx), hitTargets: new Set(), previousAge: 0,
         crackBase: Float32Array.from(crackGeometry.attributes.position.array),
         rockState: Array.from({length: q.rocks}, () => ({p: new T.Vector3(), v: new T.Vector3(), spin: new T.Vector3(), size: 0, life: 0, age: 0, alive: false, bounced: false})),
         dust: createDust(core, fx, q.dust, VFX.colors.dust), contact: new T.Vector3(), normal: new T.Vector3(0, 1, 0), up: new T.Vector3(0, 1, 0),
@@ -580,16 +622,23 @@
         pos.setXYZ(i, sl.p.x, core._ground(sl.p) + cfg.decalLift, sl.p.z);
       }
       pos.needsUpdate = true; sl.cracks.visible = true;
+      for (const plate of sl.slabs.state) {
+        plate.x = sl.contact.x + Math.sin(plate.a) * plate.r; plate.z = sl.contact.z + Math.cos(plate.a) * plate.r;
+        sl.p.set(plate.x, sl.contact.y, plate.z); plate.y = core._ground(sl.p);
+      }
       for (const rock of sl.rockState) {
         const a = core.random() * TAU, speed = rand(core, cfg.rockSpeed[0], cfg.rockSpeed[1]);
-        rock.p.set(sl.contact.x + Math.sin(a) * .25, sl.contact.y + .05, sl.contact.z + Math.cos(a) * .25);
+        const r = rand(core, .25, 1.5);
+        rock.p.set(sl.contact.x + Math.sin(a) * r, sl.contact.y, sl.contact.z + Math.cos(a) * r);
+        rock.p.y = core._ground(rock.p) + .09;
         rock.v.set(Math.sin(a) * speed, rand(core, cfg.rockUp[0], cfg.rockUp[1]), Math.cos(a) * speed);
         rock.spin.set(rand(core, -9, 9), rand(core, -9, 9), rand(core, -9, 9)); rock.size = rand(core, cfg.rockSize[0], cfg.rockSize[1]);
         rock.life = rand(core, cfg.rockLife[0], cfg.rockLife[1]); rock.age = 0; rock.alive = true; rock.bounced = false;
       }
       for (let i = 0; i < q.dust; i++) {
-        const a = core.random() * TAU, r = rand(core, .2, 1.4), speed = rand(core, .8, 2.2);
-        if (!sl.dust.spawn(sl.contact.x + Math.sin(a) * r, sl.contact.y + .1, sl.contact.z + Math.cos(a) * r, Math.sin(a) * speed, rand(core, .05, .3), Math.cos(a) * speed, rand(core, .5, .95), rand(core, cfg.dustLife[0], cfg.dustLife[1]), .55)) break;
+        const a = core.random() * TAU, r = rand(core, .6, 2.5), speed = rand(core, 1.4, 3.8);
+        sl.p.set(sl.contact.x + Math.sin(a) * r, sl.contact.y, sl.contact.z + Math.cos(a) * r);
+        if (!sl.dust.spawn(sl.p.x, core._ground(sl.p) + .1, sl.p.z, Math.sin(a) * speed, rand(core, .05, .3), Math.cos(a) * speed, rand(core, .7, 1.3), rand(core, cfg.dustLife[0], cfg.dustLife[1]), .38)) break;
       }
       for (let i = 0; i < q.sparks; i++) {
         const a = core.random() * TAU, speed = rand(core, 1.5, 4.5);
@@ -601,6 +650,7 @@
     },
     tick(core, fx, dt) {
       const s = fx.skill, t = fx.age, cfg = VFX.slam, sl = fx.slam, after = t - s.activeAt;
+      const previous = sl.previousAge; sl.previousAge = t;
       for (const m of fx.materials) if (m.uniforms?.uTime) m.uniforms.uTime.value = t;
       // Charge: energy gathers at the staff tip during the raise; no ground effect yet.
       if (after < 0) {
@@ -618,26 +668,43 @@
       }
       // Exactly one contact per cast, even when one frame jumps past the whole timeline.
       if (!sl.impacted) { sl.impacted = true; this.impactNow(core, fx); if (!fx.alive) return; }
+      slamHitWindow(core, fx, previous, t); if (!fx.alive) return;
+      const elapsedAfter = Math.max(0, t - Math.max(previous, s.activeAt));
       sl.orb.visible = false; sl.orbMaterial.uniforms.uOpacity.value = 0;
       const flash = 1 - smooth(0, cfg.flash, after);
-      sl.flash.visible = flash > 0; sl.flashMaterial.uniforms.uOpacity.value = flash * .9 * VFX.intensity; sl.flash.scale.setScalar(.9 + after * 10);
+      sl.flash.visible = flash > 0; sl.flashMaterial.uniforms.uOpacity.value = flash * cfg.reducedFlash * VFX.intensity; sl.flash.scale.setScalar(.9 + after * 10);
       const column = 1 - smooth(.03, cfg.columnLife, after);
       sl.columnMaterial.uniforms.uOpacity.value = column * VFX.intensity; fx.column.visible = column > 0;
-      fx.column.scale.set(.28 + after * .7, cfg.columnHeight * (.7 + .3 * column), .28 + after * .7);
+      fx.column.scale.set(.22 + after * .45, cfg.columnHeight * (.55 + .45 * smooth(0, .08, after)), .22 + after * .45);
       // Two expanding shock rings, re-fitted to the terrain every frame.
       sl.waves.forEach((w, i) => {
-        const k = clamp((after - i * cfg.secondWaveDelay) / cfg.waveLife); w.mesh.visible = k > 0 && k < 1;
+        const life = Math.max(.001, s.activeEnd - s.activeAt);
+        const k = clamp((after - i * cfg.secondWaveDelay) / life); w.mesh.visible = k > 0 && k < 1;
         if (!w.mesh.visible) { w.material.uniforms.uOpacity.value = 0; return; }
-        const r = .25 + (cfg.waveRadius * (i ? .85 : 1) - .25) * (1 - (1 - k) * (1 - k)), width = cfg.waveWidth * (1 - k * .5);
+        const r = s.radius * (i ? .88 : 1) * (1 - (1 - k) * (1 - k)), width = Math.min(r, cfg.waveWidth * (1 - k * .5));
         drawRing(core, w.ring, sl.contact, Math.max(.05, r - width), r, .045 + i * .01);
         w.material.uniforms.uOpacity.value = Math.pow(1 - k, .7) * (i ? .6 : .95) * VFX.intensity;
       });
       // Cracks glow hot, cool and vanish; the ground itself is never modified.
       const crack = 1 - smooth(cfg.crackLife * .55, cfg.crackLife, after);
       sl.crackMaterial.uniforms.uOpacity.value = crack * smooth(0, .06, after) * VFX.intensity; sl.crackMaterial.uniforms.uHeat.value = 1 - smooth(.1, .8, after);
+      sl.crackMaterial.uniforms.uReveal.value = smooth(0, .32, after) * 1.08;
       sl.cracks.visible = crack > 0;
+      // Each plate erupts after the pressure front arrives, then settles before cleanup.
+      let visiblePlates = 0;
+      sl.slabs.state.forEach((plate, i) => {
+        const a = after - plate.r / s.radius * .12, rise = smooth(0, .11, a);
+        const fade = 1 - smooth(cfg.slabLife * .55, cfg.slabLife, after), d = sl.slabs.dummy;
+        const lift = rise * fade;
+        d.position.set(plate.x, plate.y + plate.lift * lift, plate.z);
+        d.rotation.set(plate.tilt * lift, -plate.a, plate.tilt * .35 * lift);
+        d.scale.set(plate.width, .10 + .08 * rise, plate.depth).multiplyScalar(lift);
+        if (lift > .001) visiblePlates++;
+        d.updateMatrix(); sl.slabs.mesh.setMatrixAt(i, d.matrix);
+      });
+      sl.slabs.mesh.instanceMatrix.needsUpdate = true; sl.slabs.mesh.visible = visiblePlates > 0;
       // Rocks: launch velocity, gravity, one damped bounce, shrink out (sub-stepped for stability).
-      let remaining = Math.min(dt, .5), alive = 0;
+      let remaining = Math.min(elapsedAfter, s.duration - s.activeAt), alive = 0;
       while (remaining > 1e-6) {
         const h = Math.min(remaining, 1 / 30); remaining -= h;
         for (const rock of sl.rockState) {
@@ -658,7 +725,7 @@
         d.updateMatrix(); sl.rocks.setMatrixAt(i, d.matrix);
       });
       sl.rocks.instanceMatrix.needsUpdate = true; sl.rocks.visible = alive > 0;
-      sl.dust.update(Math.min(dt, .1));
+      sl.dust.update(Math.min(elapsedAfter, s.duration - s.activeAt));
     }
   };
 

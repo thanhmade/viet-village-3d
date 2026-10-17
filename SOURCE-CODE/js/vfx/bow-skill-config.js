@@ -33,7 +33,7 @@
       "radius": 0.26,
       "range": 12.0,
       "forwardOffset": 1.0,
-      "description": "Một mũi tên năng lượng vàng với luồng khí xanh dọc đường bay và chớp sáng khi kết thúc."
+      "description": "Kéo dây, tụ lực rồi phóng một mũi tên vàng lõi sáng, khí xanh xoắn quanh đường bay. Xuyên các bia trên đường thẳng; lóe khi trúng, dừng ở vật cản đã đăng ký."
     },
     {
       "id": "bow.lien-tien",

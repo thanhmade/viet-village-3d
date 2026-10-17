@@ -477,8 +477,13 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
           weaponRig.rotation.x=-1.02-(s.localId==='pha-tran'?.25:0);weaponRig.position.z=age<s.activeAt?-.3+windup*.3:-.3-Math.sin(progress*Math.PI)*.8;
           if(s.localId==='thuong-phong')rig.rotation.y=progress*Math.PI*1.45;
         }else if(weaponId==='bow'){
-          const draw=age<s.activeAt?windup:Math.max(0,1-progress*7),attribute=model.string.geometry.attributes.position;
-          attribute.setXYZ(1,0,0,.14+draw*.42);attribute.needsUpdate=true;rightHand.position.z=.14+draw*.42;model.arrow.position.z=draw*.35;model.arrow.visible=age<s.activeAt;
+          const draw=s.localId==='xuyen-tien'?window.BowPiercing.sample(age).draw:(age<s.activeAt?windup:Math.max(0,1-progress*7))*.42,attribute=model.string.geometry.attributes.position;
+          attribute.setXYZ(1,0,.035,.14+draw);attribute.needsUpdate=true;model.string.geometry.computeBoundingSphere();
+          model.arrow.position.z=-.66+draw;model.arrow.visible=age<s.activeAt;rightHand.position.set(0,.035,.14+draw);
+          if(s.localId==='xuyen-tien'){
+            // This presentation rig faces -Z and uses full-size weapons; match the runtime release point.
+            weaponRig.position.set(.12,1.7295,-.427);weaponRig.rotation.set(0,0,0);leftHand.position.set(0,0,-.26);
+          }
           if(s.localId==='mua-ten')weaponRig.rotation.x=-.46;
         }else if(weaponId==='axe'){
           if(s.localId==='cuong-phong'){rig.rotation.y=progress*Math.PI*4;weaponRig.rotation.set(-1.05,0,-.5);}

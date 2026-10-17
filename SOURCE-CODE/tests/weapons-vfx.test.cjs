@@ -114,6 +114,8 @@ test('mọi chiêu hoàn tất đúng sự kiện ở 30 FPS, 60 FPS, delta lệ
         assert.equal(byType('shield-start').length, 1);
         assert.equal(byType('shield-end').length, 1);
         assert.ok(events.indexOf(byType('shield-start')[0]) < events.indexOf(byType('shield-end')[0]));
+      } else if(skill.id==='bow.xuyen-tien'){
+        assert.equal(byType('release').length,1);assert.equal(byType('impact').length,0,'empty scene is a miss');
       } else {
         assert.ok(byType('impact').length >= 1, `${skill.id} không mất va chạm ở delta ${delta}`);
         assert.ok(events.indexOf(byType('cast')[0]) < events.indexOf(byType('impact')[0]));

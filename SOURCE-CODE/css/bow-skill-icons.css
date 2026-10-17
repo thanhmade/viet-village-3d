@@ -1,0 +1,12 @@
+/* Painted Xuyên Tiễn icon; labels and cooldown stay as accessible DOM text. */
+#weaponSkillBar [data-skill-id="bow.xuyen-tien"] .skill-icon {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; font-size: 0; pointer-events: none;
+  background: #081421 url('../../ASSETS/ui/skills/bow/xuyen-tien-gold-blue.png') center / cover no-repeat;
+  color: transparent; text-shadow: none; border-radius: 50%;
+  box-shadow: inset 0 0 0 1px #edc76e99, inset 0 0 8px #050d1b, 0 0 8px #4c9de52e;
+}
+#weaponSkillBar [data-skill-id="bow.xuyen-tien"][data-state="cooldown"] .skill-icon {filter: saturate(.45) brightness(.65);}
+#weaponSkillBar [data-skill-id="bow.xuyen-tien"][data-state="ready"] .skill-icon {filter: saturate(1.08);}
+#weaponSkillBar [data-skill-id="bow.xuyen-tien"] .skill-name,
+#weaponSkillBar [data-skill-id="bow.xuyen-tien"] .skill-key {z-index: 2; background: #081421cf; border-radius: 4px;}
+#weaponSkillBar [data-skill-id="bow.xuyen-tien"][data-state="blocked"] .skill-icon {filter: grayscale(1) brightness(.48);}

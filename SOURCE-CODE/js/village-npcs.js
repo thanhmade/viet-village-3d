@@ -341,6 +341,7 @@
    return loading;
   }
   function onSkillUsed(hitWindow=null){
+   let anyHit=false;
    const state=getState();if(!usable(state))return false;
    for(const {definition:p,root} of actors.props.values()){
     const dx=p.position.x-state.position.x,dz=p.position.z-state.position.z,distance=Math.hypot(dx,dz);
@@ -351,8 +352,8 @@
     }
     pulse=.35;root.rotation.z=.05;
     if(journal.record('practice-skill',p.id)){invalidateQuests();notify('Đã luyện chiêu hướng vào bia · Quay lại báo Võ sư.');}
-    return true;
-   }return false;
+    anyHit=true;if(hitWindow?.kind!=='piercing-arrow')return true;
+   }return anyHit;
   }
   // Minimap shares the board: the same marker per NPC as above its head.
   function drawMinimapMarkers(ctx,point){

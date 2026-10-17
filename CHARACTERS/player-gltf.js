@@ -92,11 +92,11 @@
    sweepLegs[side]={upper:findBone('mixamorig:'+prefix+'UpLeg'),lower:findBone('mixamorig:'+prefix+'Leg'),foot:findBone('mixamorig:'+prefix+'Foot')};
   }
   facing.name='player-facing-pose';
-  let staffSweep=null,staffSlam=null;
+  let staffSweep=null,staffSlam=null,bowDraw=null;
   function restoreSweep(){
    for(const [bone,q] of sweepRestore)bone.quaternion.copy(q);sweepRestore.clear();
    for(const [bone,p] of sweepPositions)bone.position.copy(p);sweepPositions.clear();
-   facing.rotation.y=forwardYaw;delete sockets.right.userData.staffSweepGripX;delete sockets.right.userData.staffSlamTime;
+   facing.rotation.y=forwardYaw;delete sockets.right.userData.staffSweepGripX;delete sockets.right.userData.staffSlamTime;delete sockets.right.userData.bowDrawTime;
   }
 
   function aimBone(bone,child,target){
@@ -189,6 +189,24 @@
    if(minimum<groundPoint.y)facing.position.y+=(groundPoint.y-minimum)/rootScale.y;
    facing.position.y+=state.lift/rootScale.y;sync();updateSockets();
   }
+  function poseBowDraw(){
+   if(!bowDraw||!global.BowPiercing)return;
+   sockets.right.userData.bowDrawTime=bowDraw.time;
+   const state=global.BowPiercing.sample(bowDraw.time),weight=state.weight;if(weight<=0)return;
+   const up=new T.Vector3(0,1,0),rotation=new T.Quaternion().setFromAxisAngle(up,forwardYaw);
+   for(const bone of Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand]))if(bone)sweepRestore.set(bone,bone.quaternion.clone());
+   for(const side of ['right','left']){
+    const {upper,lower,hand}=sweepBones[side];if(!upper||!lower)continue;
+    const palm=new T.Vector3(state.handX,state.handY,state.handZ);
+    if(side==='left'){palm.y+=.035*.7;palm.z-=(.4+state.draw)*.7;}
+    palm.applyAxisAngle(up,forwardYaw);
+    const desired=root.getWorldQuaternion(new T.Quaternion()).multiply(rotation).multiply(handCalibration[side].restInverse.clone().invert());
+    const offset=handCalibration[side].palm.clone().multiply(hand.getWorldScale(new T.Vector3())).applyQuaternion(desired);
+    const target=root.localToWorld(palm).sub(offset),pole=root.localToWorld(new T.Vector3(side==='right'?-.8:.8,1.7,-.35).applyAxisAngle(up,forwardYaw));
+    solveSweepLimb(upper,lower,hand,target,pole,desired,weight);
+   }
+   sync();updateSockets();
+  }
   let controllerJump=false;
   function pose(){
    hips.position.x=hipAnchor.x;hips.position.z=hipAnchor.z;facing.position.y=baseGroundY;sync();
@@ -197,7 +215,7 @@
    // During gameplay the collider supplies jump height, never add the GLB's
    // authored elevation a second time. Preview still retains authored motion.
    if(lowest<groundPoint.y||(controllerJump&&Number.isFinite(lowest))){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-lowest)/rootScale.y;sync();}
-   updateSockets();poseStaffSweep();poseStaffSlam();
+   updateSockets();poseStaffSweep();poseStaffSlam();poseBowDraw();
    if(staffSweep){
     let minimum=Infinity;for(const sole of soles){sole.mesh.getVertexPosition(sole.index,point).applyMatrix4(sole.mesh.matrixWorld);minimum=Math.min(minimum,point.y);}
     if(minimum<groundPoint.y){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-minimum)/rootScale.y;sync();updateSockets();}
@@ -228,43 +246,47 @@
   }
   function finished(event){if(event.action===current)pendingFinished=event.action;}
   mixer.addEventListener('finished',finished);
-  function returnToIdle(){if(disposed)return false;staffSweep=null;staffSlam=null;restoreSweep();speed=0;const returning=mode==='once';transition('idle','locomotion');if(returning)returningUntil=mixer.time+fadeDuration;pose();return true;}
+  function returnToIdle(){if(disposed)return false;staffSweep=null;staffSlam=null;bowDraw=null;restoreSweep();speed=0;const returning=mode==='once';transition('idle','locomotion');if(returning)returningUntil=mixer.time+fadeDuration;pose();return true;}
   pose();
   return {
    root,mixer,clips:Object.freeze(animations.map(clip=>Object.freeze({name:clip.name,duration:clip.duration}))),hands,sockets,
    stats:Object.freeze({modelId,height,sourceHeight,scale:height/sourceHeight,vertices,triangles,texturedMeshes,bones:new Set([...skeletons].flatMap(s=>s.bones)).size,footProbes:soles.length,forward:'+Z',forwardYaw,rootMotion:'Hips X/Z locked to idle; authored Y retained',handNames:{right:hands.right.name,left:hands.left.name},socketCalibration:'source-skeleton-idle'}),
-   setLocomotion(value){if(disposed)return false;speed=staffSlam?0:Number.isFinite(value)?Math.max(0,value):0;if(mode==='locomotion'){
+   setLocomotion(value){if(disposed)return false;speed=staffSlam||bowDraw?0:Number.isFinite(value)?Math.max(0,value):0;if(mode==='locomotion'){
     transition(locomotion(),'locomotion');const name=current.getClip().name;
     current.setEffectiveTimeScale(name==='idle'?1:Math.max(.45,Math.min(1.35,speed/(name==='run'?6.5:4.5))));
    }return true;},
-   startStaffSlam(){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||!global.StaffSlam||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;staffSlam={time:0};pose();return true;},
+   startBowDraw(){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||!global.BowPiercing||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;bowDraw={time:0};pose();return true;},
+   cancelBowDraw(){if(disposed||!bowDraw)return;bowDraw=null;restoreSweep();pose();},
+   startStaffSlam(){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||!global.StaffSlam||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;staffSlam={time:0};pose();return true;},
    cancelStaffSlam(){if(disposed||!staffSlam)return;staffSlam=null;restoreSweep();pose();},
-   startStaffSweep(){if(disposed||mode!=='locomotion'||staffSweep||staffSlam||!global.StaffSweep||controllerJump)return false;staffSweep={time:0};pose();return true;},
-   cancelStaffSweep(){if(disposed||!staffSweep)return;staffSweep=null;staffSlam=null;restoreSweep();pose();},
-   startJump(duration){if(disposed||mode!=='locomotion'||staffSweep||staffSlam||mixer.time<returningUntil)return false;
+   startStaffSweep(){if(disposed||mode!=='locomotion'||staffSweep||staffSlam||bowDraw||!global.StaffSweep||controllerJump)return false;staffSweep={time:0};pose();return true;},
+   cancelStaffSweep(){if(disposed||!staffSweep)return;staffSweep=null;staffSlam=null;bowDraw=null;restoreSweep();pose();},
+   startJump(duration){if(disposed||mode!=='locomotion'||staffSweep||staffSlam||bowDraw||mixer.time<returningUntil)return false;
     controllerJump=true;transition('jump','once');current.setEffectiveTimeScale(current.getClip().duration/Math.max(.2,duration));return true;},
    endJump(){if(disposed)return;controllerJump=false;if(mode==='once'&&current.getClip().name==='jump'){transition(locomotion(),'locomotion');returningUntil=mixer.time+fadeDuration;}},
-   playOnce(name){if(disposed||staffSweep||staffSlam||mode!=='locomotion'||mixer.time<returningUntil||!clipMap.has(name))return false;return transition(name,'once');},
+   playOnce(name){if(disposed||staffSweep||staffSlam||bowDraw||mode!=='locomotion'||mixer.time<returningUntil||!clipMap.has(name))return false;return transition(name,'once');},
    // One part of a clip (Hộ Thân / legacy preview): starts at `from`, returns to locomotion at `to`.
    // `force` may cut another one-shot (skill after skill), never defeat, a preview,
    // the two-hand Côn Quét pose or a controller jump.
    playSegment(name,{from=0,to=Infinity,force=false}={}){
-    if(disposed||!clipMap.has(name)||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||controllerJump)return false;
+    if(disposed||!clipMap.has(name)||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||controllerJump)return false;
     if(!force&&(mode!=='locomotion'||mixer.time<returningUntil))return false;
     const duration=clipMap.get(name).duration,start=Math.max(0,Math.min(Number.isFinite(from)?from:0,duration)),end=Math.min(duration,Number.isFinite(to)?to:duration);
     if(!(end>start))return false;
     transition(name,'once');current.time=start;segmentEnd=end<duration?end:Infinity;return true;
    },
-   preview(name){if(disposed||!clipMap.has(name))return false;staffSweep=null;staffSlam=null;restoreSweep();return transition(name,'preview');},
+   preview(name){if(disposed||!clipMap.has(name))return false;staffSweep=null;staffSlam=null;bowDraw=null;restoreSweep();return transition(name,'preview');},
    pausePreview(){if(disposed||mode!=='preview')return false;pausedPreview=true;return true;},
    resumePreview(){if(disposed||mode!=='preview'||current.paused)return false;pausedPreview=false;return true;},
    returnToIdle,
    setDefeatClip(name){if(disposed||!['defeat_02','defeat_03'].includes(name)||reviewedDefeats.size!==2)return false;defeatClip=name;return true;},
-   playDefeat(){if(disposed||!defeatClip)return false;staffSweep=null;staffSlam=null;restoreSweep();if(mode==='defeat')return true;return transition(defeatClip,'defeat');},
-   get state(){return {clip:current.getClip().name,time:current.time,busy:!!staffSweep||!!staffSlam||mode!=='locomotion'||mixer.time<returningUntil,preview:mode==='preview',paused:pausedPreview||current.paused,defeatClip,reviewedDefeats:[...reviewedDefeats],mode,activeActions:[...actions.values()].filter(action=>action.isScheduled()).length};},
+   playDefeat(){if(disposed||!defeatClip)return false;staffSweep=null;staffSlam=null;bowDraw=null;restoreSweep();if(mode==='defeat')return true;return transition(defeatClip,'defeat');},
+   get state(){return {clip:current.getClip().name,time:current.time,busy:!!staffSweep||!!staffSlam||!!bowDraw||mode!=='locomotion'||mixer.time<returningUntil,preview:mode==='preview',paused:pausedPreview||current.paused,defeatClip,reviewedDefeats:[...reviewedDefeats],mode,activeActions:[...actions.values()].filter(action=>action.isScheduled()).length};},
    update(dt){
     if(disposed||!Number.isFinite(dt)||dt<0)return;
     restoreSweep();if(staffSweep){staffSweep.time+=dt;if(staffSweep.time+1e-7>=global.StaffSweep.duration)staffSweep=null;}
+    let bowFinished=false;
+    if(bowDraw){bowDraw.time+=dt;if(bowDraw.time+1e-7>=global.BowPiercing.poseDuration){bowDraw=null;bowFinished=true;}}
     let slamFinished=false;
     if(staffSlam){staffSlam.time+=dt;if(staffSlam.time+1e-7>=global.StaffSlam.duration){staffSlam=null;slamFinished=true;}}
     if(!pausedPreview)mixer.update(Math.min(dt,.1));
@@ -278,6 +300,7 @@
     pose();
     // Publish the final sample for this frame; cancellation leaves the marker absent.
     if(slamFinished)sockets.right.userData.staffSlamTime=global.StaffSlam.duration;
+    if(bowFinished)sockets.right.userData.bowDrawTime=global.BowPiercing.poseDuration;
    },
    dispose(){if(disposed)return;disposed=true;mixer.removeEventListener('finished',finished);mixer.stopAllAction();mixer.uncacheRoot(model);
     // Equipment belongs to the weapon controller; don't dispose it with this GLB.

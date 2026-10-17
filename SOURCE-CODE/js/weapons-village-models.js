@@ -102,6 +102,13 @@ window.createVillageWeaponModels = function (T) {
     const arrowPoint = mesh(new T.ConeGeometry(.044,.17,4),steel,arrow);arrowPoint.rotation.x = -Math.PI/2;arrowPoint.position.z = -.85;
     for(const x of [-.035,.035])box(.018,.12,.16,gold,x,0,.62,arrow);
     m.arrow = arrow; m.tip.position.set(0,.035,-.93);
+    m.nock=new T.Object3D();m.nock.name='bow-string-nock';m.nock.position.z=.8;arrow.add(m.nock);
+    m.setDraw=function(amount=0,visible=true){
+      const draw=Math.max(0,Math.min(.42,Number.isFinite(amount)?amount:0));
+      m.string.geometry.attributes.position.setXYZ(1,0,.035,.14+draw);m.string.geometry.attributes.position.needsUpdate=true;m.string.geometry.computeBoundingSphere();
+      arrow.position.z=.14+draw-.8;arrow.visible=visible;m.tip.position.set(0,.035,-.93+arrow.position.z);
+    };
+    m.setDraw();
   }
   {
     const m = newModel('axe');

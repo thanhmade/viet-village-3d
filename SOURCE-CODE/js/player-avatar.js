@@ -98,6 +98,7 @@
    if(!hasGLTF()||!getState().authenticated||!(getState().hp>0)||open)return false;
    // Côn Quét: two-hand sweep pose driven by staff-sweep's timeline.
    if(skillId==='staff.con-quet')return visual.startStaffSweep?.()||false;
+   if(skillId==='bow.xuyen-tien')return visual.startBowDraw?.()||false;
    if(skillId==='staff.chan-dia')return visual.startStaffSlam?.()||false;
    // Hộ Thân keeps its measured clip segment; the shield outlives its gesture.
    const segment=global.StaffVFXConfig?.animation?.[skillId];
@@ -106,7 +107,7 @@
    return false;
   }
   function cancelSkillPose(){
-   visual?.cancelStaffSweep?.();visual?.cancelStaffSlam?.();
+   visual?.cancelStaffSweep?.();visual?.cancelStaffSlam?.();visual?.cancelBowDraw?.();
    if(skillPose?.visual===visual&&visual?.state.mode==='once'&&visual.state.clip===skillPose.clip)visual.returnToIdle();
    skillPose=null;
   }

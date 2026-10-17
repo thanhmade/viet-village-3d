@@ -11,6 +11,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   const el = id => document.getElementById(id);
   const panel = el('weaponsPanel'), bar = el('weaponSkillBar');
   const configs = window.WeaponVFXCore.getWeaponConfigs();
+  const guard = window.createStaffGuard();
   const configById = new Map(configs.map(config => [config.weaponId, config]));
   const skillLabels = new Map(configs.map(config => [config.weaponId,
     config.skills.map((skill, index) => `${index + 1} · ${skill.name}`)]));
@@ -86,7 +87,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   function showEquipped(value) { if (grip && grip.visible !== value) grip.visible = value; hide(bar, !value); showRoaming(value); }
   function setExpanded(value) { el('weaponsBtn')?.setAttribute?.('aria-expanded', String(value)); }
   function cancel() {
-    cancelAim();onSkillCancel?.();
+    cancelAim();guard.cancel();onSkillCancel?.();
     if (manager?.hasActiveEffects) manager.cancelAll();
     if (poseTime || poseLength) grip?.rotation.set(0, Math.PI, 0);
     poseTime = poseLength = 0;
@@ -104,15 +105,17 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       const button = skillButtons[index], skill = currentConfig.skills[index], part = parts[index];
       if (!button || !skill || !part) continue;
       const {remaining, state} = skillState(skill, allowed), aimed = AIMED.has(skill.type);
-      const signature = [skill.id, state, remaining > 0 ? remaining.toFixed(1) : '', aiming?.slot === skill.slot].join('|');
+      const protection = skill.id === 'staff.ho-than' && guard.state?.active ? Math.ceil(guard.state.remaining) : null;
+      const signature = [skill.id, state, remaining > 0 ? remaining.toFixed(1) : '', protection, aiming?.slot === skill.slot].join('|');
       if (signatures[index] === signature) continue;
       signatures[index] = signature;
       setText(part, 'icon', GLYPHS[skill.type] || '✦'); setText(part, 'name', skill.name);
-      setText(part, 'key', index === 0 ? 'J · 1' : KEYS[index]); setText(part, 'cd', remaining > 0 ? remaining.toFixed(1) : '');
+      setText(part, 'key', index === 0 ? 'J · 1' : KEYS[index]); setText(part, 'cd', protection !== null ? '⛨ ' + protection : remaining > 0 ? remaining.toFixed(1) : '');
       button.style?.setProperty?.('--cd', remaining > 0 ? String(Math.min(1, remaining / skill.cooldown)) : '0');
       button.setAttribute?.('data-state', aiming?.slot === skill.slot ? 'aiming' : state);
       button.setAttribute?.('aria-label', skill.name + ' · phím ' + (index === 0 ? 'J hoặc 1' : KEYS[index])
         + (remaining > 0 ? ' · đang hồi ' + remaining.toFixed(1) + ' giây' : state === 'blocked' ? ' · chưa dùng được ở đây' : '')
+        + (protection !== null ? ' · bảo vệ còn ' + protection : '')
         + (aimed ? ' · giữ và kéo để ngắm' : ' · chạm để dùng'));
       const disabled = !allowed || remaining > 0;
       if (button.disabled !== disabled) button.disabled = disabled;
@@ -221,6 +224,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     const result = manager.cast(skill.id, {caster, weaponTip: selectedModel.tip, weapon: selectedModel.group, point: target,
       casterHeight: Number.isFinite(height) && height > 0 ? height : 2.35});
     if (result.ok) {
+      if (skill.id === 'staff.ho-than') { const state = getState(); guard.start(skill, {maxHp: state.maxHp, ownerId: state.uid || null, handle: result.handle}); }
       poseTime = 0; poseLength = skill.id==='staff.con-quet'?skill.duration:Math.min(skill.duration, .9);
       const button = skillButtons[slot - 1];
       button?.classList?.add?.('skill-fired'); setTimeout(() => button?.classList?.remove?.('skill-fired'), 260);
@@ -264,7 +268,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     if (press.aiming && aiming?.pointerId === event.pointerId) { cancelAim(); render(usable()); }
   }
   function update(dt) {
-    if (disposed) return;
+    if (disposed || !Number.isFinite(dt) || dt < 0) return;
     const allowed = usable(), changed = allowed !== lastAllowed;
     lastAllowed = allowed; showEquipped(allowed);
     if (!allowed) {
@@ -284,6 +288,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       }
       if (phase === 1) {poseLength = 0;grip.rotation.set(0,Math.PI,0);}
     }
+    guard.advance(dt);
     manager.update(dt);
     uiElapsed += dt;
     // Match the tenths-of-a-second label precision, not the display refresh rate.
@@ -347,9 +352,24 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     },
     suspend() { cancel(); showEquipped(false); lastAllowed = false; render(false); },
     lock() { deactivate(); },
-    // A real hit on the player (world point): ripples an active Hộ Thân shell.
+    // Called by session health before HP changes; VFX failure cannot undo combat.
+    absorbDamage({amount, source = null, uid = null}) {
+      if (!usable() || weaponId !== 'staff') { guard.cancel(); return amount; }
+      if (guard.state && guard.state.ownerId !== uid) { manager?.cancel(guard.state.handle); guard.cancel(); return amount; }
+      const result = guard.absorb(amount, uid);
+      if (result.absorbed > 0) {
+        try {
+          const point = source?.position;
+          if (point) manager?.hitShield(caster, point);
+          if (result.broken) manager?.endShield(result.handle, 'depleted');
+        } catch (_) { /* Visual reactions do not own HP or guard. */ }
+        try { signatures.fill(''); render(usable()); } catch (_) { /* UI is not combat. */ }
+      }
+      return result.damage;
+    },
+    // Explicit visual-only hook for previews; real combat uses absorbDamage above.
     onPlayerHit(point) { return !!manager && !disposed && enabled && manager.hitShield(caster, point); },
-    get state() { return {enabled, weaponId, weaponName: currentConfig.name, aiming: aiming ? {slot: aiming.slot, source: aiming.source, cancel: aiming.cancel, point: {x: aiming.point.x, z: aiming.point.z}} : null, active: manager?.effects.length || 0, particles: manager?.pool.count || 0}; },
+    get state() { return {enabled, weaponId, guard: guard.state, weaponName: currentConfig.name, aiming: aiming ? {slot: aiming.slot, source: aiming.source, cancel: aiming.cancel, point: {x: aiming.point.x, z: aiming.point.z}} : null, active: manager?.effects.length || 0, particles: manager?.pool.count || 0}; },
     dispose() {
       if (disposed) return; deactivate(); disposed = true; bindings.forEach(remove => remove()); manager?.dispose();
       if (indicator) { indicator.group.removeFromParent(); indicator.group.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); }); indicator = null; }

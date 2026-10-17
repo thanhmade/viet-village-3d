@@ -314,6 +314,12 @@
       for(const fx of this.effects)if(fx.alive&&fx.caster===caster&&fx.custom?.onHit&&fx.custom.onHit(this,fx,point))return true;
       return false;
     }
+    // Combat ends this particular shield; the effect only renders its release.
+    endShield(handle,reason='depleted') {
+      if(this.disposed)return false;
+      const fx=this.effects.find(fx=>fx.alive&&fx.handle===handle);
+      return !!(fx?.custom?.end&&fx.custom.end(this,fx,reason));
+    }
     cooldownRemaining(id,caster) {return Math.max(0,(this.cooldowns.get(caster)?.get(id)||0)-this.time);}
     _ground(p) {const y=this.getGroundY(p.clone());if(!Number.isFinite(y)) throw new TypeError('getGroundY phải trả về số hữu hạn.');return y;}
     _pose(caster) {
@@ -626,4 +632,3 @@
   }
   return WeaponVFXCore;
 });
-

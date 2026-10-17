@@ -29,7 +29,8 @@
     // Animation segment played on the GLB avatar (from/to in clip seconds). Côn Quét
     // has none: it uses the two-hand staff pose driven by staff-sweep.js.
     animation: Object.freeze({
-      'staff.ho-than': Object.freeze({clip: 'cast_a_spell', from: 1.95, to: 4.95}),
+      // Gathering pose ends after 0.7 s; locomotion resumes while the shield holds.
+      'staff.ho-than': Object.freeze({clip: 'cast_a_spell', from: 1.95, to: 2.65}),
       'staff.chan-dia': Object.freeze({clip: 'slash', from: 1.45, to: 3.25})
     }),
     // Côn Quét staff ribbon (sparks, ground band, wave, grit and light: staff-sweep.js).
@@ -57,8 +58,8 @@
       radiusFactor: 0.6,       // × character height (2.35 m → 1.41 m), at least skill.radius
       centerFactor: 0.5,       // sphere centre height × character height
       rimPower: 2.4, rimOpacity: 0.5, baseOpacity: 0.025,
-      bandSpeed: [0.9, -0.65], bandTilt: [0.42, -0.62], bandWidth: 0.07,
-      patternOpacity: 0.16,
+      bandSpeed: [0.9, -0.65, 0.42], bandTilt: [0.42, -0.62, 1.12], bandWidth: 0.07,
+      patternOpacity: 0.035,
       rippleSpeed: 2.0,        // radians of arc per second across the sphere
       rippleLife: 1.2,
       fadeOut: 0.32            // seconds after activeEnd to dissolve

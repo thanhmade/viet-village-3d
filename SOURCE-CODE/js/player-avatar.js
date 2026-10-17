@@ -10,7 +10,7 @@
   const definition=id=>models.find(model=>model.avatarId===id&&model.available);
   const hasGLTF=()=>selected!=='original'&&!!visual;
   let visual=null,selected='original',requested='original',open=false,epoch=0,lastHp=null,disposed=false,uiTime=0;
-  let physicalJump=false,lastJumpPointerAt=-Infinity;
+  let physicalJump=false,lastJumpPointerAt=-Infinity,skillPose=null;
   let social=null,pendingReaction=null,conversation=null;const socialQueue=[];
   const bindings=[];
   function listen(target,type,handler){target?.addEventListener(type,handler);bindings.push(()=>target?.removeEventListener?.(type,handler));}
@@ -84,6 +84,7 @@
     }
     if(s.visible||open)visual.update(dt);
     if(!visual.state.busy)social=null;
+    if(skillPose&&(visual.state.mode!=='once'||visual.state.clip!==skillPose.clip))skillPose=null;
     if(pendingReaction&&!open&&s.hp>0&&s.visible&&!visual.state.busy){
      const next=pendingReaction;if(visual.playOnce(next.clip)){social=null;pendingReaction=null;}
     }else if(socialQueue.length&&!open&&s.hp>0&&s.visible&&!visual.state.busy){
@@ -97,11 +98,16 @@
    if(!hasGLTF()||!getState().authenticated||!(getState().hp>0)||open)return false;
    // Côn Quét: two-hand sweep pose driven by staff-sweep's timeline.
    if(skillId==='staff.con-quet')return visual.startStaffSweep?.()||false;
-   // Hộ Thân / Chấn Địa play the measured part of a clip that matches their VFX timeline.
+   // Hộ Thân / Chấn Địa play the measured part of a clip that matches the gathering/strike; the Hộ Thân shield outlives its gesture.
    const segment=global.StaffVFXConfig?.animation?.[skillId];
-   if(segment&&visual.playSegment?.(segment.clip,{from:segment.from,to:segment.to,force:true})){social=null;pendingReaction=null;return true;}
+   if(segment&&visual.playSegment?.(segment.clip,{from:segment.from,to:segment.to,force:true})){skillPose={visual,clip:segment.clip};social=null;pendingReaction=null;return true;}
    if(['staff','sword','spear','axe'].includes(weaponId))return visual.playOnce('slash');
    return false;
+  }
+  function cancelSkillPose(){
+   visual?.cancelStaffSweep?.();
+   if(skillPose?.visual===visual&&visual?.state.mode==='once'&&visual.state.clip===skillPose.clip)visual.returnToIdle();
+   skillPose=null;
   }
   function clearInteraction(){socialQueue.length=0;conversation=null;if(social)visual?.returnToIdle();social=null;}
   function onInteraction({type,clip,npcId}={}){
@@ -162,7 +168,7 @@
   });
   listen(global,'keydown',e=>{if(open&&e.key==='Escape'){e.preventDefault();close();}});
   panel.classList.add('hidden');el('playerAnimationTests').hidden=true;message('Chọn nhân vật cho phiên chơi local. Nhân vật ban đầu luôn được giữ lại.');
-  return Object.freeze({select,open:show,close,isOpen:()=>open,update,onSkillUsed,cancelStaffSweep:()=>visual?.cancelStaffSweep?.(),onInteraction,jump,lock,
+  return Object.freeze({select,open:show,close,isOpen:()=>open,update,onSkillUsed,cancelSkillPose,cancelStaffSweep:()=>visual?.cancelStaffSweep?.(),onInteraction,jump,lock,
    get isJumping(){return !!motion?.airborne;},
    get isFemale(){return selected==='female';},get height(){const value=hasGLTF()?visual.stats?.height:null;return Number.isFinite(value)&&value>0?value:null;},get isGLTF(){return hasGLTF();},get state(){return {selected,modelId:definition(selected)?.id||null,loading:loads.size>0,testing,animation:hasGLTF()?visual.state:null};},
    dispose(){if(disposed)return;lock();selected='original';displaySelection();disposed=true;bindings.forEach(remove=>remove());for(const item of visuals.values())item.dispose();visuals.clear();visual=null;}

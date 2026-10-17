@@ -32,12 +32,12 @@ function rig({ground = () => 0, quality = 'low'} = {}) {
 const staffPoint = (weapon, x) => weapon.localToWorld(new THREE.Vector3(x, 0, 0));
 const vertex = (mesh, array, index) => mesh.localToWorld(new THREE.Vector3().fromArray(array, index * 3));
 
-test('animation segments last exactly as long as each VFX timeline; Côn Quét uses the two-hand pose', () => {
+test('Hộ Thân returns to locomotion after gathering; Chấn Địa retains its full timeline', () => {
   assert.equal(VFX.animation['staff.con-quet'], undefined, 'Côn Quét: staff-sweep pose, no clip segment');
   for (const item of staff.skills.filter(item => item.id !== 'staff.con-quet')) {
     const segment = VFX.animation[item.id];
     assert.ok(segment && segment.clip, item.id);
-    close(segment.to - segment.from, item.duration, item.id + ' segment length');
+    close(segment.to - segment.from, item.id === 'staff.ho-than' ? .7 : item.duration, item.id + ' segment length');
     assert.ok(item.activeAt < item.activeEnd && item.activeEnd <= item.duration);
   }
   for (const value of Object.values(VFX.colors)) assert.match(value, /^#[0-9a-f]{6}$/i);
@@ -299,4 +299,29 @@ test('Côn Quét: the teleport threshold follows the real staff size', () => {
     assert.equal(trail.count === 1, expectReset, `scale ${scale}: count ${before} → ${trail.count}`);
     vfx.dispose();
   }
+});
+
+
+
+test('Hộ Thân: three tilted bands, meridians, jumping anchor and depletion release only this cast', () => {
+  const {caster, vfx, events} = rig({ground: p => p.x * .1});
+  const result = vfx.cast('staff.ho-than', {caster, casterHeight: 2.35});
+  vfx.update(.5); const fx = vfx.effects[0], sh = fx.shield;
+  assert.equal(sh.bands.length, 3); assert.equal(sh.sigils.children.length, 3);
+  caster.position.y = 1.2; vfx.update(.1);
+  close(sh.root.getWorldPosition(new THREE.Vector3()).y, 1.2 + 2.35 * .5, 'shell follows airborne body');
+  close(sh.floor.position.y, .035, 'seal stays on ground');
+  assert.equal(vfx.endShield(result.handle + 99), false);
+  assert.equal(vfx.endShield(result.handle), true); assert.equal(vfx.endShield(result.handle), false);
+  assert.equal(vfx.hitShield(caster, new THREE.Vector3(1,1,0)), false);
+  assert.equal(byType(events, 'shield-end').length, 1);
+  assert.equal(byType(events, 'shield-end')[0].reason, 'depleted');
+  vfx.update(.33); assert.equal(sh.root.visible, false);
+  vfx.update(3); assert.equal(vfx.effects.length, 0);
+  assert.equal(byType(events, 'shield-end').length, 1); vfx.dispose();
+});
+
+test('Hộ Thân: a hit exactly at activeEnd is rejected', () => {
+ const {caster,vfx} = rig(); vfx.cast('staff.ho-than',{caster}); vfx.update(2.65);
+ assert.equal(vfx.hitShield(caster,new THREE.Vector3(1,1,0)),false);vfx.dispose();
 });

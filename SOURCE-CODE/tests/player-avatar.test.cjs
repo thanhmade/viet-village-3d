@@ -345,3 +345,14 @@ test('Hộ Thân/Chấn Địa play their measured clip segment, Côn Quét star
   assert.deepEqual(visual.once, [], 'the whole slash clip is not used for the staff');
   weapons.equip('axe'); assert.equal(weapons.cast(1).ok, true); assert.deepEqual(visual.once, ['slash']);
 });
+
+
+
+test('cancelSkillPose cancels its staff gesture without cutting unrelated hit or defeat animation',async()=>{
+ const h=game();await h.avatar.select('female');const v=h.calls.visuals[0];let returns=0;
+ v.returnToIdle=()=>{returns++;v.state.mode='locomotion';v.state.clip='idle';};
+ v.playSegment=clip=>{v.state.mode='once';v.state.clip=clip;return true;};
+ h.avatar.onSkillUsed({weaponId:'staff',skillId:'staff.ho-than'});h.avatar.cancelSkillPose();assert.equal(returns,1);
+ h.avatar.onSkillUsed({weaponId:'staff',skillId:'staff.ho-than'});v.state.clip='hit_to_body_01';h.avatar.cancelSkillPose();assert.equal(returns,1);
+ h.avatar.onSkillUsed({weaponId:'staff',skillId:'staff.ho-than'});v.state.mode='defeat';h.avatar.cancelSkillPose();assert.equal(returns,1);
+});

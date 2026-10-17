@@ -177,8 +177,8 @@ window.VietVillageExperience=playerExperience;
 addEventListener('storage',event=>{if(event.key===null||event.key?.startsWith(playerExperience.storagePrefix))playerExperience.refresh();});
 $('experienceRewardRetry').addEventListener('click',()=>{for(const item of pendingExperienceRewards.values())if(item.uid===window.VietVillageAuth?.getProfile?.()?.uid&&!item.promise)void claimActivityExperience(item.kind,item.id);});
 playerJourney=window.createVillageJourney?.({getIdentity:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),uid:window.VietVillageAuth?.getProfile?.()?.uid||null}),storage:localStorage,notify:toast,getExperience:()=>playerExperience.getState(),
- // A real blow with a world position ripples an active Hộ Thân shell at that point (visual only).
- onDamage:({source})=>{const p=source?.position;if(p&&[p.x,p.y,p.z].every(Number.isFinite))villageWeapons?.onPlayerHit(p);}})||null;
+ // Session combat consumes guard before HP. VFX only observes the absorption result.
+ mitigateDamage:hit=>villageWeapons?.absorbDamage(hit)??hit.amount})||null;
 window.VietVillageJourney=playerJourney;
 if(!THREE.WebGLRenderer)throw new Error('Không tải được Three.js.');renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;$('view').append(renderer.domElement);if(matchMedia('(pointer:coarse)').matches)document.body.classList.add('touch');
 // Hybrid devices: the touch layout (joystick, large skills) follows the input actually used.
@@ -195,9 +195,9 @@ villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,clearMotio
  getCasterHeight:()=>playerAvatar?.height||2.35,
  onVfxEvent:event=>{if(event.type==='impact'&&event.shake>0)addCameraShake(event.shake);},
  onSkillUsed:skill=>{playerJourney?.recordSkillUse();if(skill.skillId!=='staff.con-quet')window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
- onSkillHit:event=>window.VietVillageNPCs?.onSkillUsed(event),onSkillCancel:()=>playerAvatar?.cancelStaffSweep?.(),
+ onSkillHit:event=>window.VietVillageNPCs?.onSkillUsed(event),onSkillCancel:()=>playerAvatar?.cancelSkillPose?.(),
  getGroundY:point=>bridgeHeight(point.x,point.z),
- getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),poseBusy:!!playerAvatar?.state?.animation?.busy||!!playerMotion?.airborne,
+ getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),uid:window.VietVillageAuth?.getProfile?.()?.uid||null,maxHp:playerJourney?.getState().maxHp,poseBusy:!!playerAvatar?.state?.animation?.busy||!!playerMotion?.airborne,
  // HP 0 (defeat) blocks casting; update() then cancels any live skill visuals.
  canCast:gameInitialized&&!!window.VietVillageAuth?.isAuthenticated()&&playerJourney?.getState().alive!==false&&(localWalking||multiplayerWalking)&&world.visible&&!insideHouse&&!overlays()&&gateView<0&&houseView<0})});
 window.VietVillageWeapons=villageWeapons;

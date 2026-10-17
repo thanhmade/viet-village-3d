@@ -344,7 +344,7 @@ test('staff skills: trail sits on the equipped staff, Chấn Địa is a tap ski
   const newest = trail.localToWorld(new T.Vector3().fromArray(trail.geometry.getAttribute('position').array, 3));
   assert.ok(newest.distanceTo(outer) < 1e-4, 'ribbon vertex = point on the visible staff model');
   controller.update(skill.duration + 2);
-  // Hộ Thân + a real damage call with a world hit position → ripple there; HP math unchanged.
+  // Hộ Thân + a real damage call with a world hit position → guard absorbs damage and ripples only at known impact points.
   const journey = context.VietVillageJourney, hpBefore = journey.getState().hp;
   assert.equal(controller.cast(2).ok, true);
   controller.update(.5);
@@ -355,7 +355,8 @@ test('staff skills: trail sits on the equipped staff, Chấn Địa is a tap ski
   const origin = shell.getWorldPosition(new T.Vector3());
   assert.equal(journey.takeDamage(5, {source: {position: {x: origin.x + 3, y: origin.y, z: origin.z}}}), true);
   assert.ok(hits[0].w >= 0 && hits[0].x > .99, 'ripple starts on the side the blow came from');
-  assert.equal(journey.getState().hp, hpBefore - 12, 'the shield is visual: damage is not reduced');
+  assert.equal(journey.getState().hp, hpBefore, 'guard absorbs both hits before HP');
+  assert.equal(controller.state.guard.remaining, 18);
   controller.update(5);
   // Chấn Địa shakes the camera lightly, only if the player keeps the option on.
   run("$('cameraShake').checked=true;");
@@ -365,4 +366,30 @@ test('staff skills: trail sits on the equipped staff, Chấn Địa is a tap ski
   run("$('cameraShake').checked=false;");
   assert.equal(controller.cast(3).ok, true); controller.update(2);
   assert.equal(run('cameraShakeAmount'), 0, 'option off: no shake');
+});
+
+
+
+test('Hộ Thân combat: startup, absorption, overflow, cooldown and weapon cancellation', () => {
+ const {context:c,run} = createHarness(), w=c.VietVillageWeapons,j=c.VietVillageJourney;
+ w.equip('staff');assert.equal(w.cast(2).ok,true);assert.equal(w.cast(2).reason,'cooldown');
+ j.takeDamage(5);assert.equal(j.getState().hp,95,'startup is unprotected');
+ w.update(.25);j.takeDamage(12);assert.equal(j.getState().hp,95);assert.equal(w.state.guard.remaining,18);
+ const label=c.document.getElementById('weaponSkill2').getAttribute('aria-label');assert.match(label,/bảo vệ còn 18/);
+ j.takeDamage(25);assert.equal(j.getState().hp,88,'only seven overflow damage');assert.equal(w.state.guard,null);
+ j.takeDamage(4);assert.equal(j.getState().hp,84,'broken shield cannot absorb again');
+ w.update(5);w.cast(2);w.update(.4);w.equip('sword');j.takeDamage(6);assert.equal(j.getState().hp,78);
+ w.equip('staff');assert.equal(w.cast(2).reason,'cooldown','equipment cannot reset cooldown');
+ w.update(5);w.cast(2);w.update(2.65);j.takeDamage(8);assert.equal(j.getState().hp,70,'no absorption at exact expiry');
+ w.update(5);w.cast(2);w.update(.5);w.suspend();j.takeDamage(9);assert.equal(j.getState().hp,61,'map/menu suspension clears guard');
+ w.update(5);w.cast(2);w.update(.5);j.setCharacterState({hp:0});w.update(.01);assert.equal(w.state.guard,null);
+ assert.equal(w.cast(2).ok,false,'dead characters cannot recast');
+ c.VietVillageGame.lock();assert.equal(w.state.guard,null);
+});
+
+test('Hộ Thân: identity change never transfers remaining protection',()=>{
+ const {context:c}=createHarness(),w=c.VietVillageWeapons,j=c.VietVillageJourney;
+ w.equip('staff');w.cast(2);w.update(.4);
+ c.VietVillageAuth.getProfile=()=>({uid:'second-student'});
+ j.takeDamage(10);assert.equal(j.getState().hp,90);assert.equal(w.state.guard,null);
 });

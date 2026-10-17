@@ -7,8 +7,8 @@
   // getIdentity returns only Firebase's current {authenticated, uid}. These local
   // tutorial flags are UI progress, never trusted grades, roles or server rights.
   // onDamage({amount, hp, source}) runs after a real hit lowered HP; source.position
-  // (world point of the blow) lets visuals such as the Hộ Thân shell react there.
-  global.createVillageJourney = function ({getIdentity, storage, notify, getExperience, onDamage = null} = {}) {
+  // is the world point of the blow. mitigateDamage returns remaining HP damage.
+  global.createVillageJourney = function ({getIdentity, storage, notify, getExperience, onDamage = null, mitigateDamage = null} = {}) {
     let identity = null, authenticated = false, uid = null, walked = 0;
     let alive = false, hp = 0, level = 0, movement = false, skills = false, snapshot;
     function publish() {
@@ -94,8 +94,13 @@
     }
     function takeDamage(amount, {source = null} = {}) {
       if (!syncIdentity() || !alive || !Number.isFinite(amount) || amount <= 0) return false;
+      const incoming = amount;
+      // Only combat may mitigate. Invalid/throwing hooks cannot grant invulnerability.
+      try { const remaining = mitigateDamage?.({amount, source, uid});
+        if (Number.isFinite(remaining) && remaining >= 0 && remaining <= incoming) amount = remaining;
+      } catch (_) { /* Apply the original hit if the combat hook fails. */ }
       hp = Math.max(0, hp - amount); alive = hp > 0; publish();
-      try { onDamage?.({amount, hp, source}); } catch (_) { /* Hit visuals never change the HP result. */ }
+      try { if (amount > 0) onDamage?.({amount, hp, source}); } catch (_) { /* Hit visuals never change the HP result. */ }
       return true;
     }
     function lock() {

@@ -1,7 +1,8 @@
 /* VIET VILLAGE 3D — Côn / Gậy: 3 kỹ năng riêng.
  * Thời gian: giây; khoảng cách: mét (quy ước 1 đơn vị Three.js = 1 mét).
  * Côn Quét: nhịp 4 pha do thiết kế (staff-sweep.js, docs/staff-sweep-20261016.md).
- * Hộ Thân/Chấn Địa: activeAt/activeEnd khớp đoạn hoạt ảnh GLB trong staff-vfx-config.js
+ * Hộ Thân giữ thời gian 3 s; động tác tụ khí 0,7 s độc lập thời gian bảo vệ.
+ * Chấn Địa: activeAt/activeEnd khớp đoạn hoạt ảnh GLB trong staff-vfx-config.js
  * (đo từ clip thật: thế thủ, điểm côn chạm đất); các trị số khác là mặc định thiết kế,
  * không đo từ ảnh.
  * Hướng trước trong local space là -Z; scene cần dùng hệ trục Y-up.
@@ -44,6 +45,8 @@
     {
       "id": "staff.ho-than",
       "localId": "ho-than",
+      // Proposed balance for session combat, separate from visual size/intensity.
+      "guard": {"maxHpRatio": 0.30},
       "name": "Hộ Thân",
       "type": "shield",
       "slot": 2,
@@ -54,7 +57,7 @@
       "radius": 1.55,
       "range": 0,
       "forwardOffset": 0.0,
-      "description": "Cầu khí xanh ngọc trong suốt bám theo người, hai vòng sáng nghiêng và hoa văn vàng nhạt; gợn sóng tại điểm trúng đòn."
+      "description": "Hộ thể bằng cầu khí ngọc, ba vòng khí vàng và phù văn. Hấp thụ tối đa 30% HP tối đa trong 2,4 giây; hết dung lượng thì vỡ. Mức bảo vệ thử nghiệm, chỉnh tại guard.maxHpRatio."
     },
     {
       "id": "staff.chan-dia",

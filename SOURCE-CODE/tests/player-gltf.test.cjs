@@ -313,3 +313,18 @@ test('Côn quét keeps both real GLB palms on one rigid staff and restores locom
   assert.equal(v.state.activeActions,1);v.dispose();
  }
 });
+
+
+
+test('Hộ Thân on both real GLBs: the 0.7 s gesture releases locomotion while protection persists',async()=>{
+ const config=require('../js/vfx/staff-vfx-config.js').animation['staff.ho-than'];
+ const skill=require('../js/vfx/staff-skill-config.js').skills.find(s=>s.id==='staff.ho-than');
+ for(const kind of ['male','female']){
+  const {v}=await visual(kind);const socket=v.sockets.right;
+  assert.equal(v.playSegment(config.clip,{from:config.from,to:config.to,force:true}),true);
+  v.setLocomotion(4.5);advance(v,.5);assert.equal(v.state.mode,'once');
+  advance(v,.3);assert.equal(v.state.mode,'locomotion');assert.equal(v.state.clip,'walk');
+  assert.equal(v.sockets.right,socket,'the same weapon attachment survives');
+  assert.ok(.8<skill.activeEnd);v.dispose();
+ }
+});

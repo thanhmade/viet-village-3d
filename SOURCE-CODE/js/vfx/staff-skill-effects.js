@@ -221,13 +221,26 @@
   const BAND_FRAGMENT = `uniform vec3 uJade,uGold;uniform float uOpacity,uTime,uSpeed;varying vec2 vUv;
     void main(){float across=1.-abs(vUv.y-.5)*2.;float dash=smoothstep(.15,.75,.5+.5*sin(vUv.x*6.2831*7.-uTime*uSpeed*6.));
       float head=pow(fract(vUv.x-uTime*uSpeed*.16),6.);
-      gl_FragColor=vec4(mix(uJade,uGold,head),across*across*(.25+.55*dash+.6*head)*uOpacity);}`;
+      gl_FragColor=vec4(mix(uJade,uGold,.65+.35*head),across*across*(.25+.55*dash+.6*head)*uOpacity);}`;
   const SIGIL_FRAGMENT = `uniform vec3 uGold;uniform float uOpacity,uTime;varying vec2 vUv;
-    float seg(vec2 p,vec2 a,vec2 b){vec2 pa=p-a,ba=b-a;return 1.-smoothstep(.02,.045,length(pa-ba*clamp(dot(pa,ba)/dot(ba,ba),0.,1.)));}
-    void main(){vec2 p=vUv;float g=seg(p,vec2(.5,.15),vec2(.5,.85));g=max(g,seg(p,vec2(.25,.62),vec2(.75,.62)));
-      g=max(g,seg(p,vec2(.3,.32),vec2(.5,.5)));g=max(g,seg(p,vec2(.7,.32),vec2(.5,.5)));
-      float ring=1.-smoothstep(.02,.05,abs(length(p-.5)-.44));
-      gl_FragColor=vec4(uGold,(g*.9+ring*.45)*uOpacity*(.8+.2*sin(uTime*2.3)));}`;
+    float seg(vec2 p,vec2 a,vec2 b){vec2 ba=b-a;return 1.-smoothstep(.025,.065,length(p-a-ba*clamp(dot(p-a,ba)/dot(ba,ba),0.,1.)));}
+    void main(){float cell=floor(vUv.x*16.);vec2 p=vec2(vUv.y,fract(vUv.x*16.-uTime*.12));
+      float g=seg(p,vec2(.5,.12),vec2(.5,.88));
+      g=max(g,seg(p,vec2(.22,.7),vec2(.78,.7)));g=max(g,seg(p,vec2(.28,.38),vec2(.72,.38)));
+      g=max(g,seg(p,vec2(.5,.5),vec2(.2+mod(cell,2.)*.6,.2)));
+      float rails=(1.-smoothstep(.012,.028,abs(p.x-.06)))+(1.-smoothstep(.012,.028,abs(p.x-.94)));
+      gl_FragColor=vec4(uGold,(g*.8+rails*.25)*uOpacity);}`;
+  // Concentric seal rings with angular strokes. Abstract ornament, no fabricated text.
+  const SEAL_FRAGMENT = `uniform vec3 uJade,uGold;uniform float uOpacity,uTime;varying vec2 vUv;
+    float ring(float r,float at,float w){return 1.-smoothstep(w,w+.008,abs(r-at));}
+    void main(){vec2 p=(vUv-.5)*2.;float r=length(p),a=atan(p.y,p.x)+uTime*.12;
+      float rings=ring(r,.91,.006)+ring(r,.84,.003)+ring(r,.61,.004)+ring(r,.48,.002);
+      float sectors=pow(max(0.,cos(a*24.)),16.);
+      float strokes=sectors*smoothstep(.64,.66,r)*(1.-smoothstep(.79,.81,r));
+      float knots=pow(max(0.,cos(a*8.)),12.)*ring(r,.54,.025);
+      float halo=exp(-abs(r-.87)*38.)*.2;
+      float alpha=(rings*.7+strokes*.8+knots*.6+halo)*uOpacity*(1.-smoothstep(.97,1.,r));
+      gl_FragColor=vec4(mix(uJade,uGold,clamp(rings+strokes,0.,1.)),alpha);}`;
   const COLUMN_FRAGMENT = `uniform vec3 uJade,uGold,uCore;uniform float uOpacity,uTime;uniform sampler2D uNoise;varying vec2 vUv;
     void main(){float h=vUv.y;float n=texture2D(uNoise,vec2(vUv.x*3.,h*1.2-uTime*1.8)).r;
       float streak=smoothstep(.45,.95,n);float fade=(1.-h)*(1.-h)*smoothstep(0.,.08,h);
@@ -409,32 +422,39 @@
       const sigilMaterial = material(core, fx, {uniforms: {uGold: {value: c.gold}, uOpacity: {value: 0}, uTime: time}, vertexShader: UV_VERTEX, fragmentShader: SIGIL_FRAGMENT});
       const sigils = new T.Group(); root.add(sigils);
       for (let i = 0; i < 3; i++) {
-        const a = i / 3 * TAU, n = mesh(core, fx, shared.quad, sigilMaterial, sigils, 10);
-        n.scale.setScalar(.34); n.position.set(Math.sin(a) * radius * 1.02, (i - 1) * .32, Math.cos(a) * radius * 1.02); n.rotation.y = a;
+        const pivot = new T.Group(); pivot.rotation.y = i / 3 * Math.PI; sigils.add(pivot);
+        const n = mesh(core, fx, shared.band, sigilMaterial, pivot, 10);
+        n.rotation.z = Math.PI / 2; n.scale.set(radius * 1.015, .16, radius * 1.015);
       }
-      const floorMaterial = material(core, fx, {uniforms: {uMap: {value: shared.dot}, uColor: {value: c.jade}, uCore: {value: c.gold}, uOpacity: {value: 0}}, vertexShader: UV_VERTEX, fragmentShader: GLOW_FRAGMENT});
-      const floor = mesh(core, fx, shared.quad, floorMaterial, fx.group, 7); floor.rotation.x = -Math.PI / 2; floor.position.y = .03; floor.scale.setScalar(radius * 2.1);
-      fx.shield = {root, shell, bands, sigils, sigilMaterial, floorMaterial, front, back, time, hits: hits.value, dissolve, radius, hitIndex: 0, hitCount: 0, moteCarry: 0,
+      const floorMaterial = material(core, fx, {uniforms: {uJade: {value: c.jade}, uGold: {value: c.gold}, uTime: time, uOpacity: {value: 0}}, vertexShader: UV_VERTEX, fragmentShader: SEAL_FRAGMENT});
+      const floor = mesh(core, fx, shared.quad, floorMaterial, fx.group, 7); floor.rotation.x = -Math.PI / 2; floor.position.y = .035; floor.scale.setScalar(radius * 2.6);
+      fx.shield = {root, shell, bands, sigils, sigilMaterial, floorMaterial, floor, center, endAt: fx.skill.activeEnd, broken: false, front, back, time, hits: hits.value, dissolve, radius, hitIndex: 0, hitCount: 0, moteCarry: 0,
         p: new T.Vector3(), v: new T.Vector3()};
     },
     // Centred on the character's world position (feet on the ground), never tilted by hands or swing.
-    place(core, fx) { anchorAtCaster(core, fx); syncWorld(fx); },
+    place(core, fx) {
+      anchorAtCaster(core, fx); syncWorld(fx);
+      const sh = fx.shield; if (!sh) return; fx.caster.getWorldPosition(sh.p);
+      sh.root.position.y = sh.center + sh.p.y - fx.group.position.y;
+      sh.floor.quaternion.setFromUnitVectors(sh.v.set(0, 0, 1), core.groundNormal(sh.p.x, sh.p.z, sh.p));
+    },
     tick(core, fx, dt) {
       const s = fx.skill, t = fx.age, cfg = VFX.shield, sh = fx.shield;
       if (t >= s.activeAt) core._emit('shield-start', fx, {activeSeconds: s.activeEnd - s.activeAt});
       if (!fx.alive) return;
-      if (t >= s.activeEnd) core._emit('shield-end', fx);
+      if (t >= sh.endAt) core._emit('shield-end', fx, {reason: sh.broken ? 'depleted' : 'expired'});
       const grow = smooth(s.activeAt - .1, s.activeAt + .22, t), pop = 1 + .08 * Math.sin(clamp((t - s.activeAt) / .35) * Math.PI);
-      const fade = smooth(s.activeEnd, s.activeEnd + cfg.fadeOut, t), energy = grow * VFX.intensity, held = energy * (1 - fade);
+      const fade = smooth(sh.endAt, sh.endAt + cfg.fadeOut, t), flash = sh.broken ? .45 * (1 - smooth(sh.endAt, sh.endAt + .09, t)) : 0;
+      const energy = grow * VFX.intensity * (1 + flash), held = energy * (1 - fade);
       sh.time.value = t; sh.dissolve.value = -.2 + fade * 1.3;
       sh.front.uniforms.uOpacity.value = sh.back.uniforms.uOpacity.value = energy;
-      sh.root.visible = energy > 0;
-      sh.root.scale.setScalar(Math.max(.001, (.55 + .45 * grow) * pop * (1 + fade * .06)));
+      sh.root.visible = energy > 0 && fade < 1;
+      sh.root.scale.setScalar(Math.max(.001, (.55 + .45 * grow) * pop * (1 + fade * (sh.broken ? .22 : .06))));
       for (const b of sh.bands) { b.pivot.rotation.y += b.speed * dt; b.material.uniforms.uOpacity.value = held * .9; }
-      sh.sigils.rotation.y = -t * .35; sh.sigilMaterial.uniforms.uOpacity.value = held * smooth(s.activeAt + .2, s.activeAt + .6, t) * .55;
-      sh.floorMaterial.uniforms.uOpacity.value = held * .28;
+      sh.sigils.rotation.y = -t * .12; sh.sigilMaterial.uniforms.uOpacity.value = held * smooth(s.activeAt + .2, s.activeAt + .6, t) * .55;
+      sh.floorMaterial.uniforms.uOpacity.value = held * .65;
       // A few jade/gold motes drift up inside the shell while it holds.
-      if (t >= s.activeAt && t < s.activeEnd) {
+      if (t >= s.activeAt && t < sh.endAt) {
         sh.moteCarry += Math.min(dt, .1) * 10; const n = Math.min(4, Math.floor(sh.moteCarry)); sh.moteCarry -= n;
         for (let i = 0; i < n; i++) {
           const a = core.random() * TAU, r = core.random() * sh.radius * .8;
@@ -443,10 +463,26 @@
         }
       }
     },
+    end(core, fx, reason) {
+      const sh = fx.shield;
+      if (!sh || fx.age >= sh.endAt) return false;
+      sh.endAt = fx.age; sh.broken = reason === 'depleted';
+      core._emit('shield-end', fx, {reason});
+      if (sh.broken) {
+        sh.root.getWorldPosition(sh.p);
+        for (let i = 0; i < (core.quality === 'low' ? 12 : 20); i++) {
+          const a = core.random() * TAU, y = rand(core, -.6, .8);
+          sh.v.set(Math.sin(a), y, Math.cos(a)).normalize();
+          const point = sh.p.clone().addScaledVector(sh.v, sh.radius);
+          core.pool.spawn(point, sh.v.multiplyScalar(rand(core, .8, 1.6)), i % 2 ? VFX.colors.gold : VFX.colors.jade, .32, .055, .5, .85);
+        }
+      }
+      return true;
+    },
     // A real hit (world point) → ripple from the matching point on the shell.
     onHit(core, fx, point) {
       const s = fx.skill, sh = fx.shield;
-      if (!sh || fx.age < s.activeAt || fx.age > s.activeEnd) return false;
+      if (!sh || fx.age + 1e-9 < s.activeAt || fx.age + 1e-9 >= sh.endAt) return false;
       sh.shell.updateWorldMatrix(true, false);
       const local = sh.shell.worldToLocal(sh.p.set(point.x, point.y, point.z));
       if (local.lengthSq() < 1e-8) local.set(0, 0, 1);

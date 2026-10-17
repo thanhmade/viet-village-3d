@@ -96,7 +96,7 @@
   function restoreSweep(){
    for(const [bone,q] of sweepRestore)bone.quaternion.copy(q);sweepRestore.clear();
    for(const [bone,p] of sweepPositions)bone.position.copy(p);sweepPositions.clear();
-   facing.rotation.y=forwardYaw;delete sockets.right.userData.staffSweepGripX;delete sockets.right.userData.staffSlamTime;delete sockets.right.userData.bowDrawTime;
+   facing.rotation.y=forwardYaw;delete sockets.right.userData.staffSweepGripX;delete sockets.right.userData.staffSlamTime;delete sockets.right.userData.bowDrawTime;delete sockets.right.userData.bowDrawSkillId;
   }
 
   function aimBone(bone,child,target){
@@ -189,20 +189,22 @@
    if(minimum<groundPoint.y)facing.position.y+=(groundPoint.y-minimum)/rootScale.y;
    facing.position.y+=state.lift/rootScale.y;sync();updateSockets();
   }
+  function bowPoseSpec(skillId){return skillId==='bow.lien-tien'?global.BowVolley:skillId==='bow.xuyen-tien'?global.BowPiercing:null;}
   function poseBowDraw(){
-   if(!bowDraw||!global.BowPiercing)return;
-   sockets.right.userData.bowDrawTime=bowDraw.time;
-   const state=global.BowPiercing.sample(bowDraw.time),weight=state.weight;if(weight<=0)return;
-   const up=new T.Vector3(0,1,0),rotation=new T.Quaternion().setFromAxisAngle(up,forwardYaw);
+   if(!bowDraw||!bowPoseSpec(bowDraw.skillId))return;
+   sockets.right.userData.bowDrawTime=bowDraw.time;sockets.right.userData.bowDrawSkillId=bowDraw.skillId;
+   const state=bowPoseSpec(bowDraw.skillId).sample(bowDraw.time),weight=state.weight;if(weight<=0)return;
+   const bowYaw=forwardYaw+(state.yaw||0);
+   const up=new T.Vector3(0,1,0),rotation=new T.Quaternion().setFromAxisAngle(up,bowYaw);
    for(const bone of Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand]))if(bone)sweepRestore.set(bone,bone.quaternion.clone());
    for(const side of ['right','left']){
     const {upper,lower,hand}=sweepBones[side];if(!upper||!lower)continue;
     const palm=new T.Vector3(state.handX,state.handY,state.handZ);
     if(side==='left'){palm.y+=.035*.7;palm.z-=(.4+state.draw)*.7;}
-    palm.applyAxisAngle(up,forwardYaw);
+    palm.applyAxisAngle(up,bowYaw);
     const desired=root.getWorldQuaternion(new T.Quaternion()).multiply(rotation).multiply(handCalibration[side].restInverse.clone().invert());
     const offset=handCalibration[side].palm.clone().multiply(hand.getWorldScale(new T.Vector3())).applyQuaternion(desired);
-    const target=root.localToWorld(palm).sub(offset),pole=root.localToWorld(new T.Vector3(side==='right'?-.8:.8,1.7,-.35).applyAxisAngle(up,forwardYaw));
+    const target=root.localToWorld(palm).sub(offset),pole=root.localToWorld(new T.Vector3(side==='right'?-.8:.8,1.7,-.35).applyAxisAngle(up,bowYaw));
     solveSweepLimb(upper,lower,hand,target,pole,desired,weight);
    }
    sync();updateSockets();
@@ -255,7 +257,7 @@
     transition(locomotion(),'locomotion');const name=current.getClip().name;
     current.setEffectiveTimeScale(name==='idle'?1:Math.max(.45,Math.min(1.35,speed/(name==='run'?6.5:4.5))));
    }return true;},
-   startBowDraw(){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||!global.BowPiercing||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;bowDraw={time:0};pose();return true;},
+   startBowDraw(skillId='bow.xuyen-tien'){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||!bowPoseSpec(skillId)||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;bowDraw={time:0,skillId};pose();return true;},
    cancelBowDraw(){if(disposed||!bowDraw)return;bowDraw=null;restoreSweep();pose();},
    startStaffSlam(){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||!global.StaffSlam||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;staffSlam={time:0};pose();return true;},
    cancelStaffSlam(){if(disposed||!staffSlam)return;staffSlam=null;restoreSweep();pose();},
@@ -285,8 +287,8 @@
    update(dt){
     if(disposed||!Number.isFinite(dt)||dt<0)return;
     restoreSweep();if(staffSweep){staffSweep.time+=dt;if(staffSweep.time+1e-7>=global.StaffSweep.duration)staffSweep=null;}
-    let bowFinished=false;
-    if(bowDraw){bowDraw.time+=dt;if(bowDraw.time+1e-7>=global.BowPiercing.poseDuration){bowDraw=null;bowFinished=true;}}
+    let bowFinished=null;
+    if(bowDraw){bowDraw.time+=dt;if(bowDraw.time+1e-7>=bowPoseSpec(bowDraw.skillId).poseDuration){bowFinished={skillId:bowDraw.skillId,duration:bowPoseSpec(bowDraw.skillId).poseDuration};bowDraw=null;}}
     let slamFinished=false;
     if(staffSlam){staffSlam.time+=dt;if(staffSlam.time+1e-7>=global.StaffSlam.duration){staffSlam=null;slamFinished=true;}}
     if(!pausedPreview)mixer.update(Math.min(dt,.1));
@@ -300,7 +302,7 @@
     pose();
     // Publish the final sample for this frame; cancellation leaves the marker absent.
     if(slamFinished)sockets.right.userData.staffSlamTime=global.StaffSlam.duration;
-    if(bowFinished)sockets.right.userData.bowDrawTime=global.BowPiercing.poseDuration;
+    if(bowFinished){sockets.right.userData.bowDrawTime=bowFinished.duration;sockets.right.userData.bowDrawSkillId=bowFinished.skillId;}
    },
    dispose(){if(disposed)return;disposed=true;mixer.removeEventListener('finished',finished);mixer.stopAllAction();mixer.uncacheRoot(model);
     // Equipment belongs to the weapon controller; don't dispose it with this GLB.

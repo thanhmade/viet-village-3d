@@ -98,7 +98,7 @@
    if(!hasGLTF()||!getState().authenticated||!(getState().hp>0)||open)return false;
    // Côn Quét: two-hand sweep pose driven by staff-sweep's timeline.
    if(skillId==='staff.con-quet')return visual.startStaffSweep?.()||false;
-   if(skillId==='bow.xuyen-tien')return visual.startBowDraw?.()||false;
+   if(['bow.xuyen-tien','bow.lien-tien'].includes(skillId))return visual.startBowDraw?.(skillId)||false;
    if(skillId==='staff.chan-dia')return visual.startStaffSlam?.()||false;
    // Hộ Thân keeps its measured clip segment; the shield outlives its gesture.
    const segment=global.StaffVFXConfig?.animation?.[skillId];

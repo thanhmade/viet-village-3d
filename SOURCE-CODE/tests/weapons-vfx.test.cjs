@@ -114,8 +114,8 @@ test('mọi chiêu hoàn tất đúng sự kiện ở 30 FPS, 60 FPS, delta lệ
         assert.equal(byType('shield-start').length, 1);
         assert.equal(byType('shield-end').length, 1);
         assert.ok(events.indexOf(byType('shield-start')[0]) < events.indexOf(byType('shield-end')[0]));
-      } else if(skill.id==='bow.xuyen-tien'){
-        assert.equal(byType('release').length,1);assert.equal(byType('impact').length,0,'empty scene is a miss');
+      } else if(['bow.xuyen-tien','bow.lien-tien'].includes(skill.id)){
+        assert.equal(byType('release').length,skill.id==='bow.lien-tien'?3:1);assert.equal(byType('impact').length,0,'empty scene is a miss');
       } else {
         assert.ok(byType('impact').length >= 1, `${skill.id} không mất va chạm ở delta ${delta}`);
         assert.ok(events.indexOf(byType('cast')[0]) < events.indexOf(byType('impact')[0]));
@@ -138,6 +138,7 @@ test('liên tiễn và mưa tên giữ các va chạm riêng khi một frame đi
   for (const id of ['bow.lien-tien', 'bow.mua-ten']) {
     for (const delta of [1 / 60, 10]) {
       const { caster, events, vfx } = fixture();
+      if(id==='bow.lien-tien')vfx.onEvent=e=>{events.push(e);if(['target-query','hit-window'].includes(e.type))e.testTarget('wide-target',new THREE.Vector3(0,0,-4),2);};
       assert.equal(vfx.cast(id, { caster }).ok, true);
       finish(vfx, delta);
       const impacts = events.filter(event => event.type === 'impact');

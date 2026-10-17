@@ -449,7 +449,7 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
   listen(window,'resize',resize);
   function animateActor(time){
     rig.rotation.set(0,0,0);rig.position.y=0;torso.rotation.set(0,0,0);
-    weaponRig.position.set(.35,1.3,-.32);weaponRig.rotation.set(0,0,-.25);
+    weaponRig.position.set(.35,1.3,-.32);weaponRig.rotation.set(0,0,-.25);weaponRig.scale.setScalar(1);
     leftHand.position.set(-.15,0,0);rightHand.position.set(0,0,0);
     if(weaponId==='staff'){weaponRig.position.set(0,1.26,-.3);weaponRig.rotation.set(0,.18,-.15);leftHand.position.x=-.39;rightHand.position.x=.39;}
     if(weaponId==='sword'){weaponRig.rotation.set(-.52,.15,-.35);leftHand.position.set(-.08,-.23,.02);}
@@ -477,12 +477,17 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
           weaponRig.rotation.x=-1.02-(s.localId==='pha-tran'?.25:0);weaponRig.position.z=age<s.activeAt?-.3+windup*.3:-.3-Math.sin(progress*Math.PI)*.8;
           if(s.localId==='thuong-phong')rig.rotation.y=progress*Math.PI*1.45;
         }else if(weaponId==='bow'){
-          const draw=s.localId==='xuyen-tien'?window.BowPiercing.sample(age).draw:(age<s.activeAt?windup:Math.max(0,1-progress*7))*.42,attribute=model.string.geometry.attributes.position;
+          const volley=s.localId==='lien-tien'?window.BowVolley.sample(age):null;
+          const draw=volley?volley.draw:s.localId==='xuyen-tien'?window.BowPiercing.sample(age).draw:(age<s.activeAt?windup:Math.max(0,1-progress*7))*.42,attribute=model.string.geometry.attributes.position;
           attribute.setXYZ(1,0,.035,.14+draw);attribute.needsUpdate=true;model.string.geometry.computeBoundingSphere();
-          model.arrow.position.z=-.66+draw;model.arrow.visible=age<s.activeAt;rightHand.position.set(0,.035,.14+draw);
+          model.arrow.position.z=-.66+draw;model.arrow.visible=volley?volley.arrowVisible:age<s.activeAt;model.tip.position.set(0,.035,-.93+model.arrow.position.z);rightHand.position.set(0,.035,.14+draw);
           if(s.localId==='xuyen-tien'){
             // This presentation rig faces -Z and uses full-size weapons; match the runtime release point.
             weaponRig.position.set(.12,1.7295,-.427);weaponRig.rotation.set(0,0,0);leftHand.position.set(0,0,-.26);
+          }
+          if(volley){
+            // Match the game's 0.7-scale bow and three authored fan release anchors.
+            weaponRig.scale.setScalar(.7);weaponRig.position.set(.12,1.74,-.298).applyAxisAngle(unitY,volley.yaw);weaponRig.rotation.set(0,volley.yaw,0);leftHand.position.set(0,0,-.26);
           }
           if(s.localId==='mua-ten')weaponRig.rotation.x=-.46;
         }else if(weaponId==='axe'){

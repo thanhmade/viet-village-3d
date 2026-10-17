@@ -1,0 +1,182 @@
+{
+  "schemaVersion": "1.0.0",
+  "skillId": "bow.lien-tien",
+  "displayName": "Liên Tiễn",
+  "weaponType": "bow",
+  "status": "integrated",
+  "sources": [
+    {
+      "path": "SOURCE-CODE/docs/lien-tien-reference.png",
+      "kind": "user_image",
+      "sha256": "42ff3fe7e9028601c7cb704ff037690372e552a64d9e00b3eb1449de1a887cca"
+    },
+    {
+      "path": "SOURCE-CODE/js/vfx/bow-skill-config.js",
+      "kind": "existing_config"
+    },
+    {
+      "commit": "844f75bd4ee86c75e44b61c2dfd6d9892aea3b16",
+      "repository": "thanhmade/viet-village-3d",
+      "branch": "cap-nhat"
+    }
+  ],
+  "evidence": {
+    "observed": [
+      "Gold fan arrows, blue qi trails, gold contact stars, gold ribbons around archer in static reference"
+    ],
+    "inferred": [
+      "Three pull/release motions and horizontal aiming fan"
+    ],
+    "proposed": [
+      "0.9-second pose; 0.035-second recoil before next energy-arrow reload"
+    ],
+    "missing": [
+      "GPU render comparison and frame-rate measurement on target device"
+    ]
+  },
+  "animation": {
+    "models": [
+      "CHARACTERS/PLAYER/MALE/PLAYER_BASE_MALE_GLB.glb",
+      "CHARACTERS/PLAYER/FEMALE/PLAYER_BASE_FEMALE_GLB.glb"
+    ],
+    "baseClip": "idle",
+    "method": "existing two-bone IK with calibrated right/left hand sockets",
+    "anchors": {
+      "hold": "visual.sockets.right",
+      "draw": "visual.sockets.left",
+      "release": "bow.tip",
+      "nock": "bow.nock"
+    },
+    "forwardAxis": "player +Z, Core caster -Z; caster child rotated PI",
+    "rootMotion": false,
+    "poseSeconds": {
+      "value": 0.9,
+      "provenance": "proposal"
+    }
+  },
+  "timeline": {
+    "unit": "seconds",
+    "provenance": "existing_config except pose recovery/recoil (proposal)",
+    "duration": 1.8,
+    "releases": [
+      0.25,
+      0.37,
+      0.49
+    ],
+    "rangeExpiry": [
+      1.21,
+      1.33,
+      1.45
+    ],
+    "recovery": [
+      0.62,
+      0.9
+    ]
+  },
+  "gameplay": {
+    "provenance": "existing_config",
+    "slot": 2,
+    "activationConditions": [
+      "equipped bow",
+      "host authorizes cast (auth, HP, map, overlays, pose, cooldown)"
+    ],
+    "resourceCost": "unchanged; bow config defines no resource charge",
+    "cooldownSeconds": 3,
+    "cooldownStartEvent": "successful cast",
+    "rangeMeters": 11,
+    "radiusMeters": 0.28,
+    "hitWindows": [
+      {
+        "hitIndex": 0,
+        "from": 0.25,
+        "to": 1.21,
+        "shape": "swept segment against target upright capsule",
+        "maxTargets": 1
+      },
+      {
+        "hitIndex": 1,
+        "from": 0.37,
+        "to": 1.33,
+        "shape": "swept segment against target upright capsule",
+        "maxTargets": 1
+      },
+      {
+        "hitIndex": 2,
+        "from": 0.49,
+        "to": 1.45,
+        "shape": "swept segment against target upright capsule",
+        "maxTargets": 1
+      }
+    ],
+    "damageAuthority": "host onSkillHit; current host applies training-dummy practice only",
+    "shield": "not applicable",
+    "interruptPolicy": "cancel outstanding shots and effects, retain cooldown; reuse host lifecycle"
+  },
+  "vfxLayers": [
+    "body qi ribbons",
+    "live bow-tip charge",
+    "three release flashes",
+    "gold arrow bodies and cross-plane trails",
+    "blue helical ribbons",
+    "confirmed contact star and sparks"
+  ],
+  "audio": [
+    {
+      "scope": "standalone preview only",
+      "enabledByDefault": false,
+      "kind": "synthetic contact sample"
+    }
+  ],
+  "quality": {
+    "low": {
+      "ribbonSegments": 24,
+      "qiBands": 1,
+      "sparksPerContact": 6
+    },
+    "medium": {
+      "ribbonSegments": 48,
+      "qiBands": 2,
+      "sparksPerContact": 10
+    },
+    "high": {
+      "ribbonSegments": 48,
+      "qiBands": 2,
+      "sparksPerContact": 10
+    },
+    "gameplayInvariant": true
+  },
+  "integration": {
+    "engineVersion": "Three.js r160 from repo",
+    "castEntry": "VietVillageWeapons.cast(2)",
+    "updateEntry": "existing weapons controller / WeaponVFXCore.update(dt)",
+    "cleanupEntry": "WeaponVFXCore cancel/cancelAll/dispose through existing controller",
+    "effect": "SOURCE-CODE/js/vfx/bow-volley.js",
+    "icon": "ASSETS/ui/skills/bow/lien-tien-gold-blue.png",
+    "preview": "SOURCE-CODE/lien-tien-cung-preview.html"
+  },
+  "verification": {
+    "logic": {
+      "status": "see VALIDATION.md",
+      "cases": [
+        "30/60/120 Hz and skipped frames",
+        "three independent releases",
+        "nearest target, wall and point-blank",
+        "miss, out-of-height and range",
+        "resource cleanup and retained callbacks",
+        "real GLB nock/tip measurements",
+        "actual NPC practice flow"
+      ]
+    },
+    "visual": {
+      "status": "not_run",
+      "evidence": [
+        "reference and generated icon inspected; no WebGL capture"
+      ]
+    },
+    "performance": {
+      "status": "not_measured",
+      "environment": "Node logic tests; Chromium download blocked",
+      "measurements": []
+    }
+  }
+}

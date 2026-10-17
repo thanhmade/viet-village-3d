@@ -48,7 +48,7 @@
       "radius": 0.28,
       "range": 11.0,
       "forwardOffset": 1.0,
-      "description": "Nhiều tên vàng phóng liên tiếp theo hình quạt, mỗi tên có vệt xanh và lóe va chạm."
+      "description": "Ba nhịp kéo–nhả dây phóng tên vàng theo hình quạt, khí xanh cuốn theo. Mỗi tên dừng ở mục tiêu hoặc vật cản đầu tiên; chỉ lóe khi thực sự trúng."
     },
     {
       "id": "bow.mua-ten",

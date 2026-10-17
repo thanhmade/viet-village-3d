@@ -107,14 +107,15 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
       });
     }
   }
-  function bowPoseActive(fx){return fx.skill.id==='bow.xuyen-tien'&&fx.age<window.BowPiercing.poseDuration;}
-  function poseFallbackBow(time){
+  function bowPoseSpec(id){return id==='bow.lien-tien'?window.BowVolley:id==='bow.xuyen-tien'?window.BowPiercing:null;}
+  function bowPoseActive(fx){const spec=bowPoseSpec(fx.skill.id);return !!spec&&fx.age<spec.poseDuration;}
+  function poseFallbackBow(time,skillId='bow.xuyen-tien'){
     if(!fallbackSlam)return;
-    const state=window.BowPiercing.sample(time),weight=state.weight,up=new T.Vector3(0,1,0);
-    const palm=new T.Vector3(.10,state.handY,state.handZ);
-    grip.rotation.set(0,Math.PI,0);
+    const state=bowPoseSpec(skillId).sample(time),weight=state.weight,up=new T.Vector3(0,1,0);
+    const palm=new T.Vector3(.10,state.handY,state.handZ).applyAxisAngle(up,state.yaw||0);
+    grip.rotation.set(0,Math.PI+(state.yaw||0),0);
     grip.position.copy(palm).sub(selectedModel.gripPoint.clone().multiplyScalar(.7).applyQuaternion(grip.quaternion));
-    for(const [arm,target] of [[rightArm,palm],[leftArm,palm.clone().add(new T.Vector3(0,.0245,-(.4+state.draw)*.7))]]){
+    for(const [arm,target] of [[rightArm,palm],[leftArm,palm.clone().add(new T.Vector3(0,.0245,-(.4+state.draw)*.7).applyAxisAngle(up,state.yaw||0))]]){
       if(!arm)continue;
       const origin=arm.position.clone(),axis=target.clone().sub(origin),distance=Math.min(.6799,axis.length());axis.normalize();
       const pole=new T.Vector3(arm===rightArm?.6:-.6,-.1,-.35);pole.addScaledVector(axis,-pole.dot(axis)).normalize();
@@ -147,7 +148,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
     manager = new window.WeaponVFXCore({THREE: T, scene, quality: qualityName(), maxActive: 4,
       getGroundY, getEquippedWeapon: () => weaponId,
       onEvent: event => {
-        if (event.type === 'hit-window') onSkillHit?.(event);
+        if (event.type === 'hit-window' || event.type === 'target-query') onSkillHit?.(event);
         try { onVfxEvent?.(event); } catch (_) { /* Camera/UI reactions never break the effect. */ }
       }});
   }
@@ -296,7 +297,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
     const skill = currentConfig.skills.find(item => item.slot === slot);
     if (!skill) return {ok: false, reason: 'unknown-slot'};
     if(manager?.effects.some(bowPoseActive))return {ok:false,reason:manager.cooldownRemaining(skill.id,caster)>0?'cooldown':'busy'};
-    if(['staff.con-quet','staff.chan-dia','bow.xuyen-tien'].includes(skill.id)&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
+    if(['staff.con-quet','staff.chan-dia','bow.xuyen-tien','bow.lien-tien'].includes(skill.id)&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
     // Aimed casts turn the player toward the chosen point first, so the
     // effect, the training-dummy facing check and the avatar agree.
     let target = null;
@@ -313,15 +314,15 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
       casterHeight: Number.isFinite(height) && height > 0 ? height : 2.35});
     if (result.ok) {
       if (skill.id === 'staff.ho-than') { const state = getState(); guard.start(skill, {maxHp: state.maxHp, ownerId: state.uid || null, handle: result.handle}); }
-      poseTime = 0; poseLength = ['staff.con-quet','staff.chan-dia'].includes(skill.id)?skill.duration:skill.id==='bow.xuyen-tien'?window.BowPiercing.poseDuration:Math.min(skill.duration, .9);
+      poseTime = 0; poseLength = ['staff.con-quet','staff.chan-dia'].includes(skill.id)?skill.duration:bowPoseSpec(skill.id)?bowPoseSpec(skill.id).poseDuration:Math.min(skill.duration, .9);
       const button = skillButtons[slot - 1];
       button?.classList?.add?.('skill-fired'); setTimeout(() => button?.classList?.remove?.('skill-fired'), 260);
       try { onSkillUsed?.({weaponId, skillId: skill.id, slot}); } catch (_) { /* Progress UI cannot interrupt a successful cast. */ }
-      if(skill.id==='bow.xuyen-tien'){
+      if(bowPoseSpec(skill.id)){
         clearMotion();const fx=manager.effects.find(effect=>effect.handle===result.handle);
         fx.bow.avatarPoseLinked=!!avatarSocket&&Number.isFinite(avatarSocket.userData.bowDrawTime);
         fx.bow.trace=(a,b,r)=>window.BowPiercing.traceWorld(T,a,b,r,getProjectileBounds(),getGroundY);
-        if(!avatarSocket){startFallbackSlam();if(sweepPivot)sweepPivot.name='village-bow-draw-pose';fx.bow.handX=.10;poseFallbackBow(0);}
+        if(!avatarSocket){startFallbackSlam();if(sweepPivot)sweepPivot.name='village-bow-draw-pose';fx.bow.handX=.10;poseFallbackBow(0,skill.id);}
         selectedModel.setDraw(0,true);
       }
       if(skill.id==='staff.chan-dia'){
@@ -390,7 +391,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
       const phase = Math.min(1, poseTime / poseLength);
       const slam=manager.effects.find(fx=>fx.skill.id==='staff.chan-dia');
       if(manager.effects.some(bowPoseActive)){
-        poseFallbackBow(poseTime);
+        poseFallbackBow(poseTime,manager.effects.find(bowPoseActive).skill.id);
       }else if(slam){
         poseFallbackSlam(poseTime);
       }else if(weaponId==='staff'&&poseLength>1){
@@ -405,7 +406,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
     }
     // A jump during anticipation cancels only this strike; an existing shield survives.
     if (getState().airborne) {
-      const pending = manager.effects.filter(fx => (fx.skill.id === 'staff.chan-dia' || fx.skill.id === 'bow.xuyen-tien') && fx.age < fx.skill.activeAt);
+      const pending = manager.effects.filter(fx => (fx.skill.id === 'staff.chan-dia' || !!bowPoseSpec(fx.skill.id)) && fx.age < fx.skill.activeAt);
       if (pending.length) {
         pending.forEach(fx => manager.cancel(fx.handle));
         cancelAim(); onSkillCancel?.();
@@ -416,11 +417,11 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
     for(const fx of manager.effects.slice())if(fx.skill.id==='staff.chan-dia'&&fx.slam.avatarPoseLinked&&
       !Number.isFinite(avatarSocket?.userData.staffSlamTime)){manager.cancel(fx.handle);onSkillCancel?.();}
     for(const fx of manager.effects.slice())if(bowPoseActive(fx)&&fx.bow.avatarPoseLinked&&
-      !Number.isFinite(avatarSocket?.userData.bowDrawTime)){manager.cancel(fx.handle);onSkillCancel?.();}
+      (!Number.isFinite(avatarSocket?.userData.bowDrawTime)||(avatarSocket.userData.bowDrawSkillId&&avatarSocket.userData.bowDrawSkillId!==fx.skill.id))){manager.cancel(fx.handle);onSkillCancel?.();}
     const arrowPose=manager.effects.find(bowPoseActive);
     if(weaponId==='bow'){
-      const t=arrowPose?arrowPose.age+dt:window.BowPiercing.poseDuration;
-      selectedModel.setDraw(window.BowPiercing.sample(t).draw,t<window.BowPiercing.releaseAt||t>=window.BowPiercing.poseDuration);
+      const spec=arrowPose?bowPoseSpec(arrowPose.skill.id):window.BowPiercing,t=arrowPose?arrowPose.age+dt:spec.poseDuration,pose=spec.sample(t);
+      selectedModel.setDraw(pose.draw,pose.arrowVisible??(t<window.BowPiercing.releaseAt||t>=spec.poseDuration));
     }
     guard.advance(dt);
     syncSweepGrip();

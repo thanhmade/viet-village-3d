@@ -1,6 +1,6 @@
 /* VIET VILLAGE 3D — tunable art values for the three CÔN (staff) skills.
  * Units: seconds and metres (1 Three.js unit = 1 m). Colours are sRGB hex.
- * Côn Quét keeps the designed four-phase timeline and two-hand pose of
+ * Côn Quét keeps the continuous six-turn timeline and two-hand pose of
  * staff-sweep.js; only its staff ribbon is tuned here (`sweep`).
  * Hộ Thân / Chấn Địa timings are measured from the real player GLB clips
  * (right-hand bone sampled at 30 Hz):
@@ -31,7 +31,8 @@
     animation: Object.freeze({
       // Gathering pose ends after 0.7 s; locomotion resumes while the shield holds.
       'staff.ho-than': Object.freeze({clip: 'cast_a_spell', from: 1.95, to: 2.65}),
-      // Shifted +0.09 s (was 1.45–3.25): on both player GLBs the striking staff end is lowest
+      // Legacy clip range for reference previews only; gameplay now uses StaffSlam
+      // (5.4 s authored leap/IK). On the old clip the striking staff end is lowest
       // at clip 2.25–2.27 s, i.e. at the 0.72 s ground contact (measured in game, 17/10/2026).
       'staff.chan-dia': Object.freeze({clip: 'slash', from: 1.54, to: 3.34})
     }),
@@ -71,11 +72,11 @@
       staffEnd: 1.4, contactMin: 0.35, contactMax: 2.3, contactFallback: 1.35,
       chargeRadius: 0.3, flash: 0.12, columnHeight: 4.2, columnLife: 0.52,
       waveRadius: 4.5, waveLife: 0.78, waveWidth: 0.5, secondWaveDelay: 0.1,
-      crackRadius: 3.4, crackLife: 1.02, decalLift: 0.035,
-      rockSpeed: [1.8, 4.0], rockUp: [3.0, 6.0], rockSize: [0.07, 0.20], rockLife: [0.75, 1.03], gravity: 13.5, bounce: 0.2,
-      dustLife: [0.65, 1.0],
+      crackRadius: 3.4, crackLife: 1.45, decalLift: 0.035,
+      rockSpeed: [1.8, 4.0], rockUp: [3.0, 6.0], rockSize: [0.07, 0.20], rockLife: [0.95, 1.40], gravity: 13.5, bounce: 0.2,
+      dustLife: [0.85, 1.4],
       slabs: Object.freeze({low: 16, medium: 28, high: 40}),
-      slabRadius: 2.9, slabHeight: 0.45, slabLife: 1.02,
+      slabRadius: 2.9, slabHeight: 0.45, slabLife: 1.45,
       hitHeight: 0.8, // target feet tolerance above their sampled terrain; no HP changes in the VFX
       reducedFlash: 0.65
     })

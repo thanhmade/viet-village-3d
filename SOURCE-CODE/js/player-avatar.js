@@ -98,14 +98,15 @@
    if(!hasGLTF()||!getState().authenticated||!(getState().hp>0)||open)return false;
    // Côn Quét: two-hand sweep pose driven by staff-sweep's timeline.
    if(skillId==='staff.con-quet')return visual.startStaffSweep?.()||false;
-   // Hộ Thân / Chấn Địa play the measured part of a clip that matches the gathering/strike; the Hộ Thân shield outlives its gesture.
+   if(skillId==='staff.chan-dia')return visual.startStaffSlam?.()||false;
+   // Hộ Thân keeps its measured clip segment; the shield outlives its gesture.
    const segment=global.StaffVFXConfig?.animation?.[skillId];
    if(segment&&visual.playSegment?.(segment.clip,{from:segment.from,to:segment.to,force:true})){skillPose={visual,clip:segment.clip};social=null;pendingReaction=null;return true;}
    if(['staff','sword','spear','axe'].includes(weaponId))return visual.playOnce('slash');
    return false;
   }
   function cancelSkillPose(){
-   visual?.cancelStaffSweep?.();
+   visual?.cancelStaffSweep?.();visual?.cancelStaffSlam?.();
    if(skillPose?.visual===visual&&visual?.state.mode==='once'&&visual.state.clip===skillPose.clip)visual.returnToIdle();
    skillPose=null;
   }

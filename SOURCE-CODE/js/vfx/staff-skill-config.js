@@ -66,14 +66,15 @@
       "name": "Chấn Địa",
       "type": "slam",
       "slot": 3,
-      "duration": 1.8,
-      "activeAt": 0.72,
-      "activeEnd": 1.5,
+      "duration": 5.4,
+      "phases": {"takeoff": 0.75, "apex": 1.45, "dive": 3.35, "recover": 4.65},
+      "activeAt": 3.9,
+      "activeEnd": 4.95,
       "cooldown": 3.6,
       "radius": 4.5,
       "range": 4.5,
       "forwardOffset": 0.65,
-      "description": "Tụ khí ở đầu côn rồi nện xuống đất: chớp sáng, cột sáng thấp, sóng chấn động bám địa hình, vết nứt phát sáng và đá văng."
+      "description": "Dồn lực, bật nhảy và tụ khí ngọc viền vàng quanh người trên không, rồi giáng côn xuống đất. Tổng 5,4 giây; chạm đất tại 3,9 giây mới phát sóng chấn động, vết nứt và đá văng."
     }
   ]
 };

@@ -359,12 +359,12 @@ test('staff skills: trail sits on the equipped staff, Chấn Địa is a tap ski
   assert.equal(controller.state.guard.remaining, 18);
   controller.update(5);
   // Chấn Địa shakes the camera lightly, only if the player keeps the option on.
-  run("$('cameraShake').checked=true;");
-  assert.equal(controller.cast(3).ok, true); controller.update(2);
+  run("$('cameraShake').checked=true;cameraShakeAmount=0;");
+  assert.equal(controller.cast(3).ok, true); controller.update(3.91);
   assert.ok(run('cameraShakeAmount') > 0, 'impact requests a light shake');
   run('cameraShakeAmount=0;'); controller.update(5);
   run("$('cameraShake').checked=false;");
-  assert.equal(controller.cast(3).ok, true); controller.update(2);
+  assert.equal(controller.cast(3).ok, true); controller.update(3.91);
   assert.equal(run('cameraShakeAmount'), 0, 'option off: no shake');
 });
 

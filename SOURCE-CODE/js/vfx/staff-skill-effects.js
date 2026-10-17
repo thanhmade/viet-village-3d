@@ -8,9 +8,9 @@
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports)
-    module.exports = factory(require('./weapon-vfx-core.js'), require('./staff-vfx-config.js'));
-  else root.StaffSkillEffects = factory(root.WeaponVFXCore, root.StaffVFXConfig);
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (Core, VFX) {
+    module.exports = factory(require('./weapon-vfx-core.js'), require('./staff-vfx-config.js'), require('./staff-slam.js'));
+  else root.StaffSkillEffects = factory(root.WeaponVFXCore, root.StaffVFXConfig, root.StaffSlam);
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (Core, VFX, Slam) {
   'use strict';
   if (!Core || !VFX) throw new Error('Nạp weapon-vfx-core.js và staff-vfx-config.js trước staff-skill-effects.js.');
   const TAU = Math.PI * 2;
@@ -585,6 +585,34 @@
     };
     try { core.onEvent?.(e); } finally { accepting = false; }
   }
+  function buildSlamAura(core,fx){
+    const T=core.THREE,shared=sharedFor(core),c=palette(T),root=new T.Group();root.name='chan-dia-gathering-aura';fx.world.add(root);root.visible=false;
+    const bands=Array.from({length:core.quality==='low'?2:3},(_,i)=>{
+      const pivot=new T.Group();pivot.rotation.set(.30+i*.27,i*2.1,i%2?.30:-.25);root.add(pivot);
+      const m=material(core,fx,{uniforms:{uJade:{value:c.jade},uGold:{value:c.gold},uOpacity:{value:0},uTime:{value:0},uSpeed:{value:2.5+i}},vertexShader:UV_VERTEX,fragmentShader:BAND_FRAGMENT});
+      const band=mesh(core,fx,shared.band,m,pivot,11);band.scale.set(1,.07,1);return {pivot,band,material:m};
+    });
+    const sealMaterial=material(core,fx,{uniforms:{uJade:{value:c.jade},uGold:{value:c.gold},uOpacity:{value:0},uTime:{value:0}},vertexShader:UV_VERTEX,fragmentShader:SEAL_FRAGMENT});
+    const seal=mesh(core,fx,shared.quad,sealMaterial,fx.world,8);seal.name='chan-dia-charge-seal';seal.rotation.x=-Math.PI/2;seal.visible=false;
+    const light=new T.PointLight(c.jade,0,5,2);light.castShadow=false;root.add(light);
+    return {root,bands,seal,sealMaterial,light,carry:0,center:new T.Vector3()};
+  }
+  function tickSlamAura(core,fx,dt){
+    const sl=fx.slam,a=sl.aura,t=fx.age,pose=Slam.sample(t,fx.skill),p=core._pose(fx.caster).p;
+    const k=pose.charge; a.root.visible=t<fx.skill.activeAt&&k>0;
+    a.center.copy(p);a.center.y+=pose.lift+fx.casterHeight*.56;a.root.position.copy(a.center);
+    a.light.intensity=a.root.visible?(.35+k*1.8)*VFX.intensity:0;
+    a.bands.forEach((b,i)=>{b.pivot.rotation.y=t*(1.1+i*.65);const r=(.72+i*.18)*(1+.24*k);b.band.scale.set(r,.045+.065*k,r);b.material.uniforms.uTime.value=t;b.material.uniforms.uOpacity.value=a.root.visible?k*(i?.48:.65)*VFX.intensity:0;});
+    a.seal.visible=a.root.visible;a.seal.position.set(p.x,core._ground(p)+.045,p.z);a.seal.scale.setScalar(2.1+.65*k);a.sealMaterial.uniforms.uTime.value=t;a.sealMaterial.uniforms.uOpacity.value=a.root.visible*k*.36;
+    if(!a.root.visible)return;
+    a.carry+=Math.min(dt,.1)*(core.quality==='low'?16:28)*k;const n=Math.min(4,Math.floor(a.carry));a.carry-=n;
+    for(let i=0;i<n;i++){
+      const angle=t*5+i*2.4,r=1.0+core.random()*.4;
+      sl.p.set(a.center.x+Math.cos(angle)*r,a.center.y+rand(core,-.65,.65),a.center.z+Math.sin(angle)*r);
+      sl.v.subVectors(a.center,sl.p).multiplyScalar(1.8);sl.v.y+=.35;
+      core.pool.spawn(sl.p,sl.v,i%2?VFX.colors.gold:VFX.colors.jade,.40,.035,0,.65);
+    }
+  }
   const GroundSlamEffect = {
     build(core, fx) {
       const T = core.THREE, q = tier(core), shared = sharedFor(core), c = palette(T), cfg = VFX.slam; worldLayer(core, fx);
@@ -608,7 +636,7 @@
       const cracks = mesh(core, fx, crackGeometry, crackMaterial, fx.world, 8); cracks.visible = false; cracks.frustumCulled = false;
       const rocks = new T.InstancedMesh(shared.rock, shared.rockMaterial, q.rocks); rocks.visible = false; rocks.frustumCulled = false; fx.world.add(rocks);
       fx.slam = {orb, orbMaterial, impact, flash, flashMaterial, columnMaterial, waves, cracks, crackMaterial, crackGeometry, rocks,
-        slabs: slamSlabs(core, fx), hitTargets: new Set(), previousAge: 0,
+        aura: buildSlamAura(core,fx), slabs: slamSlabs(core, fx), hitTargets: new Set(), previousAge: 0,
         crackBase: Float32Array.from(crackGeometry.attributes.position.array),
         rockState: Array.from({length: q.rocks}, () => ({p: new T.Vector3(), v: new T.Vector3(), spin: new T.Vector3(), size: 0, life: 0, age: 0, alive: false, bounced: false})),
         dust: createDust(core, fx, q.dust, VFX.colors.dust), contact: new T.Vector3(), normal: new T.Vector3(0, 1, 0), up: new T.Vector3(0, 1, 0),
@@ -632,7 +660,13 @@
     // That end projected on the terrain. Only a missing staff, an end behind the player
     // or out of reach falls back to the ground straight ahead of the feet.
     contactPoint(core, fx, out) {
-      const cfg = VFX.slam, {p, d} = core._pose(fx.caster), end = this.strikeEnd(core, fx, fx.slam.tip);
+      const cfg = VFX.slam, {p, d} = core._pose(fx.caster);
+      if(fx.slam.authoredLeap){
+        const contact=fx.slam.contactOffset||Slam.contact;
+        out.copy(p).addScaledVector(d,contact.z);out.x+=d.z*contact.x;out.z-=d.x*contact.x;
+        out.y=core._ground(out);return out;
+      }
+      const end = this.strikeEnd(core, fx, fx.slam.tip);
       let dx = end ? end.x - p.x : 0, dz = end ? end.z - p.z : 0;
       const reach = Math.hypot(dx, dz), ahead = dx * d.x + dz * d.z;
       if (!end || !(reach >= cfg.contactMin && reach <= cfg.contactMax) || ahead < -.1) { dx = d.x * cfg.contactFallback; dz = d.z * cfg.contactFallback; }
@@ -678,6 +712,7 @@
     tick(core, fx, dt) {
       const s = fx.skill, t = fx.age, cfg = VFX.slam, sl = fx.slam, after = t - s.activeAt;
       const previous = sl.previousAge; sl.previousAge = t;
+      tickSlamAura(core,fx,dt);
       for (const m of fx.materials) if (m.uniforms?.uTime) m.uniforms.uTime.value = t;
       // Charge: energy gathers at the staff tip during the raise; no ground effect yet.
       if (after < 0) {

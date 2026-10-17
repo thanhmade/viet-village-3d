@@ -137,7 +137,7 @@ if((active||multiplayerWalking||localWalking)&&world.visible&&!insideHouse&&!ove
  let dx=0,dz=0;let ix=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joystick.x;let iz=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0)+joystick.y;
  const manualMovement=Math.abs(ix)+Math.abs(iz)>.08;
  if(manualMovement){target=null;waypoints=[];dx=ix*Math.cos(yaw)+iz*Math.sin(yaw);dz=-ix*Math.sin(yaw)+iz*Math.cos(yaw);}else if(target){while(target&&Math.hypot(target.x-player.position.x,target.z-player.position.z)<.2)target=waypoints.shift()||null;if(target){dx=target.x-player.position.x;dz=target.z-player.position.z;const distance=Math.hypot(dx,dz);dx/=distance;dz/=distance;}}
- const movement=playerMotion.step(dt,{x:dx,z:dz,speed:keys.ShiftLeft||keys.ShiftRight?MOVE_SPEED.run:MOVE_SPEED.walk});
+ const movement=playerMotion.step(dt,{x:dx,z:dz,speed:keys.ShiftLeft||keys.ShiftRight?MOVE_SPEED.run:MOVE_SPEED.walk,enabled:!villageWeapons?.movementLocked});
  avatarSpeed=movement.speed;
  if(manualMovement)playerJourney?.recordMovement(movement.distance);
  if(!playerAvatar?.isGLTF){
@@ -190,7 +190,7 @@ addEventListener('keydown',e=>{if(e.code!=='KeyC'||e.repeat||e.ctrlKey||e.altKey
 $('playerPortraitBtn')?.addEventListener('click',e=>{e.stopPropagation?.();void openCharacterSheet();});window.VillagePerformance=window.createVillagePerformance({renderer,getSun:()=>sun,getSize:()=>({width:innerWidth,height:innerHeight,dpr:devicePixelRatio,mobile:innerWidth<800||matchMedia('(pointer:coarse)').matches}),readout:$('performanceReadout'),storage:localStorage});$('quality').value=window.VillagePerformance.mode;quality();createWorld();bind();bindScenery();bindInterior();initClimate();initializeHouseTravel();initializeRegionTravel();void window.VietVillageMapAssets?.initialize({region:regionTravel.current,interior:interiorRoot,preview:housePreview,notify:toast});$('loading').classList.add('hidden');requestAnimationFrame(tick);renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();toast('Đồ họa bị gián đoạn. Hãy tải lại trang để tiếp tục.');});gameInitialized=true;
 playerMotion=window.createVillagePlayerMotion({position:player.position,body,surfaceAt:villageMovementSurface,contextKey:()=>regionTravel?.currentId+':'+insideHouse});
 window.VietVillagePlayerMotion=playerMotion;
-villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,clearMotion,startRoaming,aim:{fromScreen:aimFromScreen,fromDrag:aimFromDrag},notify:toast,
+villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,leftArm,leftLeg,rightLeg,clearMotion,startRoaming,aim:{fromScreen:aimFromScreen,fromDrag:aimFromDrag},notify:toast,
  getQuality:()=>{const level=window.VillagePerformance?.policy?.level;return level>=3?'high':level>=2?'medium':'low';},
  getCasterHeight:()=>playerAvatar?.height||2.35,
  onVfxEvent:event=>{if(event.type==='impact'&&event.shake>0)addCameraShake(event.shake);},

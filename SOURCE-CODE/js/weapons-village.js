@@ -6,7 +6,7 @@
 // VFX hooks: getQuality() → 'low'|'medium'|'high' (applied when no effect is live),
 // onVfxEvent(event) receives the core's cast/impact/shield events (camera shake),
 // getCasterHeight() sizes body-centred effects such as the Hộ Thân shell.
-window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getState, getGroundY, startRoaming, clearMotion, onSkillUsed, onSkillHit = null, onSkillCancel = null, aim = null, notify = () => {},
+window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftArm = null, leftLeg = null, rightLeg = null, getState, getGroundY, startRoaming, clearMotion, onSkillUsed, onSkillHit = null, onSkillCancel = null, aim = null, notify = () => {},
   getQuality = () => 'low', onVfxEvent = null, getCasterHeight = () => 2.35}) {
   const el = id => document.getElementById(id);
   const panel = el('weaponsPanel'), bar = el('weaponSkillBar');
@@ -49,6 +49,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   // The pose publishes a temporary grip offset only for Côn Quét. Other staff skills keep their grip.
   function syncSweepGrip() {
     if (!grip || !selectedModel || weaponId !== 'staff') return;
+    if(fallbackSlam&&grip.parent===sweepPivot)return;
     const active = manager?.effects.find(fx => fx.skill.id === 'staff.con-quet');
     const x = avatarSocket ? avatarSocket.userData.staffSweepGripX : active ? window.StaffSweep.sample(poseTime).gripX : undefined;
     const desired = Number.isFinite(x) ? x : selectedModel.gripPoint.x;
@@ -62,7 +63,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     }
   }
   // Original procedural avatar: rotate only its visual parts; caster, collider and camera stay put.
-  let sweepPivot=null;
+  let sweepPivot=null,fallbackSlam=null;
   function startFallbackSpin(){
     if(avatarSocket||sweepPivot)return;
     const parts=body.children.filter(part=>part.userData.proceduralAvatarPart);
@@ -72,8 +73,39 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   }
   function stopFallbackSpin(){
     if(!sweepPivot)return;
+    if(fallbackSlam){for(const [part,state] of fallbackSlam){part.position.copy(state.p);part.quaternion.copy(state.q);part.scale.copy(state.s);}fallbackSlam=null;attachGrip();}
     for(const part of [...sweepPivot.children])body.add(part);
     sweepPivot.removeFromParent();sweepPivot=null;
+  }
+  function startFallbackSlam(){
+    startFallbackSpin();if(!sweepPivot)return;
+    sweepPivot.name='village-staff-slam-pose';fallbackSlam=new Map();
+    for(const part of [...sweepPivot.children,...[rightArm,leftArm].filter(Boolean).flatMap(arm=>arm.children.filter(o=>o.isMesh))])
+      fallbackSlam.set(part,{p:part.position.clone(),q:part.quaternion.clone(),s:part.scale.clone()});
+    sweepPivot.add(grip);
+  }
+  function poseFallbackSlam(time){
+    if(!fallbackSlam)return;
+    const state=window.StaffSlam.sample(time),weight=state.weight,up=new T.Vector3(0,1,0);
+    sweepPivot.position.y=state.lift-state.crouch;
+    for(const leg of [leftLeg,rightLeg])if(leg)leg.scale.y=(.77-state.crouch)/.77;
+    const palm=new T.Vector3(.10,Math.min(1.98,state.handY)+state.crouch,state.handZ);
+    const rotation=new T.Quaternion().setFromAxisAngle(up,Math.PI).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),-state.staffPitch));
+    grip.position.copy(palm);grip.quaternion.copy(rotation);
+    for(const [arm,x] of [[rightArm,0],[leftArm,.42]]){
+      if(!arm)continue;
+      const target=palm.clone().add(new T.Vector3(x*.7,0,0).applyQuaternion(rotation));
+      const origin=arm.position.clone(),axis=target.clone().sub(origin),distance=Math.min(.6799,axis.length());axis.normalize();
+      const pole=new T.Vector3(arm===rightArm?.6:-.6,-.1,.35);pole.addScaledVector(axis,-pole.dot(axis)).normalize();
+      const elbow=origin.clone().addScaledVector(axis,distance/2).addScaledVector(pole,Math.sqrt(.34*.34-distance*distance/4));
+      const end=origin.clone().addScaledVector(axis,distance),joints=[origin,elbow,end];arm.quaternion.identity();
+      arm.children.filter(o=>o.isMesh).slice(0,2).forEach((mesh,i)=>{
+        const a=joints[i],b=joints[i+1],base=fallbackSlam.get(mesh),direction=b.clone().sub(a);
+        mesh.position.copy(base.p).lerp(a.clone().add(b).multiplyScalar(.5).sub(origin),weight);
+        mesh.quaternion.copy(base.q).slerp(new T.Quaternion().setFromUnitVectors(up,direction.clone().normalize()),weight);
+        mesh.scale.copy(base.s);mesh.scale.y*=1+(direction.length()/(i?.28:.40)-1)*weight;
+      });
+    }
   }
   function setAvatarSocket(socket) { cancel(); avatarSocket = socket || null; attachGrip(); }
 
@@ -131,7 +163,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   }
   function render(allowed) {
     bar?.setAttribute?.('data-equipped-weapon', weaponId);
-    allowed=allowed&&!manager?.effects.some(fx=>fx.skill.id==='staff.con-quet');
+    allowed=allowed&&!manager?.effects.some(fx=>['staff.con-quet','staff.chan-dia'].includes(fx.skill.id));
     if (nameLabel.textContent !== currentConfig.name) nameLabel.textContent = currentConfig.name;
     for (let index = 0; index < skillButtons.length; index++) {
       const button = skillButtons[index], skill = currentConfig.skills[index], part = parts[index];
@@ -238,7 +270,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   }
   function cast(slot, {point = null} = {}) {
     const allowed = usable();
-    if (manager?.effects.some(fx=>fx.skill.id==='staff.con-quet'||(fx.skill.id==='staff.chan-dia'&&fx.age<fx.skill.activeAt)))return {ok:false,reason:'busy'};
+    if (manager?.effects.some(fx=>fx.skill.id==='staff.con-quet'||fx.skill.id==='staff.chan-dia'))return {ok:false,reason:'busy'};
     if (!allowed) return {ok: false, reason: 'village-unavailable'};
     const skill = currentConfig.skills.find(item => item.slot === slot);
     if (!skill) return {ok: false, reason: 'unknown-slot'};
@@ -259,10 +291,16 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       casterHeight: Number.isFinite(height) && height > 0 ? height : 2.35});
     if (result.ok) {
       if (skill.id === 'staff.ho-than') { const state = getState(); guard.start(skill, {maxHp: state.maxHp, ownerId: state.uid || null, handle: result.handle}); }
-      poseTime = 0; poseLength = skill.id==='staff.con-quet'?skill.duration:Math.min(skill.duration, .9);
+      poseTime = 0; poseLength = ['staff.con-quet','staff.chan-dia'].includes(skill.id)?skill.duration:Math.min(skill.duration, .9);
       const button = skillButtons[slot - 1];
       button?.classList?.add?.('skill-fired'); setTimeout(() => button?.classList?.remove?.('skill-fired'), 260);
       try { onSkillUsed?.({weaponId, skillId: skill.id, slot}); } catch (_) { /* Progress UI cannot interrupt a successful cast. */ }
+      if(skill.id==='staff.chan-dia'){
+        clearMotion();
+        const fx=manager.effects.find(effect=>effect.handle===result.handle);
+        if(fx?.slam){fx.slam.authoredLeap=true;fx.slam.avatarPoseLinked=!!avatarSocket&&Number.isFinite(avatarSocket.userData.staffSlamTime);}
+        if(!avatarSocket){startFallbackSlam();if(fx?.slam)fx.slam.contactOffset={x:.10,z:window.StaffSlam.contact.z};poseFallbackSlam(0);}
+      }
       if(skill.id==='staff.con-quet'){
         startFallbackSpin();
         if(!avatarSocket)grip.rotation.set(0,Math.PI+window.StaffSweep.sample(0).staffYaw,0);
@@ -321,7 +359,10 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     if (poseLength && !avatarSocket) {
       poseTime += dt;
       const phase = Math.min(1, poseTime / poseLength);
-      if(weaponId==='staff'&&poseLength>1){
+      const slam=manager.effects.find(fx=>fx.skill.id==='staff.chan-dia');
+      if(slam){
+        poseFallbackSlam(poseTime);
+      }else if(weaponId==='staff'&&poseLength>1){
         const pose=window.StaffSweep.sample(poseTime);
         if(sweepPivot)sweepPivot.rotation.y=pose.bodyYaw;
         grip.rotation.set(0,Math.PI+pose.staffYaw-(sweepPivot?pose.bodyYaw:0),0);
@@ -341,10 +382,13 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
         poseTime = poseLength = 0;
       }
     }
+    for(const fx of manager.effects.slice())if(fx.skill.id==='staff.chan-dia'&&fx.slam.avatarPoseLinked&&
+      !Number.isFinite(avatarSocket?.userData.staffSlamTime)){manager.cancel(fx.handle);onSkillCancel?.();}
     guard.advance(dt);
     syncSweepGrip();
     manager.update(dt);
     if (!manager.effects.some(fx => fx.skill.id === 'staff.con-quet')) syncSweepGrip();
+    if(!manager.effects.some(fx=>fx.skill.id==='staff.chan-dia')&&sweepPivot?.name==='village-staff-slam-pose'){stopFallbackSpin();poseTime=poseLength=0;attachGrip();}
     uiElapsed += dt;
     // Match the tenths-of-a-second label precision, not the display refresh rate.
     if (changed || uiElapsed >= .1) { render(allowed); uiElapsed = 0; }
@@ -397,7 +441,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
   listen(window, 'focus', () => { focused = true; });
   listen(document, 'visibilitychange', () => { if (document.hidden) { cancel(); clearMotion(); update(0); } });
   hide(panel, true); hide(bar, true); setExpanded(false); render(false);
-  return Object.freeze({equip, cast, update, openPanel, closePanel, deactivate, setAvatarSocket,
+  return Object.freeze({get movementLocked(){return !!manager?.effects.some(fx=>fx.skill.id==='staff.chan-dia');},equip, cast, update, openPanel, closePanel, deactivate, setAvatarSocket,
     beginAim, aimAt, confirmAim, cancelAim, isAiming: () => !!aiming,
     // Same configs and cooldown clock as the buttons: the character sheet reads this.
     skills() {

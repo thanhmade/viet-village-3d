@@ -37,7 +37,8 @@ test('Hộ Thân returns to locomotion after gathering; Chấn Địa retains it
   for (const item of staff.skills.filter(item => item.id !== 'staff.con-quet')) {
     const segment = VFX.animation[item.id];
     assert.ok(segment && segment.clip, item.id);
-    close(segment.to - segment.from, item.id === 'staff.ho-than' ? .7 : item.duration, item.id + ' segment length');
+    if(item.id==='staff.ho-than')close(segment.to-segment.from,.7,'Hộ Thân gesture');
+    else close(item.duration,5.4,'Chấn Địa authored leap timeline');
     assert.ok(item.activeAt < item.activeEnd && item.activeEnd <= item.duration);
   }
   for (const value of Object.values(VFX.colors)) assert.match(value, /^#[0-9a-f]{6}$/i);
@@ -205,7 +206,7 @@ test('repeated casts reuse shared resources and free every per-cast buffer exact
         for (const resource of owned) { counts.set(resource, 0); resource.addEventListener('dispose', () => counts.set(resource, counts.get(resource) + 1)); }
         if (item.id === 'staff.con-quet') assert.equal(fx.sweep.ribbon.trails[0].ring.length, VFX.quality[quality].trailSamples);
         if (item.id === 'staff.chan-dia') assert.equal(fx.slam.rockState.length, VFX.quality[quality].rocks);
-        for (let t = 0; t < item.cooldown + .1; t += 1 / 30) { if (round % 3 === 0) caster.rotation.y += .05; vfx.update(1 / 30); }
+        for (let t = 0; t < Math.max(item.duration,item.cooldown) + .1; t += 1 / 30) { if (round % 3 === 0) caster.rotation.y += .05; vfx.update(1 / 30); }
       }
       assert.equal(vfx.shared.size, 1, 'one shared texture/geometry set per quality');
       assert.equal(vfx.stats.active, 0);

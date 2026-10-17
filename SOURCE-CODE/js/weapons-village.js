@@ -130,6 +130,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
     return {remaining, state: !allowed ? 'blocked' : remaining > 0 ? 'cooldown' : 'ready'};
   }
   function render(allowed) {
+    bar?.setAttribute?.('data-equipped-weapon', weaponId);
     allowed=allowed&&!manager?.effects.some(fx=>fx.skill.id==='staff.con-quet');
     if (nameLabel.textContent !== currentConfig.name) nameLabel.textContent = currentConfig.name;
     for (let index = 0; index < skillButtons.length; index++) {
@@ -140,6 +141,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, getSta
       const signature = [skill.id, state, remaining > 0 ? remaining.toFixed(1) : '', protection, aiming?.slot === skill.slot].join('|');
       if (signatures[index] === signature) continue;
       signatures[index] = signature;
+      button.setAttribute?.('data-skill-id', skill.id);
       setText(part, 'icon', GLYPHS[skill.type] || '✦'); setText(part, 'name', skill.name);
       setText(part, 'key', index === 0 ? 'J · 1' : KEYS[index]); setText(part, 'cd', protection !== null ? '⛨ ' + protection : remaining > 0 ? remaining.toFixed(1) : '');
       button.style?.setProperty?.('--cd', remaining > 0 ? String(Math.min(1, remaining / skill.cooldown)) : '0');

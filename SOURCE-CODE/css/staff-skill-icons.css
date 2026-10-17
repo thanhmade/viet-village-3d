@@ -1,0 +1,55 @@
+/* Làng Việt: three painted staff emblems. Load AFTER game-hud.css.
+   Art URLs are static so build-public-game.mjs includes the PNG files.
+   Skill names, keys, cooldowns and accessibility text remain live DOM. */
+/* Desktop: room under the badges for their labels, so the help line stays readable. */
+body:not(.touch) #weaponSkillBar[data-equipped-weapon="staff"] .weaponSkillButtons{margin-bottom:18px}
+/* The 351 px bar is wider than the 340 px the jump button leaves; keep it clear of the Côn Quét label. */
+body.weapons-roaming:not(.touch):has(#weaponSkillBar[data-equipped-weapon="staff"]:not(.hidden)) .player-jump{right:calc(var(--hud-right) + 356px)}
+#weaponSkillBar button[data-skill-id^="staff."]{
+ isolation:isolate;overflow:visible;border:0;background:transparent;
+ box-shadow:0 3px 8px #0007;transition:box-shadow .16s ease;
+}
+#weaponSkillBar button[data-skill-id^="staff."] .skill-icon{
+ position:absolute;inset:0;display:block;margin:0;width:100%;height:100%;
+ border-radius:50%;background:center/contain no-repeat;
+ font-size:0;line-height:0;pointer-events:none;z-index:0;
+}
+#weaponSkillBar button[data-skill-id="staff.con-quet"] .skill-icon{
+ background-image:url("../../ASSETS/ui/skills/staff/con-quet-jade.png");
+}
+#weaponSkillBar button[data-skill-id="staff.ho-than"] .skill-icon{
+ background-image:url("../../ASSETS/ui/skills/staff/ho-than-jade.png");
+}
+#weaponSkillBar button[data-skill-id="staff.chan-dia"] .skill-icon{
+ background-image:url("../../ASSETS/ui/skills/staff/chan-dia-jade.png");
+}
+#weaponSkillBar button[data-skill-id^="staff."] .skill-name{
+ z-index:4;bottom:-16px;left:-3px;right:-3px;padding:2px 4px;
+ overflow:visible;border-radius:5px;background:#0a211bf2;color:#fff2cc;
+ font:700 10px/1.2 system-ui,sans-serif;text-shadow:0 1px 2px #000;
+ pointer-events:none;white-space:nowrap;
+}
+#weaponSkillBar button[data-skill-id^="staff."].skill-main .skill-name{font-size:11px;left:-5px;right:-5px}
+#weaponSkillBar button[data-skill-id^="staff."] .skill-key{
+ z-index:4;top:-5px;padding:1px 5px;border:1px solid #b59250;
+ background:#0c211cf5;color:#ffedbc;font-size:9px;line-height:1.15;
+ box-shadow:0 1px 3px #0008;pointer-events:none;
+}
+#weaponSkillBar button[data-skill-id^="staff."] .skill-cd{
+ z-index:2;inset:4px;border-radius:50%;font-size:21px;
+ color:#fff8db;text-shadow:0 1px 4px #000,0 0 8px #000;
+ background:conic-gradient(#040f12d9 calc(var(--cd,0) * 360deg),transparent 0);
+}
+#weaponSkillBar button[data-skill-id^="staff."][data-state="cooldown"] .skill-icon{filter:saturate(.55) brightness(.8)}
+#weaponSkillBar button[data-skill-id^="staff."][data-state="blocked"]{filter:none;opacity:1}
+#weaponSkillBar button[data-skill-id^="staff."][data-state="blocked"] .skill-icon{filter:grayscale(1) brightness(.48)}
+#weaponSkillBar button[data-skill-id^="staff."][data-state="aiming"]{box-shadow:0 0 0 3px #ffe8a5,0 0 15px #d8a74eaa}
+#weaponSkillBar button[data-skill-id^="staff."]:hover:not(:disabled){filter:none;box-shadow:0 0 0 2px #cda65a,0 0 13px #68d3aa66}
+#weaponSkillBar button[data-skill-id^="staff."]:focus-visible{outline:3px solid #fff0b3;outline-offset:4px}
+.touch #weaponSkillBar[data-equipped-weapon="staff"]{padding:0;bottom:calc(var(--hud-bottom) + 18px)}
+/* Touch arc: lift Chấn Địa so its label clears the Hộ Thân key and the Côn Quét badge below it. */
+.touch #weaponSkillBar[data-equipped-weapon="staff"] .skill-arc-b{bottom:101px}
+@media(prefers-reduced-motion:reduce){
+ #weaponSkillBar button[data-skill-id^="staff."]{transition:none}
+ #weaponSkillBar button[data-skill-id^="staff."].skill-fired{animation:none}
+}

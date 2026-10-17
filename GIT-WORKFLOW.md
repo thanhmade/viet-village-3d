@@ -75,3 +75,18 @@ Không có tệp âm thanh trong hai cây nguồn đã kiểm kê. Ảnh tham ch
 - Tiến độ/phiên người chơi không xuất ra Git. Cấu hình Firebase Web công khai được giữ; đây không phải khóa riêng hoặc token đăng nhập. Không tạo .env.example giả khi ứng dụng hiện không dùng .env.
 
 Quét mẫu khóa riêng/token/service-account/mật khẩu trong tệp văn bản và thành viên văn bản của ZIP chưa phát hiện bí mật máy chủ. Địa chỉ email tìm thấy trong test là fixture .test/.invalid; email trong package-lock là nội dung thông báo công khai của dependency. Đây là kiểm tra theo mẫu kết hợp rà soát phạm vi, không phải chứng nhận bảo mật toàn diện.
+
+## Sao lưu cục bộ trước khi phát hành (16/10/2026)
+
+Công cụ cố định: `H:\CHAT GPT\3D-GAME\CONG-CU-SAO-LUU-VIET-VILLAGE` (`sao_luu.py`, `cau-hinh.json`, `SAO-LUU-PHIEN-BAN.bat`, `HUONG-DAN.md`). Kho mốc: `H:\CHAT GPT\3D-GAME\VIET-VILLAGE-3D-PHIEN-BAN`. Cả hai nằm ngoài hai cây nguồn và **không thuộc Git**: không đưa ZIP, bundle, patch, `THONG-TIN.json` hay cấu hình máy lên GitHub (ZIP có thể chứa `.env`/cấu hình riêng tư, không mã hóa).
+
+Mỗi mốc gồm `BAN-CHUAN.zip`, `BAN-CAP-NHAT.zip` (tệp thực tế, kể cả chưa commit; bỏ `.git`, `node_modules`, `__pycache__`, `.cache`, `.firebase`, `public-game`; bản chuẩn không chứa lồng thư mục cập nhật), hai `.bundle`, các `INDEX/WORKING.patch`, `THONG-TIN.json` (nhánh/commit/trạng thái từng cây, refs dự định push, SHA-256 từng tệp) và `HOAN-TAT.json`. Chỉ coi là thành công khi mã thoát 0 **và** có `HOAN-TAT.json`; thư mục `DANG-SAO-LUU__...` là bản dở, không dùng để khôi phục. Không xóa mốc cũ hoặc bản dở.
+
+Quy tắc cho người và phiên AI:
+
+1. Trước khi push/phát hành: dừng các tác vụ đang ghi vào hai cây nguồn, rồi tạo mốc đúng trạng thái cuối. Kiểm tra lại bằng `py -3 "H:\CHAT GPT\3D-GAME\CONG-CU-SAO-LUU-VIET-VILLAGE\sao_luu.py" --verify "<thư mục mốc>"` (phải in `KIEM TRA DAT`, mã thoát 0).
+2. `git push` từ máy này chạy hook `pre-push` dùng chung của hai worktree (`.git/hooks/pre-push` của repository chính). Hook lưu danh sách refs từ stdin vào một tệp tạm riêng (xóa khi kết thúc), gọi `sao_luu.py --pre-push`; sao lưu lỗi thì push bị dừng. Không dùng `--no-verify`, không xóa/ghi đè hook; muốn thêm kiểm tra khác thì ghép vào sau bước sao lưu và đọc refs từ tệp tạm đó.
+3. Mã phiên bản của mốc: push có đúng một tag `v...` → mốc dùng chính mã tag. Chỉ push nhánh hoặc sao lưu thủ công → nhãn `v<version trong package.json>-local`; đây là bản sao cục bộ, **không** phải bằng chứng đã phát hành. Muốn đặt mã chủ động: `py -3 sao_luu.py --version <mã tag thật> --phase pre-push`. Công cụ không tự tăng version, tạo tag, Release, push hay deploy; quy trình tăng version/tag/GitHub Release đã thống nhất (nếu có) vẫn giữ nguyên, sao lưu chỉ là bước thêm trước đó.
+4. Push/sửa GitHub qua API, web, máy khác hoặc công cụ không chạy hook Git của máy này **không** được hook bảo vệ: phải tự chạy sao lưu + `--verify` trên máy H: trước, và ghi rõ trong báo cáo.
+5. Không di chuyển thư mục công cụ (hook ghi đường dẫn tuyệt đối). Nếu bắt buộc di chuyển, cập nhật hook bằng tay, không ghi đè kiểm tra khác.
+6. Bản sao không chứa dữ liệu Firebase/Supabase, reflog, hook/config Git cục bộ hay object Git không còn refs; cùng nằm trên ổ H nên không thay thế bản sao sang ổ khác.

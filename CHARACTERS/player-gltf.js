@@ -219,9 +219,14 @@
    sweepPositions.set(hips,hips.position.clone());hips.position.y-=state.crouch/hips.parent.getWorldScale(new T.Vector3()).y;
    facing.rotation.y=forwardYaw+state.bodyYaw;
    if(spine)spine.quaternion.multiply(new T.Quaternion().setFromAxisAngle(up,state.torsoYaw*weight)).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),state.lean*weight));sync();
+   // Step into and out of the stance one foot at a time on a short lifted arc (left
+   // leads in, right leads out). Blending the leg rotations alone skated both feet.
+   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
    for(const [side,leg] of Object.entries(sweepLegs))if(leg.upper&&leg.lower&&leg.foot){
-    const base=feet[side],target=base.position.clone().add(new T.Vector3(side==='left'?state.stanceWidth:-state.stanceWidth,0,side==='left'?state.frontStep:state.backStep).applyQuaternion(heading)),pole=new T.Vector3(side==='right'?-.35:.35,.65,.8).applyQuaternion(heading);
-    solveSweepLimb(leg.upper,leg.lower,leg.foot,root.localToWorld(target),root.localToWorld(pole),base.rotation,weight);
+    // The foot travels only while it is clear of the ground (middle of the lift).
+    const step=side==='left'?ease(weight*2):ease(weight*2-1),travel=ease((step-.1)/.7),base=feet[side];
+    const target=base.position.clone().add(new T.Vector3((side==='left'?state.stanceWidth:-state.stanceWidth)*travel,.07*Math.sin(Math.PI*step),(side==='left'?state.frontStep:state.backStep)*travel).applyQuaternion(heading)),pole=new T.Vector3(side==='right'?-.35:.35,.65,.8).applyQuaternion(heading);
+    solveSweepLimb(leg.upper,leg.lower,leg.foot,root.localToWorld(target),root.localToWorld(pole),base.rotation,Math.min(1,weight*3));
    }
    // Blended entry/recovery can dip the sole below ground even with foot IK.
    // Correct the visual before arm IK so the held blade keeps its world anchors.

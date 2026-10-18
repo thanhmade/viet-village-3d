@@ -70,3 +70,18 @@ for(const gender of ['male','female'])test('Nhất Kiếm '+gender+': planted su
   }
  }v.dispose();
 });
+
+for(const gender of ['male','female'])test('Nhất Kiếm '+gender+': feet step in and out of the stance instead of skating',async()=>{
+ const {v,gltf,actor}=await visual(gender),feet=[];gltf.scene.traverse(o=>{if(o.isBone&&/(LeftFoot|RightFoot)$/.test(o.name))feet.push(o);});
+ const local=()=>{actor.updateMatrixWorld(true);return feet.map(f=>actor.worldToLocal(f.getWorldPosition(new T.Vector3())));};
+ assert.equal(feet.length,2);const rest=local();assert(v.startSwordStrike());let previous=rest;const skate={entry:[0,0],recovery:[0,0]},lift=[0,0];
+ for(let frame=1;frame<=Math.ceil(Sword.poseDuration*120);frame++){
+  v.update(1/120);const t=frame/120,now=local(),phase=t<.25?'entry':t>1.12?'recovery':null;
+  for(let i=0;i<2;i++){const moved=Math.hypot(now[i].x-previous[i].x,now[i].z-previous[i].z),dy=now[i].y-rest[i].y;lift[i]=Math.max(lift[i],dy);
+   // Sliding = moving faster than 0.15 m/s while the foot is still within 1 cm of the ground.
+   if(phase&&dy<.01&&moved*120>.15)skate[phase][i]+=moved;}
+  previous=now;
+ }
+ for(const phase of ['entry','recovery'])for(let i=0;i<2;i++)assert(skate[phase][i]<.03,gender+' '+feet[i].name+' slides '+skate[phase][i].toFixed(3)+' m during '+phase);
+ for(let i=0;i<2;i++)assert(lift[i]>.03,gender+' '+feet[i].name+' never lifts');v.dispose();
+});

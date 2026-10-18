@@ -44,3 +44,17 @@ Chưa đo FPS/GPU memory/mobile hoặc xem V3 trong phiên game đăng nhập th
 Trong khi hoàn thiện, nhánh có thêm commit `4632104861ec93c03e2f55bc81bad56e6c9a0946`. Đã đối chiếu hash đủ 12 tệp cập nhật và giữ cơ chế từng chân bước trên cung nhấc 7 cm, hai test chống trượt, font Palatino của preview. Chạy lại bộ VFX trên pose V3 đã hợp nhất và render lại các chuỗi V3. Nhật ký GPU V2 của Claude được giữ nguyên trong `GPU-V2-CLAUDE.md`; không lấy các số FPS cũ làm số đo V3.
 
 Bản hợp nhất đầu tiên không qua hai test chống trượt (nam thu thế 3,2 cm; nữ vào thế 3,1 cm). Đã giữ ngưỡng test 3 cm và điều chỉnh IK chân đạt đủ ở 1/6 trọng số thay vì 1/3 để hợp thế tấn rộng của V3. Hai test chống trượt và sáu test pose còn lại đều đạt sau sửa; clip V3 được render lại theo sửa này.
+
+## Kiểm tra GPU V3 trên máy chạy game (Claude, 2026-10-18)
+
+Nền `bd2cf9943842280ddc977cc57ca7fcf92225ae0d`; `Nhat-Kiem-Kiem-V3.zip` có 35/35 tệp dự án trùng commit nên không nhập lại. Chrome 155 headless, ANGLE D3D11 trên GPU thật; bước khung thủ công 60–240 Hz (preview) và 17 ms (game, trang kiểm thử UID giả). Không phát hiện lỗi cần sửa mã.
+
+- Test trên checkout đầy đủ: `npm run test:vfx` 155/155, player/avatar/NPC 65/65, `npm test` 518/518; bản xuất sạch: `build:hosting` 392 tệp, `test:hosting` 12/12.
+- Preview nam/nữ, Nhẹ/Vừa/Cao, camera rộng và bên hông: lưỡi kiếm thật trùng đường quét tính trúng (0 mm) trong ba nhát; khí phóng 1,012 s, cách đầu kiếm 4,5 mm. Bia gần trúng 0,367 s, bia cuối tầm trúng khí 1,15 s, mỗi bia một lần. Vách: chạm 1,083 s có chớp xanh–trắng/vàng, tia, bụi, đá. Vách sát người chặn ở 0,333 s, không phóng khí. Hai bia thẳng hàng: chỉ bia trước (1,10 s). Chém hụt: khí tan, không chớp/tia/bụi/đá. Nhẹ 2 dải vệt, Vừa/Cao 4 ở nhát cuối. Hủy ở 0,60 s và 1,08 s: geometry/texture/program về đúng mức nền.
+- Bước chân kế thừa vẫn đạt với tấn V3: trượt sát đất ≤ 0,94 cm (vào/thu thế), chân nhấc khoảng 7 cm, đế giày không xuống dưới mặt đất, chân trụ đứng yên trong ba nhát.
+- Trong game (nam, nữ, hình khối, điện thoại 844×390): phím 1; bấm thêm trong chiêu vẫn một lần cast. Giữ W lúc chém không nhích; mở khóa 1,513 s, đi được ngay; cast lại được sau hồi 1,5 s. Bia 3 m trúng khí 1,156 s; bia trong tầm chém 0,357 s một lần; hai bia thẳng hàng chỉ bia trước. Nhiệm vụ bia Võ sư giữ “đang làm” đến khi khí chạm bia (1,156 s). Tường nhà 1,105 s và đình 1,122 s có đá vụn; sát tường 0,6 m chặn ở 0,34 s, không phóng khí; chém hụt không có điểm chạm. Đế giày cách mặt đất −1 đến +9 mm.
+- Gián đoạn: đổi sang cung giữa chém hoặc sau khi phóng, mở bảng nhân vật, mất tiêu điểm, đổi MAP, đổi nhân vật, chết. Hiệu ứng được gỡ ngay, không phát sự kiện muộn, không trúng bia. Icon 80 px (desktop)/84 px (điện thoại) vẫn thấy tên, phím, số hồi; chạm lần hai bị bỏ qua. Hồi quy Xuyên Tiễn, Liên Tiễn, Mưa Tên, Côn Quét, Hộ Thân, Chấn Địa đạt. Console chỉ có cảnh báo cũ về `three.min.js`.
+- FPS thời gian thực (Cao): desktop 1280×720 nghỉ 110–113 fps; lần cast đầu (biên dịch shader) 92–112 fps, khung dài nhất 70–127 ms (lúc nghỉ headless cũng có khung tới 157 ms); các lần sau khoảng 120 fps, khung dài nhất ≤ 22 ms. Điện thoại 844×390 (DPR 2): sau khi nóng 115 fps, khung dài nhất 29 ms. Draw call tăng 23 khi chiêu chạy (91 → 114; hình khối 107 → 130).
+- Hình ảnh trong game: khí tụ quanh thân ở nhiều độ cao, ba vệt xanh–trắng và kiếm khí nhìn rõ từ camera sau lưng; chớp va chạm chỉ khi chạm bia/vách.
+
+Chưa xác minh trên điện thoại thật và chưa chơi thử bằng tài khoản Google trên Alpha. Mỹ thuật V3 vẫn chờ chủ dự án nghiệm thu.

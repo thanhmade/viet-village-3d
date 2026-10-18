@@ -107,15 +107,16 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
       });
     }
   }
-  function bowPoseSpec(id){return id==='bow.lien-tien'?window.BowVolley:id==='bow.xuyen-tien'?window.BowPiercing:null;}
+  function bowPoseSpec(id){return id==='bow.mua-ten'?window.BowRain:id==='bow.lien-tien'?window.BowVolley:id==='bow.xuyen-tien'?window.BowPiercing:null;}
   function bowPoseActive(fx){const spec=bowPoseSpec(fx.skill.id);return !!spec&&fx.age<spec.poseDuration;}
   function poseFallbackBow(time,skillId='bow.xuyen-tien'){
     if(!fallbackSlam)return;
     const state=bowPoseSpec(skillId).sample(time),weight=state.weight,up=new T.Vector3(0,1,0);
     const palm=new T.Vector3(.10,state.handY,state.handZ).applyAxisAngle(up,state.yaw||0);
-    grip.rotation.set(0,Math.PI+(state.yaw||0),0);
+    const rotation=new T.Quaternion().setFromAxisAngle(up,state.yaw||0).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),state.pitch||0));
+    grip.quaternion.copy(rotation).multiply(new T.Quaternion().setFromAxisAngle(up,Math.PI));
     grip.position.copy(palm).sub(selectedModel.gripPoint.clone().multiplyScalar(.7).applyQuaternion(grip.quaternion));
-    for(const [arm,target] of [[rightArm,palm],[leftArm,palm.clone().add(new T.Vector3(0,.0245,-(.4+state.draw)*.7).applyAxisAngle(up,state.yaw||0))]]){
+    for(const [arm,target] of [[rightArm,palm],[leftArm,palm.clone().add(new T.Vector3(0,.0245,-(.4+state.draw)*.7).applyQuaternion(rotation))]]){
       if(!arm)continue;
       const origin=arm.position.clone(),axis=target.clone().sub(origin),distance=Math.min(.6799,axis.length());axis.normalize();
       const pole=new T.Vector3(arm===rightArm?.6:-.6,-.1,-.35);pole.addScaledVector(axis,-pole.dot(axis)).normalize();
@@ -297,7 +298,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
     const skill = currentConfig.skills.find(item => item.slot === slot);
     if (!skill) return {ok: false, reason: 'unknown-slot'};
     if(manager?.effects.some(bowPoseActive))return {ok:false,reason:manager.cooldownRemaining(skill.id,caster)>0?'cooldown':'busy'};
-    if(['staff.con-quet','staff.chan-dia','bow.xuyen-tien','bow.lien-tien'].includes(skill.id)&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
+    if(['staff.con-quet','staff.chan-dia','bow.xuyen-tien','bow.lien-tien','bow.mua-ten'].includes(skill.id)&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
     // Aimed casts turn the player toward the chosen point first, so the
     // effect, the training-dummy facing check and the avatar agree.
     let target = null;
@@ -321,7 +322,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
       if(bowPoseSpec(skill.id)){
         clearMotion();const fx=manager.effects.find(effect=>effect.handle===result.handle);
         fx.bow.avatarPoseLinked=!!avatarSocket&&Number.isFinite(avatarSocket.userData.bowDrawTime);
-        fx.bow.trace=(a,b,r)=>window.BowPiercing.traceWorld(T,a,b,r,getProjectileBounds(),getGroundY);
+        fx.bow.trace=skill.id==='bow.mua-ten'?(a,b)=>window.BowRain.traceWorld(T,a,b,getProjectileBounds(),getGroundY):(a,b,r)=>window.BowPiercing.traceWorld(T,a,b,r,getProjectileBounds(),getGroundY);
         if(!avatarSocket){startFallbackSlam();if(sweepPivot)sweepPivot.name='village-bow-draw-pose';fx.bow.handX=.10;poseFallbackBow(0,skill.id);}
         selectedModel.setDraw(0,true);
       }

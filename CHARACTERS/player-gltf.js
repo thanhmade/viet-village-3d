@@ -189,18 +189,18 @@
    if(minimum<groundPoint.y)facing.position.y+=(groundPoint.y-minimum)/rootScale.y;
    facing.position.y+=state.lift/rootScale.y;sync();updateSockets();
   }
-  function bowPoseSpec(skillId){return skillId==='bow.lien-tien'?global.BowVolley:skillId==='bow.xuyen-tien'?global.BowPiercing:null;}
+  function bowPoseSpec(skillId){return skillId==='bow.mua-ten'?global.BowRain:skillId==='bow.lien-tien'?global.BowVolley:skillId==='bow.xuyen-tien'?global.BowPiercing:null;}
   function poseBowDraw(){
    if(!bowDraw||!bowPoseSpec(bowDraw.skillId))return;
    sockets.right.userData.bowDrawTime=bowDraw.time;sockets.right.userData.bowDrawSkillId=bowDraw.skillId;
    const state=bowPoseSpec(bowDraw.skillId).sample(bowDraw.time),weight=state.weight;if(weight<=0)return;
    const bowYaw=forwardYaw+(state.yaw||0);
-   const up=new T.Vector3(0,1,0),rotation=new T.Quaternion().setFromAxisAngle(up,bowYaw);
+   const up=new T.Vector3(0,1,0),pitch=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),state.pitch||0),rotation=new T.Quaternion().setFromAxisAngle(up,bowYaw).multiply(pitch);
    for(const bone of Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand]))if(bone)sweepRestore.set(bone,bone.quaternion.clone());
    for(const side of ['right','left']){
     const {upper,lower,hand}=sweepBones[side];if(!upper||!lower)continue;
     const palm=new T.Vector3(state.handX,state.handY,state.handZ);
-    if(side==='left'){palm.y+=.035*.7;palm.z-=(.4+state.draw)*.7;}
+    if(side==='left')palm.add(new T.Vector3(0,.035*.7,-(.4+state.draw)*.7).applyQuaternion(pitch));
     palm.applyAxisAngle(up,bowYaw);
     const desired=root.getWorldQuaternion(new T.Quaternion()).multiply(rotation).multiply(handCalibration[side].restInverse.clone().invert());
     const offset=handCalibration[side].palm.clone().multiply(hand.getWorldScale(new T.Vector3())).applyQuaternion(desired);

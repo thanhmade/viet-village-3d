@@ -252,6 +252,7 @@ test('mũi tên mưa chạm đúng mặt đất dốc theo vị trí thế giớ
   const parent = new THREE.Group();
   parent.position.set(5, 0, 3); parent.rotation.y = 0.7;
   scene.add(parent); parent.add(caster); caster.position.set(2, 0, -1);
+  caster.position.y = ground(caster.getWorldPosition(new THREE.Vector3()));
   const target = caster.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(2, 0, -4));
   assert.equal(vfx.cast('bow.mua-ten', { caster, point: target }).ok, true);
   const fx = vfx.effects[0];
@@ -261,9 +262,9 @@ test('mũi tên mưa chạm đúng mặt đất dốc theo vị trí thế giớ
   const impacts = events.filter(event => event.type === 'impact');
   assert.equal(impacts.length, 12);
   for (const event of impacts) {
-    const arrow = fx.rain[event.hitIndex];
-    // Tip thật của ConeGeometry(.08, .23) đặt ở y=-.6, quay xuống: -(.6+.23/2).
-    const visualTip = arrow.g.localToWorld(new THREE.Vector3(0, -0.715, 0));
+    const instance = new THREE.Matrix4(); fx.bow.heads.getMatrixAt(event.hitIndex, instance);
+    fx.bow.heads.updateWorldMatrix(true, false);
+    const visualTip = new THREE.Vector3().applyMatrix4(instance).applyMatrix4(fx.bow.heads.matrixWorld);
     vectorNear(visualTip, event.position, `Mũi tên ${event.hitIndex} khớp sự kiện va chạm`);
     near(visualTip.y, ground(visualTip), `Mũi tên ${event.hitIndex} khớp mặt đất`);
   }

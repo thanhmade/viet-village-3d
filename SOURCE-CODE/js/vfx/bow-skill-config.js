@@ -56,14 +56,14 @@
       "name": "Mưa Tên",
       "type": "rain",
       "slot": 3,
-      "duration": 2.7,
-      "activeAt": 0.65,
-      "activeEnd": 2.3,
+      "duration": 4.8,
+      "activeAt": 0.85,
+      "activeEnd": 4.0,
       "cooldown": 5.0,
       "radius": 3.8,
       "range": 10.0,
       "forwardOffset": 7.0,
-      "description": "Vòng triệu hồi trên cao, nhiều tên vàng xanh rơi xuống vùng tròn phía trước."
+      "description": "Giương cung gọi trận vàng–xanh, mười hai mũi tên giáng xuống vùng đã chọn. Tên dừng ở bia hoặc vật cản đầu tiên; chớp sáng, bụi và vòng xung tại tiếp xúc."
     }
   ]
 };

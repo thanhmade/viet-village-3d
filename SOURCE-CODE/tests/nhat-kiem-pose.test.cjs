@@ -71,6 +71,18 @@ for(const gender of ['male','female'])test('Nhất Kiếm '+gender+': planted su
  }v.dispose();
 });
 
+for(const gender of ['male','female'])test('Nhất Kiếm '+gender+': lunge lowers pelvis and leans chest toward actor heading',async()=>{
+ const {v,gltf,actor}=await visual(gender);let hips,neck;
+ gltf.scene.traverse(b=>{if(b.isBone&&/Hips$/.test(b.name))hips=b;if(b.isBone&&/Neck$/.test(b.name))neck=b;});
+ const local=b=>actor.worldToLocal(b.getWorldPosition(new T.Vector3()));
+ const beforeHip=local(hips),beforeChest=local(neck).sub(beforeHip);assert(v.startSwordStrike());advance(v,Sword.releaseAt);actor.updateMatrixWorld(true);
+ const afterHip=local(hips),afterChest=local(neck).sub(afterHip);
+ assert(beforeHip.y-afterHip.y>.20,'pelvis did not lower: '+(beforeHip.y-afterHip.y));
+ assert(afterHip.z-beforeHip.z>.10,'pelvis did not drive forward: '+(afterHip.z-beforeHip.z));
+ assert(afterChest.z-beforeChest.z>.03,'chest leans away from attack: '+(afterChest.z-beforeChest.z));
+ v.cancelSwordStrike();v.dispose();
+});
+
 for(const gender of ['male','female'])test('Nhất Kiếm '+gender+': feet step in and out of the stance instead of skating',async()=>{
  const {v,gltf,actor}=await visual(gender),feet=[];gltf.scene.traverse(o=>{if(o.isBone&&/(LeftFoot|RightFoot)$/.test(o.name))feet.push(o);});
  const local=()=>{actor.updateMatrixWorld(true);return feet.map(f=>actor.worldToLocal(f.getWorldPosition(new T.Vector3())));};

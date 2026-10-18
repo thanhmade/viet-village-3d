@@ -216,9 +216,21 @@
    const up=new T.Vector3(0,1,0),heading=new T.Quaternion().setFromAxisAngle(up,forwardYaw),weaponRotation=heading.clone().multiply(global.SwordStrike.rotation(T,state));
    const feet={};for(const [side,leg] of Object.entries(sweepLegs))if(leg.foot)feet[side]={position:root.worldToLocal(leg.foot.getWorldPosition(new T.Vector3())),rotation:leg.foot.getWorldQuaternion(new T.Quaternion())};
    for(const bone of [spine,...Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand]),...Object.values(sweepLegs).flatMap(a=>[a.upper,a.lower,a.foot])])if(bone)sweepRestore.set(bone,bone.quaternion.clone());
-   sweepPositions.set(hips,hips.position.clone());hips.position.y-=state.crouch/hips.parent.getWorldScale(new T.Vector3()).y;
+   sweepPositions.set(hips,hips.position.clone());
    facing.rotation.y=forwardYaw+state.bodyYaw;
-   if(spine)spine.quaternion.multiply(new T.Quaternion().setFromAxisAngle(up,state.torsoYaw*weight)).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),state.lean*weight));sync();
+   sync();
+   // Drive the pelvis over the planted front leg. Convert the visual displacement
+   // through the actual rig parent; the gameplay actor/collider never teleports.
+   const drive=new T.Vector3(0,-state.crouch,state.drive).applyQuaternion(heading).applyQuaternion(root.getWorldQuaternion(new T.Quaternion())).applyQuaternion(hips.parent.getWorldQuaternion(new T.Quaternion()).invert()).divide(hips.parent.getWorldScale(new T.Vector3()));
+   hips.position.add(drive);
+   sync();
+   if(spine){
+    // GLB bone-local X is not actor-right. Apply the lean in the heading frame
+    // so both source rigs bend toward the cut instead of arching backward.
+    const basis=root.getWorldQuaternion(new T.Quaternion()).multiply(heading),world=spine.getWorldQuaternion(new T.Quaternion());
+    const yawQ=new T.Quaternion().setFromAxisAngle(up.clone().applyQuaternion(basis),state.torsoYaw*weight),leanQ=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0).applyQuaternion(basis),state.lean*weight);
+    spine.quaternion.copy(spine.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(leanQ.multiply(yawQ).multiply(world)));
+   }sync();
    // Step into and out of the stance one foot at a time on a short lifted arc (left
    // leads in, right leads out). Blending the leg rotations alone skated both feet.
    const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
@@ -226,7 +238,8 @@
     // The foot travels only while it is clear of the ground (middle of the lift).
     const step=side==='left'?ease(weight*2):ease(weight*2-1),travel=ease((step-.1)/.7),base=feet[side];
     const target=base.position.clone().add(new T.Vector3((side==='left'?state.stanceWidth:-state.stanceWidth)*travel,.07*Math.sin(Math.PI*step),(side==='left'?state.frontStep:state.backStep)*travel).applyQuaternion(heading)),pole=new T.Vector3(side==='right'?-.35:.35,.65,.8).applyQuaternion(heading);
-    solveSweepLimb(leg.upper,leg.lower,leg.foot,root.localToWorld(target),root.localToWorld(pole),base.rotation,Math.min(1,weight*3));
+    // The wider V3 step needs the solver fully engaged before lateral travel.
+    solveSweepLimb(leg.upper,leg.lower,leg.foot,root.localToWorld(target),root.localToWorld(pole),base.rotation,Math.min(1,weight*6));
    }
    // Blended entry/recovery can dip the sole below ground even with foot IK.
    // Correct the visual before arm IK so the held blade keeps its world anchors.
@@ -239,7 +252,7 @@
     const rotation=side==='right'?weaponRotation:heading;
     const desired=root.getWorldQuaternion(new T.Quaternion()).multiply(rotation).multiply(handCalibration[side].restInverse.clone().invert());
     const offset=handCalibration[side].palm.clone().multiply(hand.getWorldScale(new T.Vector3())).applyQuaternion(desired),target=root.localToWorld(palm).sub(offset);
-    const pole=root.localToWorld(new T.Vector3(side==='right'?-.85:.65,side==='right'?1.5:1.27,-.25).applyQuaternion(heading));
+    const pole=root.localToWorld(new T.Vector3(side==='right'?-.85:.75,side==='right'?1.23:1.1,-.30).applyQuaternion(heading));
     solveSweepLimb(upper,lower,hand,target,pole,desired,weight);
    }
    sync();updateSockets();

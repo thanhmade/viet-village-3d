@@ -23,7 +23,7 @@ test('wall intercepts qi and point-blank obstruction suppresses later cuts and r
  const close=new T.Box3(new T.Vector3(-3,0,.6),new T.Vector3(3,3,.8)),p=rig({walls:[close],targets:[target('behind',0,1.3)]});p.vfx.update(5);assert.equal(p.hits.length,0);assert.equal(p.events.filter(e=>e.type==='release').length,0);assert.equal(p.events.filter(e=>e.type==='impact').length,1);p.vfx.dispose();
 });
 test('empty space has a fading crescent but no contact flash, dust or practice',()=>{
- const r=rig();r.vfx.update(1.35);assert(r.fx.strike.wave.visible);assert(r.fx.strike.waveMeshes.every(m=>m.material.uniforms.uOpacity.value<1));assert.equal(r.events.filter(e=>e.type==='impact').length,0);assert.equal(r.fx.strike.dust.visible,false);assert.equal(r.fx.strike.rocks.visible,false);r.vfx.update(.5);assert.equal(r.vfx.effects.length,0);r.vfx.dispose();
+ const r=rig();r.vfx.update(1.35);assert(r.fx.strike.wave.visible);assert(r.fx.strike.waveMeshes.every(m=>m.material.uniforms.uOpacity.value<1));assert.equal(r.events.filter(e=>e.type==='impact').length,0);for(const name of ['impact','impactWarm','burst','dust','rocks'])assert.equal(r.fx.strike[name].visible,false,name+' must require contact');r.vfx.update(.5);assert.equal(r.vfx.effects.length,0);r.vfx.dispose();
 });
 test('ribbons sample the held blade endpoints and disappear after cancellation',()=>{
  const r=rig(),weapon=new T.Group(),tip=new T.Object3D();tip.position.y=1.62;weapon.add(tip);r.scene.add(weapon);r.fx.weapon=weapon;r.fx.weaponTip=tip;

@@ -1,8 +1,8 @@
-# Nhất Kiếm V2 · Kiếm
+# Nhất Kiếm V3 · Kiếm
 
-Bản tái thiết kế sau đối soát game 3D và canvas chạy thật; xem `RESEARCH-V2.md`.
+Bản tái thiết kế sau đối soát game 3D và canvas chạy thật; xem `RESEARCH-V3.md`.
 
-Mã `sword.nhat-kiem`, ô 1 khi cầm Kiếm. Nền GitHub `thanhmade/viet-village-3d@cap-nhat`, commit `b78881f8d5ecef5cfeaefd754597d0d045e39a3d`. Giữ Three.js r160, WeaponVFXCore, avatar/controller và luồng nhiệm vụ đang có.
+Mã `sword.nhat-kiem`, ô 1 khi cầm Kiếm. Nền GitHub `thanhmade/viet-village-3d@cap-nhat`, commit `4632104861ec93c03e2f55bc81bad56e6c9a0946`. Giữ Three.js r160, WeaponVFXCore, avatar/controller và luồng nhiệm vụ đang có.
 
 ## Ảnh và quyết định thiết kế
 
@@ -14,8 +14,8 @@ Mã `sword.nhat-kiem`, ô 1 khi cầm Kiếm. Nền GitHub `thanhmade/viet-villa
 
 | Thời gian | Hành động và hình ảnh |
 |---|---|
-| 0–0,25 s | Vào thế, hạ trọng tâm 10–15 cm, xoay hông/thân và mở thế chân; ánh tụ lực tại đầu kiếm thật |
-| 0,25–0,47 s | Trảm chéo xuống; nhát nhanh 0,29–0,42 s, xanh mảnh và mép trắng |
+| 0–0,25 s | Vào thế, hạ trọng tâm 22–31 cm, xoay hông/thân và mở thế chân; ánh tụ lực tại đầu kiếm thật |
+| 0,25–0,47 s | Trảm chéo xuống; nhát nhanh 0,29–0,42 s, thân vệt xanh mềm và mép trắng |
 | 0,47–0,56 s | Chuyển thế; vệt cũ lưu rồi tan |
 | 0,56–0,78 s | Hất chéo lên; nhát nhanh 0,59–0,73 s |
 | 0,78–0,88 s | Nén thế chuẩn bị chém cuối |
@@ -30,17 +30,17 @@ Mốc va chạm phụ thuộc vị trí bia/vách, không ép chớp sáng đún
 
 ## Pose và vũ khí
 
-Hai GLB nam/nữ thật của dự án, nền clip `idle`, IK hai đoạn đang có; không yêu cầu clip mới. Tay phải giữ đúng gripPoint kiếm, tay trái hộ thế, chân trái tiến 32 cm/chân phải lùi 18 cm, mở ngang thêm 16 cm mỗi bên, hông xoay tới khoảng ±25° và thân xoay bổ sung/đổ nhẹ. Root/collider/camera gameplay không dịch chuyển. Không kéo giãn xương để đạt điểm cầm.
+Hai GLB nam/nữ thật của dự án, nền clip `idle`, IK hai đoạn đang có; không yêu cầu clip mới. Tay phải giữ đúng gripPoint kiếm, tay trái hộ thế, chân trái tiến 46 cm/chân phải lùi 30 cm, mở ngang thêm 19 cm mỗi bên, hông xoay tới khoảng ±42°, tiến hông 10–18 cm và nghiêng thân về hướng đánh khoảng 14°. Root/collider/camera gameplay không dịch chuyển. Không kéo giãn xương để đạt điểm cầm.
 
-Mô hình kiếm trong `weapons-village-models.js` giữ nguyên: scale 0,7, grip local Y=-0,12, gốc phần lưỡi Y=0,16, tip Y=1,62. Trong pose, các khoảng cách từ lòng bàn tay theo trục kiếm là 0,196 m và 1,218 m. Actor nhìn +Z; Core caster nhìn -Z qua child quay PI. Avatar nguyên thủy dùng tay phải đối xứng và pose tay nhẹ; thế chân/thân đầy đủ áp dụng cho GLB.
+Mô hình kiếm trong `weapons-village-models.js` giữ nguyên: scale 0,7, grip local Y=-0,12, gốc phần lưỡi Y=0,16, tip Y=1,62. Trong pose, các khoảng cách từ lòng bàn tay theo trục kiếm là 0,196 m và 1,220 m. Actor nhìn +Z; Core caster nhìn -Z qua child quay PI. Avatar nguyên thủy dùng tay phải đối xứng và pose tay nhẹ; thế chân/thân đầy đủ áp dụng cho GLB.
 
-Vệt mới nhất lấy trực tiếp hai đầu lưỡi đang cầm. Các mẫu giữa hai frame theo cùng đường pose; release tại 1,01 s được kiểm tra với đầu kiếm thật của cả GLB. Test Node kiểm tra rig; V2 đã kiểm tra thêm raster WebGL2/SwiftShader với texture thật trên hai GLB. Sửa lún chân khi blend trước arm IK, không đổi vị trí root/collider.
+Vệt mới nhất lấy trực tiếp hai đầu lưỡi đang cầm. Các mẫu giữa hai frame theo cùng đường pose; release tại 1,01 s được kiểm tra với đầu kiếm thật của cả GLB. Test Node kiểm tra rig; V3 kiểm tra thêm raster WebGL2/SwiftShader với texture thật trên hai GLB. Sửa lún chân khi blend trước arm IK, không đổi vị trí root/collider.
 
 ## Kỹ xảo và điện ảnh
 
-- Ba băng vệt riêng: xanh mảnh, mép trắng hẹp, đường sáng phụ ở Medium/High; shader alpha theo tuổi để tan vệt trong 0,16 s.
-- Một kiếm khí bay có ba lớp xanh–trắng và echo lệch nhẹ; tuyến tiến công rõ, không sinh thêm hit từ echo.
-- Sao sáng ngắn 0,20 s tại tiếp xúc, tia xanh–trắng và ít tia vàng nhạt. Bụi bán trong suốt và mảnh vụn instanced chỉ ở va chạm môi trường.
+- Ba băng vệt riêng theo ba mặt phẳng chém: thân xanh có nhiễu mềm để tránh mảng đặc, mép trắng và hai sợi phụ ở Medium/High; tan theo tuổi trong khoảng 0,20 s. Shader nhiễu chỉ ở thân vệt, mép sáng vẫn liên tục.
+- Luồng khí ngắt đoạn xoay quanh thân ở nhiều độ cao, tụ trước nhát đầu và nhát cuối; không tạo vòng khiên kín hoặc vùng damage. Một kiếm khí bay có bốn lớp xanh–trắng lệch chiều sâu/cao độ; tuyến tiến công rõ, không sinh thêm hit từ echo.
+- Sao sáng xanh–trắng/vàng ngắn 0,24 s tại tiếp xúc, các tia kéo dài tan trong 0,30 s và hạt sáng bay ra. Bụi bán trong suốt và mảnh vụn instanced chỉ ở va chạm môi trường.
 - Mỗi cast dùng geometry/material được Core sở hữu, particle pool dùng chung. Không thêm bloom composer, renderer hoặc RAF vào game.
 - Preview có camera toàn cảnh/bên hông và rung rất nhẹ tại impact; camera game giữ cơ chế hiện có. Âm tổng hợp thử trong preview mặc định tắt, không thêm âm chưa duyệt vào gameplay.
 
@@ -56,12 +56,12 @@ Substep tối đa 1/180 s kiểm tra đoạn palm→tip trong các cửa sổ ch
 
 ## Chất lượng và tích hợp
 
-| Mức | Vệt / mỗi nhịp | Mẫu visual | Đoạn kiếm khí | Tia / contact | Mảnh vụn |
-|---|---:|---:|---:|---:|---:|
-| Low | 2 lớp | 90 Hz | 32 | 8 | 8 |
-| Medium / High | 3 lớp | 180 Hz | 64 | 16 | 14 |
+| Mức | Vệt / nhịp | Luồng khí | Mẫu visual | Đoạn kiếm khí | Hạt / tia kéo dài | Mảnh vụn |
+|---|---:|---:|---:|---:|---:|---:|
+| Low | 2 lớp | 2 | 90 Hz | 32 | 10 / 6 | 8 |
+| Medium / High | 4 lớp | 4 | 180 Hz | 64 | 22 / 12 | 14 |
 
-Logic hit và substep giống nhau ở ba mức. Chưa đo FPS/draw calls trên thiết bị thật.
+Logic hit và substep giống nhau ở ba mức. Chưa đo FPS/draw calls trên thiết bị thật. Draw calls preview phần mềm được ghi riêng trong VALIDATION.md; không dùng chúng thay số đo GPU.
 
 - Effect: `SOURCE-CODE/js/vfx/sword-strike.js`, nạp trước `sword-skill-vfx.js`.
 - Pose: `CHARACTERS/player-gltf.js`; controller: `SOURCE-CODE/js/weapons-village.js`.
@@ -69,4 +69,6 @@ Logic hit và substep giống nhau ở ba mức. Chưa đo FPS/draw calls trên 
 - Preview HTTP local: `SOURCE-CODE/nhat-kiem-preview.html`, thêm `?test` để bắt đầu tạm dừng.
 - Gọi gameplay: trang bị Kiếm và dùng ô 1 / `VietVillageWeapons.cast(1)`.
 
-Đọc `VALIDATION.md` để phân biệt WebGL phần mềm đã chạy với GPU thiết bị thật/Alpha còn cần Claude chạy.
+Bản V3 sửa hình ảnh sau phản hồi chưa đạt của người dùng; không coi đạt test là đã được duyệt mỹ thuật. Đọc `VALIDATION.md` để phân biệt WebGL phần mềm đã chạy với GPU thiết bị thật/Alpha còn cần Claude chạy.
+
+V3 kế thừa bản sửa bước chân từ Claude (`4632104`): vào thế chân trái dẫn trước, thu thế chân phải dẫn trước; chân dịch ngang khi đã nhấc khỏi đất. Shared player script tăng cache lên `nhat-kiem-4`.

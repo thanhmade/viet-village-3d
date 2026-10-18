@@ -3,7 +3,7 @@
   "skillId": "sword.nhat-kiem",
   "displayName": "Nhất Kiếm",
   "weaponType": "sword",
-  "status": "integrated_software_webgl_validated_pending_device_alpha",
+  "status": "implemented_rendered_pending_user_visual_device_alpha_review",
   "sources": [
     {
       "path": "SOURCE-CODE/docs/nhat-kiem-reference.png",
@@ -17,11 +17,15 @@
     {
       "repository": "thanhmade/viet-village-3d",
       "branch": "cap-nhat",
-      "commit": "b78881f8d5ecef5cfeaefd754597d0d045e39a3d"
+      "commit": "4632104861ec93c03e2f55bc81bad56e6c9a0946"
     },
     {
-      "path": "SOURCE-CODE/docs/nhat-kiem/RESEARCH-V2.md",
+      "path": "SOURCE-CODE/docs/nhat-kiem/RESEARCH-V3.md",
       "kind": "primary_source_comparison"
+    },
+    {
+      "path": "SOURCE-CODE/docs/nhat-kiem/GPU-V2-CLAUDE.md",
+      "kind": "inherited_claude_v2_measurements_not_v3"
     }
   ],
   "evidence": {
@@ -33,9 +37,9 @@
       "Three-dimensional blade trails, narrow white cores and broader blue afterimages can reproduce the illustrated energy"
     ],
     "proposed": [
-      "Descending diagonal, rising return and horizontal finishing cut; faster action between held chambers",
-      "Pelvis and spine rotation, 0.10–0.15m crouch, left foot +0.32m / right -0.18m; +0.16m lateral opening per side",
-      "Shorter 0.16s blue-white blade trails with narrow leading edge"
+      "Three fast cuts with deeper planted bow stance and full-body turns",
+      "Pelvis down 0.22–0.31m and forward 0.10–0.18m; front foot +0.46m/back -0.30m; lateral opening +0.19m per side",
+      "Actor-heading spine lean; blue-white noise-modulated ribbons, partial qi currents, four optical wave layers and contact-only streak burst"
     ],
     "missing": [
       "Measured physical GPU/device performance",
@@ -48,7 +52,7 @@
       "CHARACTERS/PLAYER/FEMALE/PLAYER_BASE_FEMALE_GLB.glb"
     ],
     "baseClip": "idle",
-    "method": "Existing two-bone IK, foot planting, pelvis/spine pose and sole correction before arm IK",
+    "method": "Existing mixer and two-bone IK; planted feet, pelvis drive, heading-frame spine lean, sole correction before hand solve; inherited sequential lifted entry/recovery steps from Claude commit 4632104",
     "anchors": {
       "hold": "visual.sockets.right / model.gripPoint",
       "bladeBase": "sword.group local (0,0.16,0)",
@@ -65,7 +69,7 @@
   },
   "timeline": {
     "unit": "seconds",
-    "provenance": "V1 duration/windows retained; V2 authored cadence within windows",
+    "provenance": "Existing V1/V2 timing retained; V3 pose and VFX revised from official wuxia/xianxia references",
     "duration": 1.8,
     "charge": [
       0,
@@ -163,13 +167,13 @@
     "occlusion": "nearest world barrier wins ties; close blade obstruction prevents later cuts/release; already-hit target still blocks qi"
   },
   "vfxLayers": [
-    "live sword-tip charge",
-    "three independent sampled blade ribbons",
-    "wide blue body and narrow white edge",
-    "secondary filament at medium/high",
-    "one flying crescent with three optical layers",
-    "contact-only cross-plane star, pale blue/gold particles",
-    "world-contact-only soft dust and instanced grit"
+    "Sword-tip charge at opening and final chamber",
+    "Three swept blade ribbons with soft procedural body breakup",
+    "White leading edge and two secondary filaments at medium/high",
+    "Partial 3D qi currents at separate heights, decorative only",
+    "One flying crescent with four optical layers, no extra hits",
+    "Contact-only white-blue/warm flash, elongated streaks and sparks",
+    "World-contact-only dust and instanced grit"
   ],
   "audio": [
     {
@@ -183,22 +187,28 @@
       "bladeLayersPerCut": 2,
       "visualSampleHz": 90,
       "qiSegments": 32,
-      "sparksPerContact": 8,
-      "rocks": 8
+      "sparksPerContact": 10,
+      "rocks": 8,
+      "qiCurrents": 2,
+      "contactStreaks": 6
     },
     "medium": {
-      "bladeLayersPerCut": 3,
+      "bladeLayersPerCut": 4,
       "visualSampleHz": 180,
       "qiSegments": 64,
-      "sparksPerContact": 16,
-      "rocks": 14
+      "sparksPerContact": 22,
+      "rocks": 14,
+      "qiCurrents": 4,
+      "contactStreaks": 12
     },
     "high": {
-      "bladeLayersPerCut": 3,
+      "bladeLayersPerCut": 4,
       "visualSampleHz": 180,
       "qiSegments": 64,
-      "sparksPerContact": 16,
-      "rocks": 14
+      "sparksPerContact": 22,
+      "rocks": 14,
+      "qiCurrents": 4,
+      "contactStreaks": 12
     },
     "gameplayInvariant": true,
     "collisionSubstepHz": 180
@@ -221,11 +231,11 @@
   "verification": {
     "logic": {
       "status": "passed",
-      "vfxTests": 151,
+      "vfxTests": 155,
       "playerNpcTests": 65,
       "hosting": {
         "files": 392,
-        "bytes": 239727120,
+        "bytes": 239732909,
         "glbFiles": 59
       },
       "cases": [
@@ -237,19 +247,22 @@
         "real male/female GLB anchors within 5 mm at three frame rates",
         "root and bone lengths preserved; pose recovery and follow-up bow skills",
         "actual held blade endpoint sampling",
-        "male/female sole clearance during entry/recovery; support feet remain within 8mm during active phase"
+        "male/female sole clearance during entry/recovery; support feet remain within 8mm during active phase",
+        "Male/female pelvis lowers and advances; chest leans toward actor heading rather than bone-local axis",
+        "Inherited anti-skating tests: sequential lifted steps entering and recovering, ground sliding below 3cm"
       ]
     },
     "visual": {
-      "status": "passed_software_webgl_scope",
+      "status": "rendered_and_inspected_pending_user_visual_acceptance",
       "engine": "Chromium 153 / Three.js r160 / WebGL2 / ANGLE SwiftShader",
-      "samples": 54,
+      "samples": 66,
+      "baselineV2Samples": 0,
       "errors": 0,
       "badPrograms": 0,
       "evidence": [
-        "Actual renderer canvas before/after movie; no AI simulation",
-        "Male/female, low/medium/high, miss/melee/qi/wall/close-wall/nearest scenarios",
-        "No WebGL errors in measured frames; contact routing agrees with test outcomes"
+        "Actual canvas movie: V2/V3 identical setup; V3 wall and female long-range target",
+        "48 V3 scenario samples: male/female, low/medium/high, miss/melee/qi/wall/close-wall/nearest",
+        "No shader errors; hits agree with tested collision routing; no postproduction VFX"
       ]
     },
     "performance": {
@@ -261,5 +274,5 @@
       "status": "not_deployed"
     }
   },
-  "revision": "2.0"
+  "revision": "3.0"
 }

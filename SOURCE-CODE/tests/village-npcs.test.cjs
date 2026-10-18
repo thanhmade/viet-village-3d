@@ -73,6 +73,9 @@ test('practice requires accepted quest, correct map, range, facing and a success
  assert.equal(n.onSkillUsed(),false,'Facing away cannot train');assert.equal(n.status.quests.QUEST_LV_02,'active');
  stand(h,0,16.5,Math.PI);assert.equal(n.onSkillUsed(),false,'Remote casting cannot train');
  stand(h,10.7,-14.3,Math.PI);assert(h.context.VietVillageWeapons.cast(1).ok);
+ assert.equal(n.status.quests.QUEST_LV_02,'active','Casting alone cannot complete practice');
+ h.context.VietVillageWeapons.update(.95);assert.equal(n.status.quests.QUEST_LV_02,'active','The distant dummy has not been hit yet');
+ h.context.VietVillageWeapons.update(.4);
  assert.equal(n.status.quests.QUEST_LV_02,'ready');assert(!h.context.VietVillageWeapons.cast(1).ok,'Cooldown cast fails');
  assert(h.context.VietVillageJourney.getState().tutorials.skills);assert.equal(h.run('progress.score'),0);
 });

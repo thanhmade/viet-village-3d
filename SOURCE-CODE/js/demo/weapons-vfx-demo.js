@@ -401,7 +401,7 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
     const point=['projectile','volley','thrust','rain'].includes(s.type)?actor.position.clone().addScaledVector(forward,s.type==='rain'?5:Math.min(s.range||9,9)):null;
     if(point)point.y=0;
     // The staff passes its model too: Côn Quét's ribbon follows two points on the shaft.
-    const result=vfx.cast(id,{caster:actor,weaponTip:models.get(weaponId).tip,weapon:weaponId==='staff'?models.get(weaponId).group:null,point});
+    const result=vfx.cast(id,{caster:actor,weaponTip:models.get(weaponId).tip,weapon:['staff','sword'].includes(weaponId)?models.get(weaponId).group:null,point});
     if(!result.ok){toast(result.reason==='cooldown'?'Đang hồi chiêu · còn '+fmt(result.retryAfter)+' giây':'Chưa thi triển được: '+result.reason);return false;}
     pose={id,start:simulationTime(),handle:result.handle};$('active-label').textContent=s.name;return true;
   }
@@ -471,7 +471,11 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
           if(s.localId==='chan-dia'){const slam=window.StaffSlam.sample(age,s);rig.position.y=slam.lift;weaponRig.rotation.set(0,0,-slam.staffPitch);weaponRig.position.set(slam.handX,slam.handY,-slam.handZ);leftHand.position.set(-.294,0,0);rightHand.position.set(0,0,0);}
           else{const sweep=window.StaffSweep.sample(age,s);weaponRig.rotation.set(0,sweep.staffYaw,0);weaponRig.position.set(0,sweep.handY,-sweep.handZ);torso.rotation.y=sweep.torsoYaw;}
         }else if(weaponId==='sword'){
-          if(s.localId==='kiem-hoa'){rig.rotation.y=progress*Math.PI*2;weaponRig.rotation.z=-.5;}
+          if(s.localId==='nhat-kiem'){
+            const strike=window.SwordStrike.sample(age),anchor=window.SwordStrike.authoredBlade(T,new T.Vector3(),new T.Vector3(0,0,-1),age);
+            weaponRig.scale.setScalar(.7);weaponRig.quaternion.copy(anchor.rotation);weaponRig.position.copy(anchor.palm).add(new T.Vector3(0,.084,0).applyQuaternion(anchor.rotation));
+            rightHand.position.set(0,-.12,0);leftHand.position.copy(weaponRig.worldToLocal(rig.localToWorld(new T.Vector3(-.33,1.56,-.19))));torso.rotation.y=-strike.torsoYaw*strike.weight;
+          }else if(s.localId==='kiem-hoa'){rig.rotation.y=progress*Math.PI*2;weaponRig.rotation.z=-.5;}
           else{weaponRig.rotation.x=age<s.activeAt?-.4+windup*.8:.4-progress*2.2;weaponRig.position.z-=Math.sin(progress*Math.PI)*.25;}
         }else if(weaponId==='spear'){
           weaponRig.rotation.x=-1.02-(s.localId==='pha-tran'?.25:0);weaponRig.position.z=age<s.activeAt?-.3+windup*.3:-.3-Math.sin(progress*Math.PI)*.8;

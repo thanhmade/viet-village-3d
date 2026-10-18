@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#092f3b"><title>Bối cảnh Làng Việt · Three.js 3D</title>
 <link rel="stylesheet" href="./css/style.css"><link rel="stylesheet" href="./css/online.css"><link rel="stylesheet" href="./css/weapons-village.css?v=20261016-staff1"><link rel="stylesheet" href="./css/house-travel.css?v=20261011-regions1"><link rel="stylesheet" href="./css/regions.css?v=20261011-picker1"><link rel="stylesheet" href="./css/toolbar.css?v=20261011-regions1"><link rel="stylesheet" href="./css/world-atlas.css?v=20261011-atlas1"><link rel="stylesheet" href="./css/village-npcs.css?v=20261012-healer1"><link rel="stylesheet" href="./css/player-avatar.css"><link rel="stylesheet" href="./css/character-creation.css?v=20261016-roster1"><link rel="stylesheet" href="./css/experience.css"><link rel="stylesheet" href="./css/learning.css"><link rel="stylesheet" href="./css/game-hud.css?v=20261016-skills1"><link rel="stylesheet" href="./css/staff-skill-icons.css?v=20261017-icons1">
-<link rel="stylesheet" href="css/bow-skill-icons.css?v=mua-ten-1"></head><body class="auth-locked" data-auth-state="checking">
+<link rel="stylesheet" href="css/bow-skill-icons.css?v=mua-ten-1"><link rel="stylesheet" href="css/sword-skill-icons.css?v=nhat-kiem-1"></head><body class="auth-locked" data-auth-state="checking">
 <section id="authGate" class="authGate" aria-labelledby="authTitle" aria-busy="true">
  <div class="authCard">
   <span class="tag">VIET VILLAGE 3D · NGÔI LÀNG VIỆT</span>
@@ -71,8 +71,8 @@
 <script src="./js/vfx/staff-vfx-config.js?v=20261017-chandia54"></script>
 <script src="./js/vfx/staff-slam.js?v=20261017-chandia54"></script>
 <script src="./js/vfx/staff-skill-effects.js?v=20261017-chandia54"></script>
-<script src="./js/vfx/sword-skill-config.js"></script>
-<script src="./js/vfx/sword-skill-vfx.js"></script>
+<script src="./js/vfx/sword-skill-config.js?v=nhat-kiem-1"></script>
+<script src="js/vfx/sword-strike.js?v=nhat-kiem-1"></script><script src="./js/vfx/sword-skill-vfx.js?v=nhat-kiem-1"></script>
 <script src="./js/vfx/spear-skill-config.js"></script>
 <script src="./js/vfx/spear-skill-vfx.js"></script>
 <script src="./js/vfx/bow-skill-config.js?v=mua-ten-1"></script>
@@ -82,7 +82,7 @@
 <script src="./js/vfx/axe-skill-vfx.js"></script>
 <script src="./js/weapons-village-models.js?v=xuyen-tien-1"></script>
 <script src="./js/staff-guard.js?v=20261017-hothan1"></script>
-<script src="./js/weapons-village.js?v=mua-ten-1"></script>
+<script src="./js/weapons-village.js?v=nhat-kiem-1"></script>
 <script src="./js/house-portals.js?v=20261011-regions1"></script>
 <script src="./js/house-travel.js?v=xuyen-tien-2"></script>
 <script src="../MAP/regions/lang-viet/scene.js?v=20261011-picker1"></script>
@@ -105,9 +105,9 @@
 <script src="./js/npc-lesson.js?v=20261012-healer1"></script>
 <script src="./js/village-npcs.js?v=xuyen-tien-1"></script>
 <script src="./js/player-health-view.js?v=20261012-healer1"></script>
-<script src="../CHARACTERS/player-gltf.js?v=mua-ten-1"></script>
-<script src="./js/player-avatar.js?v=mua-ten-1"></script>
-<script src="./js/learning-quests.js"></script><script src="./js/learning-practice.js"></script><script src="./js/learning-collectibles.js"></script><script src="./js/learning-view.js"></script><script src="./js/game-hud.js"></script><script src="./js/mobile-landscape.js"></script><script src="./js/app.js?v=mua-ten-1"></script>
+<script src="../CHARACTERS/player-gltf.js?v=nhat-kiem-1"></script>
+<script src="./js/player-avatar.js?v=nhat-kiem-1"></script>
+<script src="./js/learning-quests.js"></script><script src="./js/learning-practice.js"></script><script src="./js/learning-collectibles.js"></script><script src="./js/learning-view.js"></script><script src="./js/game-hud.js"></script><script src="./js/mobile-landscape.js"></script><script src="./js/app.js?v=nhat-kiem-1"></script>
 <section id="npcDialog" class="npc-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="npcDialogTitle">
  <div class="npc-card"><header><div><small>DÂN LÀNG VIỆT</small><h2 id="npcDialogTitle"></h2></div><button id="closeNpcDialog" type="button" aria-label="Đóng hội thoại">✕</button></header><div id="npcDialogueLines"></div><div id="npcAnimations" class="npc-actions"></div><p id="npcAnimationStatus" role="status" aria-live="polite"></p><p id="npcDemoGuidance"></p><section id="npcLesson" aria-label="Bài học với Thầy đồ"></section><p id="npcServiceStatus" role="status" aria-live="polite"></p><div id="npcQuests"></div><div id="npcActions" class="npc-actions"></div><p id="npcRouteStatus" class="npc-route" role="status" aria-live="polite"></p></div>
 </section>

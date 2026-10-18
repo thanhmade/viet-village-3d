@@ -117,7 +117,7 @@ test('weapon grip follows female socket and returns to procedural arm without re
   const h = game(), weapons = h.context.VietVillageWeapons;
   assert.equal(weapons.equip('sword'), true); assert.equal(weapons.cast(1).ok, true);
   const grip = h.run("player.getObjectByName('village-local-weapon')");
-  assert.equal(grip.parent, h.run('rightArm'));
+  assert.equal(grip.parent.name, 'village-sword-strike-pose', 'active procedural strike owns the posed grip');
   assert.equal(await h.avatar.select('female'), true); const visual = h.calls.visuals[0];
   assert.equal(grip.parent, visual.sockets.right); assert.equal(weapons.state.weaponId, 'sword'); assert.equal(weapons.state.enabled, true);
   assert.equal(weapons.cast(1).reason, 'cooldown'); near(grip.scale.x, .7);
@@ -129,14 +129,16 @@ test('weapon grip follows female socket and returns to procedural arm without re
   assert.equal(weapons.cast(1).reason, 'cooldown'); assert.equal(weapons.state.enabled, true);
 });
 
-test('successful skill invokes slash once and actual HP loss invokes hit without repeated frames', async () => {
+test('successful Nhất Kiếm invokes its dedicated pose once and actual HP loss invokes hit without repeated frames', async () => {
   const h = game(); await h.avatar.select('female'); const visual = h.calls.visuals[0], weapons = h.context.VietVillageWeapons;
+  let strikes=0;visual.startSwordStrike=()=>{strikes++;return true;};
   weapons.equip('sword'); assert.equal(weapons.cast(1).ok, true);
-  assert.deepEqual(visual.once, ['slash']); assert.equal(weapons.cast(1).reason, 'cooldown'); assert.deepEqual(visual.once, ['slash']);
+  assert.equal(strikes,1);assert.deepEqual(visual.once, []); assert.equal(weapons.cast(1).reason, 'cooldown'); assert.equal(strikes,1);
   assert.equal(h.context.VietVillageJourney.getState().tutorials.skills, true, 'existing skill tutorial callback remains connected');
   assert.equal(h.context.VietVillageJourney.takeDamage(10), true); h.step(); h.step();
-  assert.deepEqual(visual.once, ['slash','hit_to_body_01']); assert.equal(h.context.VietVillageJourney.getState().hp, 90);
-  h.context.VietVillageJourney.healToFull(); h.step(); assert.equal(visual.once.length, 2);
+  assert.deepEqual(visual.once, ['hit_to_body_01']); assert.equal(h.context.VietVillageJourney.getState().hp, 90);
+  h.context.VietVillageJourney.healToFull(); h.step(); assert.equal(visual.once.length, 1);
+  weapons.equip('axe');assert.equal(weapons.cast(1).ok,true);assert.deepEqual(visual.once,['hit_to_body_01','slash']);
   weapons.equip('bow'); assert.equal(weapons.cast(1).ok, true); assert.equal(visual.once.filter(name=>name==='slash').length, 1, 'bow does not play sword slash');
 });
 

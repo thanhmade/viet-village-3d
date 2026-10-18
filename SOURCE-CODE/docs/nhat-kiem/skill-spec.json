@@ -1,0 +1,240 @@
+{
+  "schemaVersion": "1.0.0",
+  "skillId": "sword.nhat-kiem",
+  "displayName": "Nhất Kiếm",
+  "weaponType": "sword",
+  "status": "integrated_pending_gpu_validation",
+  "sources": [
+    {
+      "path": "SOURCE-CODE/docs/nhat-kiem-reference.png",
+      "kind": "user_image",
+      "sha256": "f05486c9ae00a661e5f20193ce964ae7ea4baab2e39a26c9c0840af5c80e51e7"
+    },
+    {
+      "path": "SOURCE-CODE/js/vfx/sword-skill-config.js",
+      "kind": "existing_config"
+    },
+    {
+      "repository": "thanhmade/viet-village-3d",
+      "branch": "cap-nhat",
+      "commit": "2eeeb2457f180ef1e3fd3daff8b1deeb9810ab8a"
+    }
+  ],
+  "evidence": {
+    "observed": [
+      "Straight sword; lunging swordsman; overlapping blue-white crescents; bright forward contact; cliff dust/debris",
+      "Caption calls for layered sword trails, successive cuts, flying sword qi"
+    ],
+    "inferred": [
+      "Three-dimensional blade trails, narrow white cores and broader blue afterimages can reproduce the illustrated energy"
+    ],
+    "proposed": [
+      "Three visual cuts share one target-hit identity",
+      "1.8 second timeline and 1.5 second pose",
+      "Crouch 0.045 m, left foot forward 0.14 m and right foot back 0.10 m"
+    ],
+    "missing": [
+      "WebGL captures",
+      "Measured GPU/device performance",
+      "Alpha deployment verification"
+    ]
+  },
+  "animation": {
+    "models": [
+      "CHARACTERS/PLAYER/MALE/PLAYER_BASE_MALE_GLB.glb",
+      "CHARACTERS/PLAYER/FEMALE/PLAYER_BASE_FEMALE_GLB.glb"
+    ],
+    "baseClip": "idle",
+    "method": "Existing two-bone IK for hands and feet, additive spine and hip pose",
+    "anchors": {
+      "hold": "visual.sockets.right / model.gripPoint",
+      "bladeBase": "sword.group local (0,0.16,0)",
+      "release": "sword.tip local (0,1.62,0)"
+    },
+    "weaponScale": 0.7,
+    "forwardAxis": "player +Z; Core caster -Z with PI-rotated child",
+    "rootMotion": false,
+    "poseSeconds": {
+      "value": 1.5,
+      "provenance": "proposal"
+    },
+    "proceduralAvatar": "Mirrored right-hand fallback; full lower-body stance is for the two GLB models"
+  },
+  "timeline": {
+    "unit": "seconds",
+    "provenance": "proposal replacing generic 1.3-second combo",
+    "duration": 1.8,
+    "charge": [
+      0,
+      0.25
+    ],
+    "cuts": [
+      [
+        0.25,
+        0.47
+      ],
+      [
+        0.56,
+        0.78
+      ],
+      [
+        0.88,
+        1.12
+      ]
+    ],
+    "qiRelease": 1.01,
+    "qiFlight": [
+      1.01,
+      1.29
+    ],
+    "poseRecovery": [
+      1.12,
+      1.5
+    ],
+    "missQiFade": [
+      1.29,
+      1.54
+    ],
+    "effectsEnd": 1.8,
+    "contactNote": "Contact time depends on obstruction/target; missing produces no impact event"
+  },
+  "gameplay": {
+    "slot": 1,
+    "activationConditions": [
+      "equipped sword",
+      "host authorizes cast (auth, HP, map, overlays, pose, cooldown)"
+    ],
+    "resourceCost": "unchanged; no new resource charge",
+    "cooldownSeconds": 1.5,
+    "cooldownStartEvent": "successful cast",
+    "rangeMeters": 3.6,
+    "radiusConfigMeters": 3,
+    "forwardOffsetMeters": 0.25,
+    "provenance": "existing cooldown, range, radius and offset; authored contact paths/timing proposed",
+    "hitIndex": 0,
+    "maxHitsPerTargetPerCast": 1,
+    "damageAuthority": "host onSkillHit; current host applies training-dummy practice only",
+    "shield": "not applicable",
+    "hitWindows": [
+      {
+        "from": 0.25,
+        "to": 0.47,
+        "shape": "substepped palm-to-tip segment",
+        "radius": 0.055
+      },
+      {
+        "from": 0.56,
+        "to": 0.78,
+        "shape": "substepped palm-to-tip segment",
+        "radius": 0.055
+      },
+      {
+        "from": 0.88,
+        "to": 1.12,
+        "shape": "substepped palm-to-tip segment",
+        "radius": 0.055
+      },
+      {
+        "from": 1.01,
+        "to": 1.29,
+        "shape": "15 swept crescent lanes, nearest contact stops entire qi",
+        "radius": 0.12
+      }
+    ],
+    "queryContract": "target-query is candidate-only/false; ephemeral hit-window confirms one eligible target; deduplicated across every cut and qi",
+    "interruptPolicy": "existing host lifecycle cancels remaining effects and pose; retain cooldown",
+    "occlusion": "nearest world barrier wins ties; close blade obstruction prevents later cuts/release; already-hit target still blocks qi"
+  },
+  "vfxLayers": [
+    "live sword-tip charge",
+    "three independent sampled blade ribbons",
+    "wide blue body and narrow white edge",
+    "secondary filament at medium/high",
+    "one flying crescent with three optical layers",
+    "contact-only cross-plane star, pale blue/gold particles",
+    "world-contact-only soft dust and instanced grit"
+  ],
+  "audio": [
+    {
+      "scope": "standalone preview only",
+      "enabledByDefault": false,
+      "kind": "synthetic contact sample"
+    }
+  ],
+  "quality": {
+    "low": {
+      "bladeLayersPerCut": 2,
+      "visualSampleHz": 90,
+      "qiSegments": 32,
+      "sparksPerContact": 8,
+      "rocks": 8
+    },
+    "medium": {
+      "bladeLayersPerCut": 3,
+      "visualSampleHz": 180,
+      "qiSegments": 64,
+      "sparksPerContact": 16,
+      "rocks": 14
+    },
+    "high": {
+      "bladeLayersPerCut": 3,
+      "visualSampleHz": 180,
+      "qiSegments": 64,
+      "sparksPerContact": 16,
+      "rocks": 14
+    },
+    "gameplayInvariant": true,
+    "collisionSubstepHz": 180
+  },
+  "integration": {
+    "engineVersion": "Three.js r160 from repo",
+    "castEntry": "VietVillageWeapons.cast(1) with sword equipped",
+    "updateEntry": "existing weapons controller / WeaponVFXCore.update(dt)",
+    "cleanupEntry": "WeaponVFXCore cancel/cancelAll/dispose via controller",
+    "effect": "SOURCE-CODE/js/vfx/sword-strike.js",
+    "collisionDependency": "existing bow-piercing.js via lazy provider",
+    "icon": "ASSETS/ui/skills/sword/nhat-kiem-ice-white.png",
+    "iconPixels": [
+      1254,
+      1254
+    ],
+    "iconCss": "SOURCE-CODE/css/sword-skill-icons.css",
+    "preview": "SOURCE-CODE/nhat-kiem-preview.html"
+  },
+  "verification": {
+    "logic": {
+      "status": "passed",
+      "vfxTests": 149,
+      "playerNpcTests": 65,
+      "hosting": {
+        "files": 392,
+        "bytes": 239725561,
+        "glbFiles": 59
+      },
+      "cases": [
+        "30/60/120 Hz; .43 and 5 second host frames",
+        "one hit per target across three cuts and qi",
+        "nearest target and wall interception, close-wall release suppression",
+        "no miss impact; no early practice; stale callbacks rejected",
+        "cancellation in each phase; resource disposal once; cooldown preserved",
+        "real male/female GLB anchors within 5 mm at three frame rates",
+        "root and bone lengths preserved; pose recovery and follow-up bow skills",
+        "actual held blade endpoint sampling"
+      ]
+    },
+    "visual": {
+      "status": "not_run",
+      "evidence": [
+        "reference and generated icon inspected; no WebGL capture"
+      ]
+    },
+    "performance": {
+      "status": "not_measured",
+      "environment": "Node logic/rig tests; no working Chromium in this environment",
+      "measurements": []
+    },
+    "alpha": {
+      "status": "not_deployed"
+    }
+  }
+}

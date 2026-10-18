@@ -137,7 +137,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
     const palm=new T.Vector3(state.handX,state.handY,state.handZ),rotation=window.SwordStrike.rotation(T,state);
     grip.quaternion.copy(rotation).multiply(new T.Quaternion().setFromAxisAngle(up,Math.PI));
     grip.position.copy(palm).sub(selectedModel.gripPoint.clone().multiplyScalar(.7).applyQuaternion(grip.quaternion));
-    for(const [arm,target] of [[rightArm,palm],[leftArm,new T.Vector3(-.33,1.56,.19)]]){
+    for(const [arm,target] of [[rightArm,palm],[leftArm,new T.Vector3(-state.guardX,state.guardY,state.guardZ)]]){
       if(!arm)continue;const origin=arm.position.clone(),axis=target.clone().sub(origin),distance=Math.min(.6799,axis.length());axis.normalize();
       const pole=new T.Vector3(arm===rightArm?.6:-.6,-.1,-.35);pole.addScaledVector(axis,-pole.dot(axis)).normalize();
       const elbow=origin.clone().addScaledVector(axis,distance/2).addScaledVector(pole,Math.sqrt(.34*.34-distance*distance/4)),end=origin.clone().addScaledVector(axis,distance),joints=[origin,elbow,end];arm.quaternion.identity();

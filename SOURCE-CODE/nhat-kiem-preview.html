@@ -4,7 +4,7 @@
 <style>
 :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#111c1c;color:#eaf0e8}*{box-sizing:border-box}body{margin:0;overflow:hidden}canvas{display:block}header{position:absolute;top:24px;left:32px;pointer-events:none}header p{color:#a7cbbb;letter-spacing:.22em;font-size:11px}h1{font-family:Georgia,serif;font-size:42px;letter-spacing:.09em;margin:8px 0;color:#ffdf9c}header small{color:#a9bcb5}.panel{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:min(820px,94vw);padding:15px 20px;border:1px solid #4d655b;border-radius:12px;background:#162826ed;text-align:center}button,select{font:inherit;font-size:13px;background:#29483f;color:#f6e9c8;border:1px solid #6c806a;border-radius:6px;padding:9px;margin:3px;cursor:pointer}button:disabled{opacity:.45}label{display:inline-block;font-size:12px;margin:5px}#status{font-size:13px;margin:7px 0;color:#b8e6d5}.hint{font-size:11px;color:#b0bdb6;margin:5px 0}details{position:absolute;right:22px;top:24px;background:#132622e8;border:1px solid #476457;padding:9px;border-radius:7px;font-size:12px;max-width:40vw}details img{display:block;width:320px;max-width:100%;margin-top:8px}@media(max-width:650px){header{top:10px;left:15px}h1{font-size:28px}header small{font-size:10px}.panel{padding:10px}.hint{font-size:10px}details{right:8px;top:10px}}
 </style></head><body>
-<header><p>LÀNG VIỆT 3D / HỆ KIẾM</p><h1><img src="../ASSETS/ui/skills/sword/nhat-kiem-ice-white.png" alt="" style="width:58px;height:58px;vertical-align:middle;border-radius:50%;border:1px solid #e9c479"> NHẤT KIẾM</h1><small>Ba nhịp chém · vệt kiếm đa lớp · kiếm khí bay · 1,8 giây</small></header>
+<header><p>LÀNG VIỆT 3D / HỆ KIẾM</p><h1><img src="../ASSETS/ui/skills/sword/nhat-kiem-ice-white.png" alt="" style="width:58px;height:58px;vertical-align:middle;border-radius:50%;border:1px solid #e9c479"> NHẤT KIẾM</h1><small>Trảm xuống · hất kiếm · phóng kiếm khí · 1,8 giây</small></header>
 <details><summary>Ảnh tham chiếu</summary><img src="docs/nhat-kiem-reference.png" alt="Ảnh Nhất Kiếm do người dùng cung cấp"></details>
 <div class="panel"><div id="status" role="status">Đang tải nhân vật…</div>
 <button id="cast" disabled>1 · Nhất Kiếm</button><button id="cancel" disabled>Hủy chiêu</button><button id="reset" disabled>Đặt lại</button><button id="pause" disabled>Tạm dừng</button><button id="step" disabled>+0,05 giây</button>
@@ -15,8 +15,8 @@
 <p class="hint">Mỗi mục tiêu được ghi nhận một lần trong cả chiêu. Kiếm khí dừng ở bia hoặc vách đầu tiên; chém hụt không sinh chớp va chạm. Đây là trang xem thử độc lập; camera điện ảnh không thay camera của game.</p></div>
 <script src="../ASSETS/vendor/three.min.js"></script><script src="js/vfx/weapon-vfx-core.js"></script>
 <script src="js/vfx/bow-skill-config.js"></script><script src="js/vfx/bow-piercing.js"></script>
-<script src="js/vfx/sword-skill-config.js?v=nhat-kiem-1"></script><script src="js/vfx/sword-strike.js?v=nhat-kiem-1"></script><script src="js/vfx/sword-skill-vfx.js?v=nhat-kiem-1"></script>
-<script src="../CHARACTERS/npc-gltf.js"></script><script src="../CHARACTERS/player-gltf.js?v=nhat-kiem-1"></script><script src="js/weapons-village-models.js?v=xuyen-tien-1"></script>
+<script src="js/vfx/sword-skill-config.js?v=nhat-kiem-1"></script><script src="js/vfx/sword-strike.js?v=nhat-kiem-2"></script><script src="js/vfx/sword-skill-vfx.js?v=nhat-kiem-1"></script>
+<script src="../CHARACTERS/npc-gltf.js"></script><script src="../CHARACTERS/player-gltf.js?v=nhat-kiem-2"></script><script src="js/weapons-village-models.js?v=xuyen-tien-1"></script>
 <script type="module">
 import {GLTFLoader} from '../ASSETS/vendor/gltf-r160/GLTFLoader.js';
 const $=id=>document.getElementById(id),q=new URLSearchParams(location.search),T=window.THREE;

@@ -9,13 +9,36 @@
  const id='sword.nhat-kiem',skill=Config.skills.find(s=>s.id===id),poseDuration=1.5,releaseAt=1.01,flightSeconds=.28,bladeRadius=.055,waveRadius=.12;
  const clamp=x=>Math.max(0,Math.min(1,x)),smooth=(a,b,t)=>{const u=clamp((t-a)/(b-a));return u*u*(3-2*u);};
  const swings=Object.freeze([{start:.25,end:.47},{start:.56,end:.78},{start:.88,end:1.12}].map(Object.freeze));
- const keys=[[0,-.9,.8],[.25,-1.1,.35],[.47,1.1,-.2],[.56,1.1,.3],[.78,-1.1,-.2],[.88,-.95,0],[1.12,.95,0],[1.5,.95,.4]];
+ // Time, blade azimuth/elevation, palm XYZ, pelvis yaw, spine yaw, crouch.
+ // Held chambers and fast cuts give each plane a distinct silhouette. The third
+ // cut crosses actor +Z at releaseAt; no camera-dependent or frame-count timing.
+ const keys=[
+  [0,-1.05,1.05,-.40,1.76,.16,-.28,-.10,.10],
+  [.25,-1.28,.92,-.40,1.76,.17,-.42,-.13,.12],
+  [.29,-1.30,.88,-.40,1.75,.18,-.43,-.13,.12],
+  [.42,1.15,-.55,.02,1.38,.39,.38,.12,.15],
+  [.47,1.20,-.60,.02,1.36,.36,.40,.12,.15],
+  [.56,1.12,-.38,.00,1.38,.30,.30,.10,.14],
+  [.59,1.14,-.40,.00,1.38,.30,.30,.10,.14],
+  [.73,-1.18,.65,-.44,1.72,.22,-.35,-.12,.10],
+  [.78,-1.24,.70,-.44,1.73,.20,-.38,-.12,.10],
+  [.88,-1.28,.18,-.42,1.53,.21,-.42,-.14,.15],
+  [.94,-1.30,.18,-.42,1.53,.21,-.43,-.14,.15],
+  [1.01,0,.02,-.20,1.55,.45,0,.04,.14],
+  [1.08,1.23,-.14,.02,1.46,.35,.43,.14,.12],
+  [1.12,1.28,-.16,.02,1.45,.32,.45,.14,.12],
+  [1.30,1.22,-.12,.00,1.46,.30,.34,.10,.10],
+  [1.5,1.0,.2,-.20,1.52,.30,0,0,.06]
+ ];
  function sample(time){
-  const t=Math.max(0,time),weight=smooth(0,.12,t)*(1-smooth(1.2,poseDuration,t));let a=keys[0],z=keys[keys.length-1];
+  const t=Math.max(0,time),weight=smooth(0,.20,t)*(1-smooth(1.23,poseDuration,t));let a=keys[0],z=keys[keys.length-1];
   for(let i=1;i<keys.length;i++)if(t<=keys[i][0]){a=keys[i-1];z=keys[i];break;}
-  const p=smooth(a[0],z[0],t),angle=a[1]+(z[1]-a[1])*p,elevation=a[2]+(z[2]-a[2])*p;
-  return {weight,angle,elevation,handX:-.20+Math.sin(angle)*.20,handY:1.62+Math.sin(elevation)*.12,handZ:.32+Math.cos(angle)*.08,
-   torsoYaw:angle*.12,crouch:.045*weight,phase:t<.25?'Tụ kiếm':t<.56?'Chém thứ nhất':t<.88?'Chém trả':t<1.12?'Nhất Kiếm · Phóng kiếm khí':t<poseDuration?'Thu kiếm':t<skill.duration?'Dư quang':'Sẵn sàng'};
+  const p=smooth(a[0],z[0],t),value=i=>a[i]+(z[i]-a[i])*p;
+  return {weight,angle:value(1),elevation:value(2),handX:value(3),handY:value(4),handZ:value(5),
+   bodyYaw:value(6)*weight,torsoYaw:value(7),lean:.14,crouch:value(8)*weight,
+   stanceWidth:.16,frontStep:.32,backStep:-.18,
+   guardX:.34,guardY:1.52+Math.sin(value(1))*.10,guardZ:.08,
+   phase:t<.25?'Lấy thế':t<.56?'Trảm xuống':t<.88?'Hất kiếm':t<1.12?'Nhất Kiếm · Phóng kiếm khí':t<poseDuration?'Hồi thế':t<skill.duration?'Dư quang':'Sẵn sàng'};
  }
  function rotation(T,s){return new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(Math.sin(s.angle)*Math.cos(s.elevation),Math.sin(s.elevation),Math.cos(s.angle)*Math.cos(s.elevation)));}
  function authoredBlade(T,origin,forward,time,handedness=1){
@@ -26,7 +49,7 @@
  const vertex=`attribute float stamp;varying vec2 vUv;varying float vAge;uniform float uTime;
  void main(){vUv=uv;vAge=uTime-stamp;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`;
  const ribbon=`uniform vec3 uColor;uniform float uOpacity;varying vec2 vUv;varying float vAge;
- void main(){float edge=pow(max(0.,sin(vUv.y*3.14159265)),.6);float life=1.-smoothstep(.035,.31,vAge);float lines=.78+.22*cos(vUv.y*38.);gl_FragColor=vec4(uColor,edge*life*lines*uOpacity);
+ void main(){float edge=pow(max(0.,sin(vUv.y*3.14159265)),.6);float life=1.-smoothstep(.018,.16,vAge);float lines=.9+.1*cos(vUv.y*24.);gl_FragColor=vec4(uColor,edge*life*lines*uOpacity);
  #include <colorspace_fragment>
  }`;
  const beam=`uniform vec3 uColor;uniform float uOpacity;varying vec2 vUv;
@@ -46,7 +69,7 @@
  function material(core,fx,color,fragment,vert=simpleVertex,additive=true){const T=core.THREE,m=new T.ShaderMaterial({uniforms:{uColor:{value:new T.Color(color)},uTime:{value:0},uOpacity:{value:0}},vertexShader:vert,fragmentShader:fragment,transparent:true,depthWrite:false,toneMapped:false,side:T.DoubleSide,blending:additive?T.AdditiveBlending:T.NormalBlending});fx.materials.add(m);return m;}
  function mesh(core,fx,g,m,parent=fx.group){fx.geometries.add(g);fx.materials.add(m);const n=new core.THREE.Mesh(g,m);n.frustumCulled=false;n.renderOrder=10;parent.add(n);return n;}
  function planes(T){const p=[],uv=[],ix=[];for(let k=0;k<3;k++){const a=k*Math.PI/3,x=Math.cos(a)*.5,z=Math.sin(a)*.5,j=k*4;p.push(-x,-.5,-z,x,-.5,z,-x,.5,-z,x,.5,z);uv.push(0,0,1,0,0,1,1,1);ix.push(j,j+1,j+2,j+2,j+1,j+3);}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(ix);return g;}
- function arc(T,segments,width,back=0){const p=[],uv=[],ix=[];for(let i=0;i<=segments;i++){const u=i/segments,a=(u-.5)*2.3;for(let j=0;j<2;j++){const r=1.3+(j-.5)*width;p.push(Math.sin(a)*r,Math.sin(a)*.25,Math.cos(a)*r-1.3-back);uv.push(u,j);}if(i<segments){const k=i*2;ix.push(k,k+1,k+2,k+2,k+1,k+3);}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(ix);return g;}
+ function arc(T,segments,width,back=0){const p=[],uv=[],ix=[];for(let i=0;i<=segments;i++){const u=i/segments,a=(u-.5)*2.3;for(let j=0;j<2;j++){const r=1.3+(j-.5)*width;p.push(Math.sin(a)*r,Math.sin(a)*.50,Math.cos(a)*r-1.3-back);uv.push(u,j);}if(i<segments){const k=i*2;ix.push(k,k+1,k+2,k+2,k+1,k+3);}}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setIndex(ix);return g;}
  function trail(core,fx,from,to,color,alpha){
   const T=core.THREE,count=72,g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(new Float32Array(count*6),3).setUsage(T.DynamicDrawUsage));g.setAttribute('uv',new T.BufferAttribute(new Float32Array(count*4),2));g.setAttribute('stamp',new T.BufferAttribute(new Float32Array(count*2),1).setUsage(T.DynamicDrawUsage));const ix=[];
   for(let i=0;i<count;i++){g.attributes.uv.setXY(i*2,i/(count-1),0);g.attributes.uv.setXY(i*2+1,i/(count-1),1);if(i<count-1){const j=i*2;ix.push(j,j+1,j+2,j+2,j+1,j+3);}}g.setIndex(ix);g.setDrawRange(0,0);
@@ -75,15 +98,15 @@
   }
   if(barrier&&fx.alive){contact(core,fx,barrier.point,at,barrier.kind||'wall');return barrier;}return null;
  }
- function waveSegments(T,b,from,to){const out=[];for(let i=0;i<15;i++){const a=(i/14-.5)*2.3,offset=new T.Vector3(Math.sin(a)*1.3,Math.sin(a)*.25,(Math.cos(a)-1)*1.3).applyQuaternion(b.heading);out.push([from.clone().add(offset),to.clone().add(offset)]);}return out;}
+ function waveSegments(T,b,from,to){const out=[];for(let i=0;i<15;i++){const a=(i/14-.5)*2.3,offset=new T.Vector3(Math.sin(a)*1.3,Math.sin(a)*.50,(Math.cos(a)-1)*1.3).applyQuaternion(b.heading);out.push([from.clone().add(offset),to.clone().add(offset)]);}return out;}
  const effect={
   place(core,fx){fx.group.position.set(0,0,0);fx.group.quaternion.identity();},
   build(core,fx){
    const T=core.THREE,origin=core._pose(fx.caster).p.clone(),heading=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),Math.atan2(fx.direction.x,fx.direction.z));
    const b=fx.strike={origin,heading,handedness:1,previous:0,hitTargets:new Set(),contacts:new Set(),blocked:false,released:false,waveDone:false,waveContact:false,waveFrom:new T.Vector3(),wavePosition:new T.Vector3(),waveLength:0,contactPoint:new T.Vector3(),contactAt:-99,contactKind:null,lanes:[]};
-   for(let i=0;i<3;i++){const layers=[trail(core,fx,0,1,'#70bfff',.65),trail(core,fx,.89,1,'#effaff',.95)];if(core.quality!=='low')layers.push(trail(core,fx,.52,.56,'#b0dcff',.65));b.lanes.push({samples:[],layers,emitted:0});}
+   for(let i=0;i<3;i++){const layers=[trail(core,fx,.36,1,'#59a9ed',.30),trail(core,fx,.965,1,'#f1fbff',.95)];if(core.quality!=='low')layers.push(trail(core,fx,.78,.795,'#a2dcff',.28));b.lanes.push({samples:[],layers,emitted:0});}
    b.wave=new T.Group();b.wave.name='nhat-kiem-flying-crescent';b.wave.quaternion.copy(heading);fx.group.add(b.wave);b.wave.visible=false;b.waveMeshes=[];
-   for(const [width,back,color,alpha] of [[.24,0,'#65b5ff',.8],[.04,0,'#f3fcff',1],[.08,.20,'#b3ddff',.55]]){const m=mesh(core,fx,arc(T,core.quality==='low'?32:64,width,back),material(core,fx,color,beam),b.wave);m.userData.alpha=alpha;b.waveMeshes.push(m);}
+   for(const [width,back,color,alpha] of [[.16,0,'#65b5ff',.48],[.025,0,'#f3fcff',1],[.045,.16,'#b3ddff',.24]]){const m=mesh(core,fx,arc(T,core.quality==='low'?32:64,width,back),material(core,fx,color,beam),b.wave);m.userData.alpha=alpha;b.waveMeshes.push(m);}
    b.charge=mesh(core,fx,planes(T),material(core,fx,'#b6e1ff',flash));b.impact=mesh(core,fx,planes(T),material(core,fx,'#e9f7ff',flash));b.dust=mesh(core,fx,planes(T),material(core,fx,'#8f8574',dust,simpleVertex,false));b.dust.renderOrder=9;
    const rocksGeometry=new T.IcosahedronGeometry(1,0),rocksMaterial=new T.MeshStandardMaterial({color:0x746d63,roughness:1,transparent:true});fx.geometries.add(rocksGeometry);fx.materials.add(rocksMaterial);b.rocks=new T.InstancedMesh(rocksGeometry,rocksMaterial,core.quality==='low'?8:14);b.rocks.frustumCulled=false;b.rocks.visible=false;fx.group.add(b.rocks);b.dummy=new T.Object3D();
    b.rockStates=Array.from({length:b.rocks.count},(_,i)=>({angle:i*2.3999632297,speed:.5+core.random()*1.6,up:1+core.random()*2,size:.025+core.random()*.045}));
@@ -112,16 +135,16 @@
    if(!fx.alive)return;
    for(let k=0;k<swings.length;k++){
     const swing=swings[k],lane=b.lanes[k],visualStep=core.quality==='low'?1/90:1/180,last=Math.min(t,swing.end);
-    if(!b.blocked&&t<swing.end+.31)while(swing.start+lane.emitted*visualStep<=last+1e-8){const at=swing.start+lane.emitted++*visualStep,pose=authoredBlade(T,b.origin,fx.direction,at,b.handedness);lane.samples.push({time:at,base:pose.base,tip:pose.tip});}
-    while(lane.samples.length&&lane.samples[0].time<t-.32)lane.samples.shift();if(lane.samples.length>72)lane.samples.splice(0,lane.samples.length-72);
+    if(!b.blocked&&t<swing.end+.16)while(swing.start+lane.emitted*visualStep<=last+1e-8){const at=swing.start+lane.emitted++*visualStep,pose=authoredBlade(T,b.origin,fx.direction,at,b.handedness);lane.samples.push({time:at,base:pose.base,tip:pose.tip});}
+    while(lane.samples.length&&lane.samples[0].time<t-.17)lane.samples.shift();if(lane.samples.length>72)lane.samples.splice(0,lane.samples.length-72);
     // The newest point follows the held weapon; intermediate points follow the same authored pose.
     if(!b.blocked&&t>=swing.start&&t<=swing.end&&lane.samples.length&&fx.weapon){const last=lane.samples[lane.samples.length-1];fx.weapon.updateWorldMatrix(true,false);last.base.copy(fx.weapon.localToWorld(new T.Vector3(0,.16,0)));last.tip.copy(fx.weaponTip?fx.weaponTip.getWorldPosition(new T.Vector3()):fx.weapon.localToWorld(new T.Vector3(0,1.62,0)));}
     for(const layer of lane.layers){const g=layer.mesh.geometry,p=g.attributes.position,stamp=g.attributes.stamp;for(let i=0;i<lane.samples.length;i++){const v=lane.samples[i];for(const [j,f] of [layer.from,layer.to].entries()){const point=v.base.clone().lerp(v.tip,f);p.setXYZ(i*2+j,point.x,point.y,point.z);stamp.setX(i*2+j,v.time);}}p.needsUpdate=stamp.needsUpdate=true;g.setDrawRange(0,Math.max(0,lane.samples.length-1)*6);layer.mesh.visible=lane.samples.length>1;layer.mesh.material.uniforms.uTime.value=t;layer.mesh.material.uniforms.uOpacity.value=layer.alpha;}
    }
    b.wave.position.copy(b.wavePosition);b.wave.visible=b.released&&!b.waveContact&&t<releaseAt+flightSeconds+.25;for(const m of b.waveMeshes)m.material.uniforms.uOpacity.value=m.userData.alpha*(1-smooth(releaseAt+flightSeconds,releaseAt+flightSeconds+.25,t));
    const anchor=authoredBlade(T,b.origin,fx.direction,Math.min(t,poseDuration),b.handedness);if(fx.weaponTip)fx.weaponTip.getWorldPosition(b.charge.position);else b.charge.position.copy(anchor.tip);
-   b.charge.visible=t<.25&&!b.blocked;b.charge.scale.setScalar(.25+.5*smooth(0,.25,t));b.charge.material.uniforms.uOpacity.value=smooth(.03,.2,t)*(1-smooth(.22,.25,t));
-   const age=t-b.contactAt,fade=1-smooth(0,.42,age),terrain=b.contactKind==='wall'||b.contactKind==='ground';b.impact.visible=age>=0&&fade>0;b.impact.position.copy(b.contactPoint);b.impact.scale.setScalar(.6+Math.max(0,age)*3);b.impact.material.uniforms.uOpacity.value=fade;
+   b.charge.visible=t<.25&&!b.blocked;b.charge.scale.setScalar(.13+.20*smooth(0,.25,t));b.charge.material.uniforms.uOpacity.value=smooth(.03,.2,t)*(1-smooth(.22,.25,t));
+   const age=t-b.contactAt,fade=1-smooth(0,.20,age),terrain=b.contactKind==='wall'||b.contactKind==='ground';b.impact.visible=age>=0&&fade>0;b.impact.position.copy(b.contactPoint);b.impact.scale.setScalar(.38+Math.max(0,age)*2);b.impact.material.uniforms.uOpacity.value=fade;
    b.dust.visible=terrain&&age>=0&&age<.5;b.dust.position.copy(b.contactPoint);b.dust.position.y+=Math.max(0,age)*.3;b.dust.scale.setScalar(.5+Math.max(0,age)*2);b.dust.material.uniforms.uOpacity.value=.22*(1-smooth(.08,.5,age));
    b.rocks.visible=terrain&&age>=0&&age<.5;b.rocks.material.opacity=1-smooth(.25,.5,age);
    if(b.rocks.visible)for(let i=0;i<b.rockStates.length;i++){const r=b.rockStates[i],d=b.dummy;d.position.copy(b.contactPoint).add(new T.Vector3(Math.sin(r.angle)*r.speed*age,r.up*age-4.9*age*age,Math.cos(r.angle)*r.speed*age));d.position.y=Math.max(core._ground(d.position)+r.size,d.position.y);d.rotation.set(age*3,r.angle,age*2);d.scale.setScalar(r.size);d.updateMatrix();b.rocks.setMatrixAt(i,d.matrix);}b.rocks.instanceMatrix.needsUpdate=b.rocks.visible;

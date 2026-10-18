@@ -47,3 +47,26 @@ for(const gender of ['male','female'])test('Nhất Kiếm '+gender+' real GLB: b
   for(const id of ['bow.xuyen-tien','bow.lien-tien','bow.mua-ten']){assert(v.startBowDraw(id));v.cancelBowDraw();}mount.removeFromParent();models.dispose();v.dispose();
  }
 });
+
+for(const gender of ['male','female'])test('Nhất Kiếm '+gender+': planted support and no sole penetration through blended entry/recovery',async()=>{
+ const {v,gltf,actor}=await visual(gender),probes=[],feet=[];
+ gltf.scene.traverse(mesh=>{
+  if(mesh.isBone&&/(LeftFoot|RightFoot)$/.test(mesh.name))feet.push(mesh);
+  if(!mesh.isSkinnedMesh)return;
+  const indices=mesh.geometry.attributes.skinIndex,weights=mesh.geometry.attributes.skinWeight;
+  for(let index=0;index<indices.count;index++){
+   let w=0;for(const c of ['X','Y','Z','W'])if(/(Foot|Toe)/.test(mesh.skeleton.bones[indices['get'+c](index)].name))w+=weights['get'+c](index);
+   if(w>.5)probes.push({mesh,index});
+  }
+ });
+ assert.equal(feet.length,2);assert(probes.length>20);assert(v.startSwordStrike());let planted;
+ for(let frame=1;frame<=90;frame++){
+  v.update(1/60);actor.updateMatrixWorld(true);const t=frame/60;
+  const floor=Math.min(...probes.map(({mesh,index})=>mesh.getVertexPosition(index,new T.Vector3()).applyMatrix4(mesh.matrixWorld).y))-actor.position.y;
+  assert(floor>-.003,gender+' sole below ground at '+t+': '+floor);
+  if(t>=.25&&t<=1.12){const positions=feet.map(f=>actor.worldToLocal(f.getWorldPosition(new T.Vector3())));
+   planted??=positions.map(p=>p.clone());for(let i=0;i<2;i++)assert(positions[i].distanceTo(planted[i])<.008,'support foot slides');
+   assert(Math.abs(positions[0].x-positions[1].x)>.43,'stance too narrow');assert(Math.abs(positions[0].z-positions[1].z)>.49,'stance lacks depth');
+  }
+ }v.dispose();
+});

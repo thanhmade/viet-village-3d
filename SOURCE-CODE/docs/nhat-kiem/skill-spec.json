@@ -3,7 +3,7 @@
   "skillId": "sword.nhat-kiem",
   "displayName": "Nhất Kiếm",
   "weaponType": "sword",
-  "status": "integrated_pending_gpu_validation",
+  "status": "integrated_software_webgl_validated_pending_device_alpha",
   "sources": [
     {
       "path": "SOURCE-CODE/docs/nhat-kiem-reference.png",
@@ -17,7 +17,11 @@
     {
       "repository": "thanhmade/viet-village-3d",
       "branch": "cap-nhat",
-      "commit": "2eeeb2457f180ef1e3fd3daff8b1deeb9810ab8a"
+      "commit": "b78881f8d5ecef5cfeaefd754597d0d045e39a3d"
+    },
+    {
+      "path": "SOURCE-CODE/docs/nhat-kiem/RESEARCH-V2.md",
+      "kind": "primary_source_comparison"
     }
   ],
   "evidence": {
@@ -29,14 +33,13 @@
       "Three-dimensional blade trails, narrow white cores and broader blue afterimages can reproduce the illustrated energy"
     ],
     "proposed": [
-      "Three visual cuts share one target-hit identity",
-      "1.8 second timeline and 1.5 second pose",
-      "Crouch 0.045 m, left foot forward 0.14 m and right foot back 0.10 m"
+      "Descending diagonal, rising return and horizontal finishing cut; faster action between held chambers",
+      "Pelvis and spine rotation, 0.10–0.15m crouch, left foot +0.32m / right -0.18m; +0.16m lateral opening per side",
+      "Shorter 0.16s blue-white blade trails with narrow leading edge"
     ],
     "missing": [
-      "WebGL captures",
-      "Measured GPU/device performance",
-      "Alpha deployment verification"
+      "Measured physical GPU/device performance",
+      "In-game Alpha deployment verification"
     ]
   },
   "animation": {
@@ -45,7 +48,7 @@
       "CHARACTERS/PLAYER/FEMALE/PLAYER_BASE_FEMALE_GLB.glb"
     ],
     "baseClip": "idle",
-    "method": "Existing two-bone IK for hands and feet, additive spine and hip pose",
+    "method": "Existing two-bone IK, foot planting, pelvis/spine pose and sole correction before arm IK",
     "anchors": {
       "hold": "visual.sockets.right / model.gripPoint",
       "bladeBase": "sword.group local (0,0.16,0)",
@@ -62,7 +65,7 @@
   },
   "timeline": {
     "unit": "seconds",
-    "provenance": "proposal replacing generic 1.3-second combo",
+    "provenance": "V1 duration/windows retained; V2 authored cadence within windows",
     "duration": 1.8,
     "charge": [
       0,
@@ -96,7 +99,21 @@
       1.54
     ],
     "effectsEnd": 1.8,
-    "contactNote": "Contact time depends on obstruction/target; missing produces no impact event"
+    "contactNote": "Contact time depends on obstruction/target; missing produces no impact event",
+    "fastCuts": [
+      [
+        0.29,
+        0.42
+      ],
+      [
+        0.59,
+        0.73
+      ],
+      [
+        0.94,
+        1.08
+      ]
+    ]
   },
   "gameplay": {
     "slot": 1,
@@ -204,11 +221,11 @@
   "verification": {
     "logic": {
       "status": "passed",
-      "vfxTests": 149,
+      "vfxTests": 151,
       "playerNpcTests": 65,
       "hosting": {
         "files": 392,
-        "bytes": 239725561,
+        "bytes": 239727120,
         "glbFiles": 59
       },
       "cases": [
@@ -219,22 +236,30 @@
         "cancellation in each phase; resource disposal once; cooldown preserved",
         "real male/female GLB anchors within 5 mm at three frame rates",
         "root and bone lengths preserved; pose recovery and follow-up bow skills",
-        "actual held blade endpoint sampling"
+        "actual held blade endpoint sampling",
+        "male/female sole clearance during entry/recovery; support feet remain within 8mm during active phase"
       ]
     },
     "visual": {
-      "status": "not_run",
+      "status": "passed_software_webgl_scope",
+      "engine": "Chromium 153 / Three.js r160 / WebGL2 / ANGLE SwiftShader",
+      "samples": 54,
+      "errors": 0,
+      "badPrograms": 0,
       "evidence": [
-        "reference and generated icon inspected; no WebGL capture"
+        "Actual renderer canvas before/after movie; no AI simulation",
+        "Male/female, low/medium/high, miss/melee/qi/wall/close-wall/nearest scenarios",
+        "No WebGL errors in measured frames; contact routing agrees with test outcomes"
       ]
     },
     "performance": {
-      "status": "not_measured",
-      "environment": "Node logic/rig tests; no working Chromium in this environment",
+      "status": "device_not_measured",
+      "environment": "Software rasterization; draw calls recorded for preview only",
       "measurements": []
     },
     "alpha": {
       "status": "not_deployed"
     }
-  }
+  },
+  "revision": "2.0"
 }

@@ -217,18 +217,24 @@
    const feet={};for(const [side,leg] of Object.entries(sweepLegs))if(leg.foot)feet[side]={position:root.worldToLocal(leg.foot.getWorldPosition(new T.Vector3())),rotation:leg.foot.getWorldQuaternion(new T.Quaternion())};
    for(const bone of [spine,...Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand]),...Object.values(sweepLegs).flatMap(a=>[a.upper,a.lower,a.foot])])if(bone)sweepRestore.set(bone,bone.quaternion.clone());
    sweepPositions.set(hips,hips.position.clone());hips.position.y-=state.crouch/hips.parent.getWorldScale(new T.Vector3()).y;
-   if(spine)spine.quaternion.multiply(new T.Quaternion().setFromAxisAngle(up,state.torsoYaw*weight)).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),.07*weight));sync();
+   facing.rotation.y=forwardYaw+state.bodyYaw;
+   if(spine)spine.quaternion.multiply(new T.Quaternion().setFromAxisAngle(up,state.torsoYaw*weight)).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0),state.lean*weight));sync();
    for(const [side,leg] of Object.entries(sweepLegs))if(leg.upper&&leg.lower&&leg.foot){
-    const base=feet[side],target=base.position.clone().add(new T.Vector3(0,0,side==='left'?.14:-.10).applyQuaternion(heading)),pole=new T.Vector3(side==='right'?-.35:.35,.65,.8).applyQuaternion(heading);
+    const base=feet[side],target=base.position.clone().add(new T.Vector3(side==='left'?state.stanceWidth:-state.stanceWidth,0,side==='left'?state.frontStep:state.backStep).applyQuaternion(heading)),pole=new T.Vector3(side==='right'?-.35:.35,.65,.8).applyQuaternion(heading);
     solveSweepLimb(leg.upper,leg.lower,leg.foot,root.localToWorld(target),root.localToWorld(pole),base.rotation,weight);
    }
+   // Blended entry/recovery can dip the sole below ground even with foot IK.
+   // Correct the visual before arm IK so the held blade keeps its world anchors.
+   let soleY=Infinity;for(const sole of soles){sole.mesh.getVertexPosition(sole.index,point).applyMatrix4(sole.mesh.matrixWorld);soleY=Math.min(soleY,point.y);}
+   root.getWorldPosition(groundPoint);root.getWorldScale(rootScale);
+   if(soleY<groundPoint.y){facing.position.y+=(groundPoint.y-soleY)/rootScale.y;sync();}
    for(const side of ['right','left']){
     const {upper,lower,hand}=sweepBones[side];if(!upper||!lower)continue;
-    const palm=(side==='right'?new T.Vector3(state.handX,state.handY,state.handZ):new T.Vector3(.33,1.56,.19)).applyQuaternion(heading);
+    const palm=(side==='right'?new T.Vector3(state.handX,state.handY,state.handZ):new T.Vector3(state.guardX,state.guardY,state.guardZ)).applyQuaternion(heading);
     const rotation=side==='right'?weaponRotation:heading;
     const desired=root.getWorldQuaternion(new T.Quaternion()).multiply(rotation).multiply(handCalibration[side].restInverse.clone().invert());
     const offset=handCalibration[side].palm.clone().multiply(hand.getWorldScale(new T.Vector3())).applyQuaternion(desired),target=root.localToWorld(palm).sub(offset);
-    const pole=root.localToWorld(new T.Vector3(side==='right'?-.85:.85,1.5,-.25).applyQuaternion(heading));
+    const pole=root.localToWorld(new T.Vector3(side==='right'?-.85:.65,side==='right'?1.5:1.27,-.25).applyQuaternion(heading));
     solveSweepLimb(upper,lower,hand,target,pole,desired,weight);
    }
    sync();updateSockets();

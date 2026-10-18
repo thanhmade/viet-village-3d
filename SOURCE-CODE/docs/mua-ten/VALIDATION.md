@@ -30,3 +30,11 @@ Các sửa collider đình/cây đa và module Côn/Xuyên Tiễn/Liên Tiễn g
 Chưa render/chụp/quay WebGL thật, chưa đo FPS, GPU memory hoặc draw calls. Browser Chromium không có trong môi trường; lần cài trước đã bị CDN trả “Site Unavailable”. Không khẳng định shader đã compile trên GPU hoặc hiệu ứng đạt hình ảnh mong muốn trước khi Claude mở preview/game thật.
 
 Chưa chạy toàn bộ `npm test` hoặc `npm run test:hosting`; đã chạy build và đối chiếu gói Hosting. Chưa truy cập ổ H:, chưa điều khiển Claude và chưa deploy Alpha trong công việc này. Hướng dẫn còn lại ở `PROMPT-CLAUDE.md`. Không đưa `public-game`, cache, GLB trùng lặp hoặc dữ liệu riêng tư vào ZIP delta.
+
+## Kiểm tra GPU trên máy chạy game (Claude, 2026-10-18)
+
+Chrome 155 headless, ANGLE D3D11, bước khung thủ công 60 Hz (preview) và 17 ms (game, trang kiểm thử UID giả).
+
+- Preview nam/nữ, Nhẹ/Vừa/Cao: cung nghiêng 55°, tay trái–nock 0 mm, tên gọi phép nhả 0,85 s cách đầu tên thật 0,3 mm; mở trận 1,46 s; 12 tên thả 1,62–3,15 s; bia trong trận mỗi bia trúng một lần, 8 tên còn lại chạm đất đến 4,00 s; xong 4,82 s. Mái che chặn cả 12 tên; trần thấp chặn tên gọi phép (không mở mưa, hồi chiêu vẫn tính); bia ngoài trận không trúng; hủy trước tên gọi phép/giữa mưa không phát thêm tên.
+- Sửa sau khi xem ảnh: dải xoáy trên trời rộng 3,6 cm ở độ cao 8,2 m nhỏ hơn một điểm ảnh, gần như không thấy; nay rộng 0,32 m và lõm 0,6 m ở tâm. Khí xanh quanh tên rơi rộng 8 cm, vòng gọi phép dày 2,6 cm. Số dải/đoạn theo mức chất lượng và gameplay không đổi.
+- Trong game (nam, nữ, hình khối, điện thoại 844×390): ngắm bằng chuột + phím 3, xác nhận bằng phím 3 hoặc chuột trái, Esc hủy không tốn hồi chiêu; chạm nút bắn 7 m phía trước, giữ–kéo để ngắm; tên đầu chạm đúng tâm đã chọn. Khóa di chuyển đến 1,80 s, rời vùng thì mưa vẫn rơi tại chỗ. Mái nhà, đình, thân cây đa chặn tên; đứng trong hộp mái nhà thì tên gọi phép bị chặn. Nhiệm vụ bia Võ sư chỉ sẵn sàng khi tên chạm bia. Đổi vũ khí/MAP/nhân vật, mở bảng, mất tiêu điểm, chết giữa mưa đều dừng sạch. Console không lỗi.

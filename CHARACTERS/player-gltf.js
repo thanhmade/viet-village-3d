@@ -96,7 +96,7 @@
   function restoreSweep(){
    for(const [bone,q] of sweepRestore)bone.quaternion.copy(q);sweepRestore.clear();
    for(const [bone,p] of sweepPositions)bone.position.copy(p);sweepPositions.clear();
-   facing.rotation.y=forwardYaw;delete sockets.right.userData.staffSweepGripX;delete sockets.right.userData.staffSlamTime;delete sockets.right.userData.bowDrawTime;delete sockets.right.userData.bowDrawSkillId;delete sockets.right.userData.swordStrikeTime;
+   facing.rotation.y=forwardYaw;delete sockets.right.userData.staffSweepGripX;delete sockets.right.userData.staffSlamTime;delete sockets.right.userData.bowDrawTime;delete sockets.right.userData.bowDrawSkillId;delete sockets.right.userData.swordStrikeTime;delete sockets.right.userData.swordStrikeSkillId;
   }
 
   function aimBone(bone,child,target){
@@ -209,11 +209,13 @@
    }
    sync();updateSockets();
   }
+  function swordPoseSpec(id){return id==='sword.kiem-hoa'?global.SwordFlower:id==='sword.nhat-kiem'?global.SwordStrike:null;}
   function poseSwordStrike(){
-   if(!swordStrike||!global.SwordStrike)return;
-   sockets.right.userData.swordStrikeTime=swordStrike.time;
-   const state=global.SwordStrike.sample(swordStrike.time),weight=state.weight;if(weight<=0)return;
-   const up=new T.Vector3(0,1,0),heading=new T.Quaternion().setFromAxisAngle(up,forwardYaw),weaponRotation=heading.clone().multiply(global.SwordStrike.rotation(T,state));
+   if(!swordStrike||!swordPoseSpec(swordStrike.skillId))return;
+   const spec=swordPoseSpec(swordStrike.skillId);
+   sockets.right.userData.swordStrikeTime=swordStrike.time;sockets.right.userData.swordStrikeSkillId=swordStrike.skillId;
+   const state=spec.sample(swordStrike.time),weight=state.weight;if(weight<=0)return;
+   const up=new T.Vector3(0,1,0),heading=new T.Quaternion().setFromAxisAngle(up,forwardYaw),weaponRotation=heading.clone().multiply(spec.rotation(T,state));
    const feet={};for(const [side,leg] of Object.entries(sweepLegs))if(leg.foot)feet[side]={position:root.worldToLocal(leg.foot.getWorldPosition(new T.Vector3())),rotation:leg.foot.getWorldQuaternion(new T.Quaternion())};
    for(const bone of [spine,...Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand]),...Object.values(sweepLegs).flatMap(a=>[a.upper,a.lower,a.foot])])if(bone)sweepRestore.set(bone,bone.quaternion.clone());
    sweepPositions.set(hips,hips.position.clone());
@@ -227,7 +229,7 @@
    if(spine){
     // GLB bone-local X is not actor-right. Apply the lean in the heading frame
     // so both source rigs bend toward the cut instead of arching backward.
-    const basis=root.getWorldQuaternion(new T.Quaternion()).multiply(heading),world=spine.getWorldQuaternion(new T.Quaternion());
+    const basis=root.getWorldQuaternion(new T.Quaternion()).multiply(heading).multiply(new T.Quaternion().setFromAxisAngle(up,spec.footstep?state.bodyYaw:0)),world=spine.getWorldQuaternion(new T.Quaternion());
     const yawQ=new T.Quaternion().setFromAxisAngle(up.clone().applyQuaternion(basis),state.torsoYaw*weight),leanQ=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0).applyQuaternion(basis),state.lean*weight);
     spine.quaternion.copy(spine.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(leanQ.multiply(yawQ).multiply(world)));
    }sync();
@@ -235,6 +237,14 @@
    // leads in, right leads out). Blending the leg rotations alone skated both feet.
    const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
    for(const [side,leg] of Object.entries(sweepLegs))if(leg.upper&&leg.lower&&leg.foot){
+    if(spec.footstep){
+     const foot=spec.footstep(state,side),base=feet[side],yaw=foot.yaw;
+     const entry=side==='left'?ease(weight*2):ease(weight*2-1),travel=ease((entry-.1)/.7);
+     const target=base.position.clone().add(new T.Vector3((side==='left'?state.stanceWidth:-state.stanceWidth)*travel,0,(side==='left'?state.frontStep:state.backStep)*travel).applyQuaternion(heading)).applyAxisAngle(up,yaw);target.y+=foot.lift+.075*Math.sin(Math.PI*entry);
+     const pole=new T.Vector3(side==='right'?-.35:.35,.65,.8).applyAxisAngle(up,forwardYaw+state.bodyYaw);
+     const worldYaw=root.getWorldQuaternion(new T.Quaternion()).multiply(new T.Quaternion().setFromAxisAngle(up,yaw)).multiply(root.getWorldQuaternion(new T.Quaternion()).invert());
+     solveSweepLimb(leg.upper,leg.lower,leg.foot,root.localToWorld(target),root.localToWorld(pole),worldYaw.multiply(base.rotation),Math.min(1,weight*6));continue;
+    }
     // The foot travels only while it is clear of the ground (middle of the lift).
     const step=side==='left'?ease(weight*2):ease(weight*2-1),travel=ease((step-.1)/.7),base=feet[side];
     const target=base.position.clone().add(new T.Vector3((side==='left'?state.stanceWidth:-state.stanceWidth)*travel,.07*Math.sin(Math.PI*step),(side==='left'?state.frontStep:state.backStep)*travel).applyQuaternion(heading)),pole=new T.Vector3(side==='right'?-.35:.35,.65,.8).applyQuaternion(heading);
@@ -249,10 +259,10 @@
    for(const side of ['right','left']){
     const {upper,lower,hand}=sweepBones[side];if(!upper||!lower)continue;
     const palm=(side==='right'?new T.Vector3(state.handX,state.handY,state.handZ):new T.Vector3(state.guardX,state.guardY,state.guardZ)).applyQuaternion(heading);
-    const rotation=side==='right'?weaponRotation:heading;
+    const rotation=side==='right'?weaponRotation:heading.clone().multiply(new T.Quaternion().setFromAxisAngle(up,state.armYaw||0));
     const desired=root.getWorldQuaternion(new T.Quaternion()).multiply(rotation).multiply(handCalibration[side].restInverse.clone().invert());
     const offset=handCalibration[side].palm.clone().multiply(hand.getWorldScale(new T.Vector3())).applyQuaternion(desired),target=root.localToWorld(palm).sub(offset);
-    const pole=root.localToWorld(new T.Vector3(side==='right'?-.85:.75,side==='right'?1.23:1.1,-.30).applyQuaternion(heading));
+    const pole=root.localToWorld(new T.Vector3(side==='right'?-.85:.75,side==='right'?1.23:1.1,-.30).applyAxisAngle(up,state.armYaw||0).applyQuaternion(heading));
     solveSweepLimb(upper,lower,hand,target,pole,desired,weight);
    }
    sync();updateSockets();
@@ -305,7 +315,7 @@
     transition(locomotion(),'locomotion');const name=current.getClip().name;
     current.setEffectiveTimeScale(name==='idle'?1:Math.max(.45,Math.min(1.35,speed/(name==='run'?6.5:4.5))));
    }return true;},
-   startSwordStrike(){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||!global.SwordStrike||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;swordStrike={time:0};pose();return true;},
+   startSwordStrike(skillId='sword.nhat-kiem'){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||!swordPoseSpec(skillId)||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;swordStrike={time:0,skillId};pose();return true;},
    cancelSwordStrike(){if(disposed||!swordStrike)return;swordStrike=null;restoreSweep();pose();},
    startBowDraw(skillId='bow.xuyen-tien'){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||!bowPoseSpec(skillId)||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;bowDraw={time:0,skillId};pose();return true;},
    cancelBowDraw(){if(disposed||!bowDraw)return;bowDraw=null;restoreSweep();pose();},
@@ -337,8 +347,8 @@
    update(dt){
     if(disposed||!Number.isFinite(dt)||dt<0)return;
     restoreSweep();if(staffSweep){staffSweep.time+=dt;if(staffSweep.time+1e-7>=global.StaffSweep.duration)staffSweep=null;}
-    let swordFinished=false;
-    if(swordStrike){swordStrike.time+=dt;if(swordStrike.time+1e-7>=global.SwordStrike.poseDuration){swordStrike=null;swordFinished=true;}}
+    let swordFinished=null;
+    if(swordStrike){swordStrike.time+=dt;if(swordStrike.time+1e-7>=swordPoseSpec(swordStrike.skillId).poseDuration){swordFinished={skillId:swordStrike.skillId,duration:swordPoseSpec(swordStrike.skillId).poseDuration};swordStrike=null;}}
     let bowFinished=null;
     if(bowDraw){bowDraw.time+=dt;if(bowDraw.time+1e-7>=bowPoseSpec(bowDraw.skillId).poseDuration){bowFinished={skillId:bowDraw.skillId,duration:bowPoseSpec(bowDraw.skillId).poseDuration};bowDraw=null;}}
     let slamFinished=false;
@@ -353,7 +363,7 @@
     }
     pose();
     // Publish the final sample for this frame; cancellation leaves the marker absent.
-    if(swordFinished)sockets.right.userData.swordStrikeTime=global.SwordStrike.poseDuration;
+    if(swordFinished){sockets.right.userData.swordStrikeTime=swordFinished.duration;sockets.right.userData.swordStrikeSkillId=swordFinished.skillId;}
     if(slamFinished)sockets.right.userData.staffSlamTime=global.StaffSlam.duration;
     if(bowFinished){sockets.right.userData.bowDrawTime=bowFinished.duration;sockets.right.userData.bowDrawSkillId=bowFinished.skillId;}
    },

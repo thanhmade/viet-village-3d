@@ -41,14 +41,14 @@
       "name": "Kiếm Hoa",
       "type": "lotus",
       "slot": 2,
-      "duration": 1.9,
-      "activeAt": 0.25,
-      "activeEnd": 1.5,
+      "duration": 3.6,
+      "activeAt": 0.55,
+      "activeEnd": 2.65,
       "cooldown": 3.0,
       "radius": 3.8,
       "range": 3.8,
       "forwardOffset": 0.0,
-      "description": "Năng lượng nở dạng nhiều cánh hoa kiếm trong không gian, dải xoay và cánh nhỏ bay."
+      "description": "Ba vòng chém cao–ngang–thấp mở sáu cánh kiếm khí xanh trắng; hoa nở, cánh tan và thu kiếm trong 3,6 giây."
     },
     {
       "id": "sword.kiem-khi",

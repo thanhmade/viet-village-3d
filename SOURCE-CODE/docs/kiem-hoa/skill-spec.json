@@ -1,0 +1,244 @@
+{
+  "schemaVersion": "1.0.0",
+  "skillId": "sword.kiem-hoa",
+  "displayName": "Kiếm Hoa",
+  "weaponType": "sword",
+  "status": "implemented_pending_target_device_review",
+  "sources": [
+    {
+      "kind": "user_image",
+      "path": "SOURCE-CODE/docs/kiem-hoa-reference.png"
+    },
+    {
+      "kind": "repository",
+      "head": "e963df859fb9341e1e21de249a1bc4acc1a13a32",
+      "branch": "cap-nhat"
+    }
+  ],
+  "evidence": {
+    "observed": [
+      "Blue-white translucent pointed petals",
+      "Circular sword arcs with thin gold accents",
+      "High/middle/low stance sketches"
+    ],
+    "inferred": [
+      "Three-dimensional flower around the fighter"
+    ],
+    "proposed": [
+      "3.6 s visual duration",
+      "Three full turns",
+      "Six main petals"
+    ],
+    "missing": [
+      "Reference motion video",
+      "GPU review of this new skill on target phone"
+    ]
+  },
+  "animation": {
+    "modelPath": [
+      "CHARACTERS/PLAYER/MALE/PLAYER_BASE_MALE_GLB.glb",
+      "CHARACTERS/PLAYER/FEMALE/PLAYER_BASE_FEMALE_GLB.glb"
+    ],
+    "clipName": "idle with analytic original-bone IK overlay",
+    "anchors": {
+      "palm": "calibrated mixamorig:RightHand + RightHandMiddle1",
+      "grip": "sword.gripPoint at scale 0.7",
+      "bladeBaseLocal": [
+        0,
+        0.16,
+        0
+      ],
+      "bladeTipLocal": [
+        0,
+        1.62,
+        0
+      ]
+    },
+    "forwardAxis": "actor +Z; caster child -Z",
+    "rootMotion": "gameplay root stationary; visual facing/pelvis only",
+    "playbackRate": 1,
+    "poseDuration": 3.3,
+    "turns": 3
+  },
+  "timeline": {
+    "unit": "seconds",
+    "provenance": "authored to match reference silhouette; no timing inferred from still image",
+    "duration": 3.6,
+    "phases": [
+      {
+        "name": "anticipation",
+        "start": 0,
+        "end": 0.55
+      },
+      {
+        "name": "high_cut",
+        "start": 0.55,
+        "end": 1.12
+      },
+      {
+        "name": "middle_cut",
+        "start": 1.12,
+        "end": 1.69
+      },
+      {
+        "name": "low_cut",
+        "start": 1.69,
+        "end": 2.25
+      },
+      {
+        "name": "bloom",
+        "start": 2.25,
+        "end": 2.65
+      },
+      {
+        "name": "recovery",
+        "start": 2.65,
+        "end": 3.3
+      },
+      {
+        "name": "residue",
+        "start": 3.3,
+        "end": 3.6
+      }
+    ],
+    "events": [
+      {
+        "type": "cast",
+        "time": 0
+      },
+      {
+        "type": "release",
+        "time": 2.25
+      },
+      {
+        "type": "impact",
+        "time": "confirmed contact only"
+      },
+      {
+        "type": "complete",
+        "time": 3.6
+      }
+    ]
+  },
+  "gameplay": {
+    "provenance": "Keep existing ID/slot/range/radius/cooldown; change timing to satisfy full effects request",
+    "slot": 2,
+    "activationConditions": [
+      "equipped sword",
+      "game allowed",
+      "avatar alive",
+      "pose available",
+      "cooldown expired"
+    ],
+    "resourceCost": null,
+    "cooldownSeconds": 3,
+    "costCommitEvent": null,
+    "cooldownStartEvent": "successful cast",
+    "range": 3.8,
+    "radius": 3.8,
+    "hitWindows": [
+      {
+        "phase": "blade",
+        "start": 0.55,
+        "end": 2.25
+      },
+      {
+        "phase": "bloom",
+        "start": 2.25,
+        "end": 2.65
+      }
+    ],
+    "deduplication": "one confirmed hit per cast and target across every phase",
+    "shield": null,
+    "interruptPolicy": "cancel via controller; preserve cooldown; dispose resources; no future contact"
+  },
+  "vfxLayers": [
+    "three sword-edge ribbon lanes",
+    "six curved translucent petals",
+    "gold filament pairs",
+    "orbiting partial currents",
+    "radial bloom ring",
+    "instanced flying petals",
+    "confirmed-contact flash and sparks"
+  ],
+  "audio": [
+    {
+      "status": "no new production audio",
+      "preview": "optional synthetic contact sound only"
+    }
+  ],
+  "quality": {
+    "low": {
+      "petalSegments": 24,
+      "fragments": 20,
+      "currents": 2,
+      "ribbonLayersPerCut": 2
+    },
+    "medium": {
+      "petalSegments": 40,
+      "fragments": 48,
+      "currents": 4,
+      "ribbonLayersPerCut": 3
+    },
+    "high": {
+      "petalSegments": 40,
+      "fragments": 48,
+      "currents": 4,
+      "ribbonLayersPerCut": 3
+    },
+    "gameplayInvariant": true
+  },
+  "integration": {
+    "engineVersion": "Three.js r160",
+    "castEntry": "createVillageWeapons.cast(2)",
+    "updateEntry": "existing controller update -> WeaponVFXCore.update(deltaSeconds)",
+    "cleanupEntry": "controller cancel/suspend -> core cancelAll, cancelSwordStrike",
+    "modifiedFiles": [
+      "ASSETS/ui/skills/sword/kiem-hoa-ice-gold.png",
+      "CHARACTERS/player-gltf.js",
+      "SOURCE-CODE/css/sword-skill-icons.css",
+      "SOURCE-CODE/index.html",
+      "SOURCE-CODE/load-order.json",
+      "SOURCE-CODE/js/app.js",
+      "SOURCE-CODE/js/player-avatar.js",
+      "SOURCE-CODE/js/weapons-village.js",
+      "SOURCE-CODE/js/vfx/sword-skill-config.js",
+      "SOURCE-CODE/js/vfx/sword-skill-vfx.js",
+      "SOURCE-CODE/js/vfx/sword-flower.js",
+      "SOURCE-CODE/js/demo/weapons-vfx-demo.js",
+      "SOURCE-CODE/weapons-vfx-demo.html",
+      "SOURCE-CODE/nhat-kiem-preview.html",
+      "SOURCE-CODE/kiem-hoa-preview.html",
+      "SOURCE-CODE/docs/kiem-hoa-reference.png",
+      "SOURCE-CODE/tests/kiem-hoa.test.cjs",
+      "SOURCE-CODE/tests/kiem-hoa-pose.test.cjs",
+      "SOURCE-CODE/tests/weapons-vfx.test.cjs",
+      "package.json"
+    ]
+  },
+  "verification": {
+    "logic": {
+      "status": "see VALIDATION.md",
+      "cases": [
+        "30/60/120 Hz and long delta",
+        "cancel and disposal",
+        "deduplication",
+        "wall",
+        "real GLB anchors",
+        "support feet and floor"
+      ]
+    },
+    "visual": {
+      "status": "real WebGL canvas capture",
+      "evidence": [
+        "Kiem-Hoa-Kiem.mp4",
+        "webgl-validation.json"
+      ]
+    },
+    "performance": {
+      "status": "target_device_fps_not_measured",
+      "environment": "headless Chromium / SwiftShader",
+      "measurements": []
+    }
+  }
+}

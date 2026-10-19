@@ -353,6 +353,10 @@
     if(bowDraw){bowDraw.time+=dt;if(bowDraw.time+1e-7>=bowPoseSpec(bowDraw.skillId).poseDuration){bowFinished={skillId:bowDraw.skillId,duration:bowPoseSpec(bowDraw.skillId).poseDuration};bowDraw=null;}}
     let slamFinished=false;
     if(staffSlam){staffSlam.time+=dt;if(staffSlam.time+1e-7>=global.StaffSlam.duration){staffSlam=null;slamFinished=true;}}
+    // Hold the idle clip under a sword strike once any walk→idle blend has settled. Its
+    // 15 s loop shuffles both feet (up to ~30 cm); the foot IK base followed it and skated
+    // the planted feet, then slid them again when the pose handed back to the clip.
+    if(swordStrike&&!outgoing&&current===actions.get('idle')){swordStrike.idleTime??=current.time;current.time=swordStrike.idleTime;}
     if(!pausedPreview)mixer.update(Math.min(dt,.1));
     if(mode==='once'&&current.time>=segmentEnd)pendingFinished=current;
     if(outgoing&&mixer.time>=fadeEnd){outgoing.stop();outgoing=null;current.stopFading().setEffectiveWeight(1);}

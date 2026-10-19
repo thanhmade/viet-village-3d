@@ -16,7 +16,7 @@ global.createImageBitmap=async blob=>{
 global.ProgressEvent=class{constructor(type,detail){this.type=type;Object.assign(this,detail);}};
 const loader=import(pathToFileURL(path.join(root,'ASSETS/vendor/gltf-r160/GLTFLoader.js')).href);
 async function asset(kind='female'){const {GLTFLoader}=await loader,bytes=kind==='male'?maleBuffer:buffer;return new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');}
-function runtime(){const context={THREE:T,SwordFlower:require('../js/vfx/sword-flower.js'),SwordStrike:require('../js/vfx/sword-strike.js'),BowRain:require('../js/vfx/bow-rain.js'),BowVolley:require('../js/vfx/bow-volley.js'),BowPiercing:require('../js/vfx/bow-piercing.js'),StaffSweep:require('../js/vfx/staff-sweep.js'),StaffSlam:require('../js/vfx/staff-slam.js'),console,document:{}};context.window=context;vm.createContext(context);
+function runtime(){const context={THREE:T,SwordFlower:require('../js/vfx/sword-flower.js'),SwordQi:require('../js/vfx/sword-qi.js'),SwordStrike:require('../js/vfx/sword-strike.js'),BowRain:require('../js/vfx/bow-rain.js'),BowVolley:require('../js/vfx/bow-volley.js'),BowPiercing:require('../js/vfx/bow-piercing.js'),StaffSweep:require('../js/vfx/staff-sweep.js'),StaffSlam:require('../js/vfx/staff-slam.js'),console,document:{}};context.window=context;vm.createContext(context);
  for(const name of ['npc-gltf.js','player-gltf.js'])vm.runInContext(fs.readFileSync(path.join(root,'CHARACTERS',name),'utf8'),context);
  return context;
 }
@@ -47,4 +47,19 @@ for(const gender of ['male','female'])test('Kiếm Hoa '+gender+': soles stay ab
  const local=()=>feet.map(f=>actor.worldToLocal(f.getWorldPosition(new T.Vector3())));actor.updateMatrixWorld(true);const base=local();let previous=base,sliding=[0,0],lift=[0,0];assert(v.startSwordStrike(Flower.skillId));
  for(let frame=1;frame<=800;frame++){v.update(1/240);actor.updateMatrixWorld(true);const t=frame/240,floor=Math.min(...probes.map(({mesh,index})=>mesh.getVertexPosition(index,new T.Vector3()).applyMatrix4(mesh.matrixWorld).y))-actor.position.y;assert(floor>-.003,gender+' sole penetration at '+t+': '+floor);const now=local();for(let i=0;i<2;i++){const dy=now[i].y-base[i].y,travel=Math.hypot(now[i].x-previous[i].x,now[i].z-previous[i].z);lift[i]=Math.max(lift[i],dy);if(t>.55&&t<2.25&&dy<.01&&previous[i].y-base[i].y<.01&&travel*240>.15)sliding[i]+=travel;}previous=now;}
  for(let i=0;i<2;i++){assert(lift[i]>.05,'foot never lifts');assert(sliding[i]<.06,gender+' support foot slides '+sliding[i]);}v.dispose();
+});
+// The 15 s idle clip shuffles both feet (up to ~30 cm). A strike cast mid-shuffle must
+// hold that clip, not drag the planted IK feet along with it or slide them at hand-off.
+for(const gender of ['male','female'])test('Kiếm Hoa / Nhất Kiếm / Kiếm Khí '+gender+': casting at any idle phase keeps support feet planted',async()=>{
+ const Strike=require('../js/vfx/sword-strike.js'),Qi=require('../js/vfx/sword-qi.js');
+ // Nhất Kiếm keeps its own 3 cm bound: its stance entry slides ~1 cm even from idle 0.
+ for(const [skillId,duration,limit] of [[Flower.skillId,Flower.poseDuration,.012],['sword.nhat-kiem',Strike.poseDuration,.03],['sword.kiem-khi',Qi.poseDuration,.015]])for(const idleAt of [0,4.9,6.2,12.3]){
+  const {v,gltf,actor}=await visual(gender),feet=[];gltf.scene.traverse(o=>{if(o.isBone&&/(LeftFoot|RightFoot)$/.test(o.name))feet.push(o);});
+  advance(v,idleAt);actor.updateMatrixWorld(true);const local=()=>feet.map(f=>actor.worldToLocal(f.getWorldPosition(new T.Vector3())));
+  const base=local(),start=v.state.time;let previous=base,sliding=[0,0];assert(v.startSwordStrike(skillId));
+  for(let frame=1;frame<=Math.floor(duration*240);frame++){v.update(1/240);actor.updateMatrixWorld(true);const now=local();
+   for(let i=0;i<2;i++){const travel=Math.hypot(now[i].x-previous[i].x,now[i].z-previous[i].z);if(now[i].y-base[i].y<.01&&previous[i].y-base[i].y<.01&&travel*240>.15)sliding[i]+=travel;}previous=now;}
+  for(let i=0;i<2;i++)assert(sliding[i]<limit,`${gender} ${skillId} cast at idle ${idleAt} s: support foot slides ${(sliding[i]*100).toFixed(2)} cm`);
+  advance(v,.2);assert.equal(v.state.busy,false);assert(v.state.time>start,'idle clip resumes after the strike');v.dispose();
+ }
 });

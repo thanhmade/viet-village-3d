@@ -26,7 +26,7 @@ Giữ ID `sword.kiem-hoa`, slot 2/phím 2, cooldown 3 s, range/radius 3,8 m. Coo
 
 ## Tích hợp
 
-`SwordFlower.sample(t)` dùng chung giữa pose giải IK trên xương gốc và đường kiếm cho va chạm/VFX. `startSwordStrike(skillId)` vẫn mặc định Nhất Kiếm để tương thích; Kiếm Hoa chọn timeline riêng. Tay giữ đúng `gripPoint` của mô hình kiếm ở scale 0,7. Hai GLB nam/nữ được hiệu chỉnh theo xương thật; không tạo model hoặc bone giả.
+`SwordFlower.sample(t)` dùng chung giữa pose giải IK trên xương gốc và đường kiếm cho va chạm/VFX. `startSwordStrike(skillId)` vẫn mặc định Nhất Kiếm để tương thích; Kiếm Hoa chọn timeline riêng. Tay giữ đúng `gripPoint` của mô hình kiếm ở scale 0,7. Hai GLB nam/nữ được hiệu chỉnh theo xương thật; không tạo model hoặc bone giả. Trong lúc chém, clip `idle` được giữ ở thời điểm bắt đầu chiêu (sau blend walk→idle) để gốc IK của chân không chạy theo bước dịch chân của clip; hết chiêu clip chạy tiếp.
 
 VFX gồm ribbon ba lớp ở mỗi đường chém, sáu mặt cánh cong có UV/noise, sợi vàng, các dòng khí xoắn, vòng nở và cánh nhỏ bằng InstancedMesh. Shader instancing áp dụng ma trận từng cánh. Các dải bám điểm đầu/cuối lưỡi; không dùng video phẳng hoặc torus làm chiêu.
 

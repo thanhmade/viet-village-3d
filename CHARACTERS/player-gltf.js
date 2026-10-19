@@ -209,7 +209,7 @@
    }
    sync();updateSockets();
   }
-  function swordPoseSpec(id){return id==='sword.kiem-hoa'?global.SwordFlower:id==='sword.nhat-kiem'?global.SwordStrike:null;}
+  function swordPoseSpec(id){return id==='sword.kiem-khi'?global.SwordQi:id==='sword.kiem-hoa'?global.SwordFlower:id==='sword.nhat-kiem'?global.SwordStrike:null;}
   function poseSwordStrike(){
    if(!swordStrike||!swordPoseSpec(swordStrike.skillId))return;
    const spec=swordPoseSpec(swordStrike.skillId);

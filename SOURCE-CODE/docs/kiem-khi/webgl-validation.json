@@ -1,0 +1,1889 @@
+{
+  "checks": [
+    {
+      "gender": "male",
+      "result": [
+        {
+          "quality": "low",
+          "scenario": "miss",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 26
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 26
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 38
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 20
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "melee",
+          "hits": [
+            {
+              "id": "preview-target-0",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 39
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 43
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 32
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "qi",
+          "hits": [
+            {
+              "id": "preview-target-1",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 39
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 38
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 35
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 32
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 40
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 44
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "close-wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "nearest",
+          "hits": [
+            {
+              "id": "preview-target-2",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 40
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 44
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "miss",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 45
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 44
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 20
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "melee",
+          "hits": [
+            {
+              "id": "preview-target-0",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 46
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 50
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 36
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "qi",
+          "hits": [
+            {
+              "id": "preview-target-1",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 46
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 45
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 39
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 36
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 47
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 51
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "close-wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "nearest",
+          "hits": [
+            {
+              "id": "preview-target-2",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 47
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 51
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "miss",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 45
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 44
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 20
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "melee",
+          "hits": [
+            {
+              "id": "preview-target-0",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 46
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 50
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 36
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "qi",
+          "hits": [
+            {
+              "id": "preview-target-1",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 46
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 45
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 39
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 36
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 47
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 51
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "close-wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "nearest",
+          "hits": [
+            {
+              "id": "preview-target-2",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 47
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 51
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        }
+      ],
+      "memoryBefore": {
+        "geometries": 23,
+        "textures": 4
+      },
+      "memoryAfter": {
+        "geometries": 23,
+        "textures": 4
+      },
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    },
+    {
+      "gender": "female",
+      "result": [
+        {
+          "quality": "low",
+          "scenario": "miss",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 26
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 26
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 38
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 20
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "melee",
+          "hits": [
+            {
+              "id": "preview-target-0",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 39
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 43
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 32
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "qi",
+          "hits": [
+            {
+              "id": "preview-target-1",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 39
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 38
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 35
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 32
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 40
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 44
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "close-wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "low",
+          "scenario": "nearest",
+          "hits": [
+            {
+              "id": "preview-target-2",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 40
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 44
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "miss",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 45
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 44
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 20
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "melee",
+          "hits": [
+            {
+              "id": "preview-target-0",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 46
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 50
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 36
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "qi",
+          "hits": [
+            {
+              "id": "preview-target-1",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 46
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 45
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 39
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 36
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 47
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 51
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "close-wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "medium",
+          "scenario": "nearest",
+          "hits": [
+            {
+              "id": "preview-target-2",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 47
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 51
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "miss",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 29
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 45
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 44
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 33
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 20
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "melee",
+          "hits": [
+            {
+              "id": "preview-target-0",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 46
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 50
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 36
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "qi",
+          "hits": [
+            {
+              "id": "preview-target-1",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 30
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 46
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 45
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 39
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 36
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 21
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 47
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 51
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "close-wall",
+          "hits": [],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 28
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 27
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        },
+        {
+          "quality": "high",
+          "scenario": "nearest",
+          "hits": [
+            {
+              "id": "preview-target-2",
+              "n": 1
+            }
+          ],
+          "phases": [
+            {
+              "t": 0.4,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 0.85,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 31
+            },
+            {
+              "t": 1.08,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 47
+            },
+            {
+              "t": 1.23,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 51
+            },
+            {
+              "t": 1.47,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 37
+            },
+            {
+              "t": 1.75,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 23
+            },
+            {
+              "t": 2.8,
+              "gl": 0,
+              "badPrograms": 0,
+              "calls": 22
+            }
+          ]
+        }
+      ],
+      "memoryBefore": {
+        "geometries": 23,
+        "textures": 4
+      },
+      "memoryAfter": {
+        "geometries": 23,
+        "textures": 4
+      },
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+    }
+  ],
+  "errors": [],
+  "mobileUI": "390x844 cast button clicked; real WebGL context; not physical phone FPS",
+  "capture": "actual WebGL frames at fixed 1/30 simulation delta; no generative video"
+}

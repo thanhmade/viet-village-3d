@@ -130,7 +130,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
       });
     }
   }
-  function swordPoseSpec(id){return id==='sword.kiem-hoa'?window.SwordFlower:id==='sword.nhat-kiem'?window.SwordStrike:null;}
+  function swordPoseSpec(id){return id==='sword.kiem-khi'?window.SwordQi:id==='sword.kiem-hoa'?window.SwordFlower:id==='sword.nhat-kiem'?window.SwordStrike:null;}
   function swordPoseActive(fx){const spec=swordPoseSpec(fx.skill.id);return !!spec&&fx.age<spec.poseDuration;}
   function poseFallbackSword(time,skillId='sword.nhat-kiem'){
     if(!fallbackSlam)return;
@@ -315,7 +315,7 @@ window.createVillageWeapons = function ({THREE: T, scene, body, rightArm, leftAr
     const skill = currentConfig.skills.find(item => item.slot === slot);
     if (!skill) return {ok: false, reason: 'unknown-slot'};
     if(manager?.effects.some(fx=>bowPoseActive(fx)||swordPoseActive(fx)))return {ok:false,reason:manager.cooldownRemaining(skill.id,caster)>0?'cooldown':'busy'};
-    if(['staff.con-quet','staff.chan-dia','bow.xuyen-tien','bow.lien-tien','bow.mua-ten','sword.nhat-kiem','sword.kiem-hoa'].includes(skill.id)&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
+    if(['staff.con-quet','staff.chan-dia','bow.xuyen-tien','bow.lien-tien','bow.mua-ten','sword.nhat-kiem','sword.kiem-hoa','sword.kiem-khi'].includes(skill.id)&&getState().poseBusy)return {ok:false,reason:'avatar-busy'};
     // Aimed casts turn the player toward the chosen point first, so the
     // effect, the training-dummy facing check and the avatar agree.
     let target = null;

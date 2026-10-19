@@ -56,14 +56,14 @@
       "name": "Kiếm Khí",
       "type": "projectile",
       "slot": 3,
-      "duration": 1.4,
-      "activeAt": 0.18,
-      "activeEnd": 1.0,
+      "duration": 3.2,
+      "activeAt": 1.04,
+      "activeEnd": 1.56,
       "cooldown": 2.2,
       "radius": 0.35,
       "range": 11.0,
       "forwardOffset": 1.0,
-      "description": "Tụ vòng sáng trước tay rồi phóng mũi kiếm khí xanh trắng dọc hướng nhìn."
+      "description": "Hạ tấn tụ vòng khí, đâm kiếm phóng một mũi kiếm khí xanh trắng lõi vàng; va chạm thật và hồi thế trong 3,2 giây."
     }
   ]
 };

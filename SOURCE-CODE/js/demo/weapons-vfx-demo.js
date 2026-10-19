@@ -471,8 +471,8 @@ function createWeaponDemoCleanup({ scene, renderer, vfx, bindings, skillBindings
           if(s.localId==='chan-dia'){const slam=window.StaffSlam.sample(age,s);rig.position.y=slam.lift;weaponRig.rotation.set(0,0,-slam.staffPitch);weaponRig.position.set(slam.handX,slam.handY,-slam.handZ);leftHand.position.set(-.294,0,0);rightHand.position.set(0,0,0);}
           else{const sweep=window.StaffSweep.sample(age,s);weaponRig.rotation.set(0,sweep.staffYaw,0);weaponRig.position.set(0,sweep.handY,-sweep.handZ);torso.rotation.y=sweep.torsoYaw;}
         }else if(weaponId==='sword'){
-          if(['nhat-kiem','kiem-hoa'].includes(s.localId)){
-            const spec=s.localId==='kiem-hoa'?window.SwordFlower:window.SwordStrike,strike=spec.sample(age),anchor=spec.authoredBlade(T,new T.Vector3(),new T.Vector3(0,0,-1),age);
+          if(['nhat-kiem','kiem-hoa','kiem-khi'].includes(s.localId)){
+            const spec=s.localId==='kiem-khi'?window.SwordQi:s.localId==='kiem-hoa'?window.SwordFlower:window.SwordStrike,strike=spec.sample(age),anchor=spec.authoredBlade(T,new T.Vector3(),new T.Vector3(0,0,-1),age);
             weaponRig.scale.setScalar(.7);weaponRig.quaternion.copy(anchor.rotation);weaponRig.position.copy(anchor.palm).add(new T.Vector3(0,.084,0).applyQuaternion(anchor.rotation));
             rightHand.position.set(0,-.12,0);leftHand.position.copy(weaponRig.worldToLocal(rig.localToWorld(new T.Vector3(-.33,1.56,-.19))));torso.rotation.y=-strike.torsoYaw*strike.weight;
           }

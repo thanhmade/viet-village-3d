@@ -97,7 +97,7 @@
   function onSkillUsed({weaponId,skillId}={}){
    if(!hasGLTF()||!getState().authenticated||!(getState().hp>0)||open)return false;
    // Côn Quét: two-hand sweep pose driven by staff-sweep's timeline.
-   if(['sword.nhat-kiem','sword.kiem-hoa'].includes(skillId))return visual.startSwordStrike?.(skillId)||false;
+   if(['sword.nhat-kiem','sword.kiem-hoa','sword.kiem-khi'].includes(skillId))return visual.startSwordStrike?.(skillId)||false;
    if(skillId==='staff.con-quet')return visual.startStaffSweep?.()||false;
    if(['bow.xuyen-tien','bow.lien-tien','bow.mua-ten'].includes(skillId))return visual.startBowDraw?.(skillId)||false;
    if(skillId==='staff.chan-dia')return visual.startStaffSlam?.()||false;

@@ -1,0 +1,169 @@
+{
+  "schemaVersion": "1.0.0",
+  "skillId": "sword.kiem-khi",
+  "displayName": "Kiếm Khí",
+  "weaponType": "sword",
+  "status": "integrated_pending_target_device_and_alpha_review",
+  "sources": [
+    {
+      "kind": "user_image",
+      "path": "SOURCE-CODE/docs/kiem-khi-reference.png",
+      "sha256": "7c1eaf28a9f2eba81115af4cf51560d819817988d918a082112331801033cc50"
+    },
+    {
+      "kind": "repository_baseline",
+      "branch": "cap-nhat",
+      "commit": "bb6921e9c3725da6ace9f1bf1ed11f570bd4f5f8"
+    }
+  ],
+  "evidence": {
+    "observed": [
+      "Forward sword/hand extension",
+      "Blue-white compression rings",
+      "One pointed sword-qi lance with gold core filaments",
+      "Contact burst shown in reference strip"
+    ],
+    "authored": [
+      "Planted thrust IK",
+      "3.2 second duration",
+      "1.04 second release",
+      "0.52 second flight"
+    ],
+    "not_measurable_from_still": [
+      "Timing",
+      "Damage",
+      "Motion interpolation"
+    ]
+  },
+  "animation": {
+    "modelPaths": [
+      "CHARACTERS/PLAYER/MALE/PLAYER_BASE_MALE_GLB.glb",
+      "CHARACTERS/PLAYER/FEMALE/PLAYER_BASE_FEMALE_GLB.glb"
+    ],
+    "baseClip": "idle",
+    "overlay": "original-bone arm/leg IK driven by SwordQi.sample",
+    "socket": "visual.sockets.right",
+    "weaponScale": 0.7,
+    "bladeTipLocal": [
+      0,
+      1.62,
+      0
+    ],
+    "forwardAxis": "actor +Z, caster -Z",
+    "rootMotion": "stationary gameplay root",
+    "poseDurationSeconds": 2.55
+  },
+  "timeline": {
+    "unit": "seconds",
+    "provenance": "authored design to satisfy full effects request",
+    "duration": 3.2,
+    "release": 1.04,
+    "flightDuration": 0.52,
+    "phases": [
+      {
+        "name": "stance",
+        "start": 0,
+        "end": 0.42
+      },
+      {
+        "name": "compression",
+        "start": 0.42,
+        "end": 0.89
+      },
+      {
+        "name": "thrust",
+        "start": 0.89,
+        "end": 1.04
+      },
+      {
+        "name": "flight",
+        "start": 1.04,
+        "end": 1.56
+      },
+      {
+        "name": "follow_through",
+        "start": 1.56,
+        "end": 1.8
+      },
+      {
+        "name": "recovery",
+        "start": 1.8,
+        "end": 2.55
+      },
+      {
+        "name": "residue",
+        "start": 2.55,
+        "end": 3.2
+      }
+    ]
+  },
+  "gameplay": {
+    "slot": 3,
+    "cooldownSeconds": 2.2,
+    "rangeMeters": 11,
+    "projectileRadiusMeters": 0.35,
+    "balanceProvenance": "existing_config",
+    "cost": "unchanged; no new resource system",
+    "damage": "host only; no new numeric damage",
+    "maxAcceptedTargetsPerCast": 1,
+    "hitIndex": 0,
+    "collision": "swept capsule against targets plus expanded registered wall bounds and sampled terrain",
+    "targetOrder": "nearest first; host may reject candidates",
+    "cooldownStart": "successful cast",
+    "cancellation": "controller cancel removes projectile and VFX; cooldown retained"
+  },
+  "vfxLayers": [
+    "three compression rings",
+    "converging curved qi ribbons",
+    "instanced charge shards",
+    "crossed curved energy blade surfaces",
+    "narrow white core",
+    "gold filigree",
+    "long blue trails",
+    "brief launch star",
+    "confirmed-contact flash",
+    "instanced outward shards",
+    "fading ring residue"
+  ],
+  "quality": {
+    "low": {
+      "segments": 28,
+      "chargeShards": 12,
+      "impactShards": 22,
+      "windStreams": 3
+    },
+    "medium": {
+      "segments": 56,
+      "chargeShards": 28,
+      "impactShards": 54,
+      "windStreams": 6
+    },
+    "high": {
+      "segments": 56,
+      "chargeShards": 28,
+      "impactShards": 54,
+      "windStreams": 6
+    },
+    "sameGameplay": true
+  },
+  "integration": {
+    "engine": "Three.js r160",
+    "entry": "createVillageWeapons.cast(3)",
+    "pose": "startSwordStrike(\"sword.kiem-khi\")",
+    "update": "existing host -> WeaponVFXCore.update(dt)",
+    "runtime": "SOURCE-CODE/js/vfx/sword-qi.js",
+    "icon": "ASSETS/ui/skills/sword/kiem-khi-ice-gold.png",
+    "preview": "SOURCE-CODE/kiem-khi-preview.html"
+  },
+  "audio": {
+    "production": "unchanged; no new audio assets",
+    "preview": "optional synthetic contact sound"
+  },
+  "verification": {
+    "report": "VALIDATION.md",
+    "webgl": "webgl-validation.json",
+    "video": "Kiem-Khi-Kiem.mp4",
+    "targetDeviceFPS": "not measured",
+    "alphaDeployment": "not performed by Codex"
+  }
+}

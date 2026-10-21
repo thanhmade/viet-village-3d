@@ -215,3 +215,20 @@ Thử trên máy tính: `START-GAME.bat --port 8002`, mở URL máy chủ báo (
 Dùng launcher dự án, **không dùng `python -m http.server` tại root**: root chứa ngân hàng đáp án máy chủ và dữ liệu thử theo tài khoản. Launcher và bản build đã chặn chúng. Giữ `.cache/learning-preview/state.json` nếu muốn giữ tiến trình nhiệm vụ thử. Chưa triển khai backend hoặc Rules.
 
 Kiểm thử: `npm run test:learning`, `npm run test:firebase` (demo emulator), `npm test`. Chi tiết: [client, chế độ, dấu NPC và cách thêm gói](SOURCE-CODE/docs/learning-client.md); [kiến trúc backend](firebase/QUEST-BACKEND.md); [nhập gói ban đầu](DOCUMENTS/TV1-HK1-INTEGRATION.md).
+
+
+## Ba chiêu Thương / Giáo — 21/10/2026
+
+| Chiêu | Thời lượng | Đặc trưng |
+| --- | --- | --- |
+| Xuyên Kích | 2,6 giây | Hạ tấn, tụ lực, đâm thương và phóng khí vàng trắng |
+| Thương Phong | 3,2 giây | Một lượt quét ngang, phong nhận xanh ngọc bám đường mũi thương |
+| Phá Trận | 4,2 giây | Thân và thương xoay hai vòng, khí xoắn vàng, dư chấn sát nền |
+
+<img src="ASSETS/ui/skills/spear/xuyen-kich-gold.png" width="110" alt="Icon Xuyên Kích"> <img src="ASSETS/ui/skills/spear/thuong-phong-jade.png" width="110" alt="Icon Thương Phong"> <img src="ASSETS/ui/skills/spear/pha-tran-gold.png" width="110" alt="Icon Phá Trận">
+
+Mã giữ nguyên ID, tầm và hồi chiêu hiện có; dùng hai tay giữ cán, khóa di chuyển trong động tác và không cộng lượt trúng từ các dải sáng. Đổi vũ khí/hủy chiêu dọn VFX và giữ hồi chiêu.
+
+Chạy `npm run test:spear`. Dùng launcher `START-GAME.bat --port 8002`, rồi mở `/SOURCE-CODE/thuong-giao-preview.html` trên URL cục bộ launcher cung cấp. Trang thử dùng GLB và mã hiệu ứng thật; có nam/nữ, ba mức chất lượng, bia/tường/hủy chiêu.
+
+[Thiết kế và ảnh tham chiếu](SOURCE-CODE/docs/thuong-giao/README.md) · [Hướng dẫn Claude](SOURCE-CODE/docs/thuong-giao/CLAUDE-INTEGRATION.md) · [Kết quả kiểm tra](SOURCE-CODE/docs/thuong-giao/QA.md).

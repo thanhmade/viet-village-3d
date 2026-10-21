@@ -114,7 +114,7 @@ test('mọi chiêu hoàn tất đúng sự kiện ở 30 FPS, 60 FPS, delta lệ
         assert.equal(byType('shield-start').length, 1);
         assert.equal(byType('shield-end').length, 1);
         assert.ok(events.indexOf(byType('shield-start')[0]) < events.indexOf(byType('shield-end')[0]));
-      } else if(['bow.xuyen-tien','bow.lien-tien','sword.nhat-kiem','sword.kiem-hoa','sword.kiem-khi'].includes(skill.id)){
+      } else if(['bow.xuyen-tien','bow.lien-tien','sword.nhat-kiem','sword.kiem-hoa','sword.kiem-khi','spear.xuyen-kich','spear.thuong-phong','spear.pha-tran'].includes(skill.id)){
         assert.equal(byType('release').length,skill.id==='bow.lien-tien'?3:1);assert.equal(byType('impact').length,0,'empty scene is a miss');
       } else {
         assert.ok(byType('impact').length >= 1, `${skill.id} không mất va chạm ở delta ${delta}`);

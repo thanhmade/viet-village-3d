@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-21",
+  "icons": [
+    {
+      "skill": "Xuyên Kích",
+      "file": "xuyen-kich-gold.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "bytes": 2666040,
+      "sha256": "69d3d875bc8841e040309c0a8f39561699f2d2a841f16e73d08578fd2b0ff75b",
+      "generated_artwork": true,
+      "runtime_capture": false
+    },
+    {
+      "skill": "Thương Phong",
+      "file": "thuong-phong-jade.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "bytes": 2381873,
+      "sha256": "390abce6af6c62303688b0fb296e2e9c4a28895f0bb272beaea8d859e6fa08f5",
+      "generated_artwork": true,
+      "runtime_capture": false
+    },
+    {
+      "skill": "Phá Trận",
+      "file": "pha-tran-gold.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "bytes": 2605172,
+      "sha256": "73ddddc55693e49faa556cd070bd43fa4f3fa3f3d1b4c3bf34b6e326870cad3a",
+      "generated_artwork": true,
+      "runtime_capture": false
+    }
+  ],
+  "note": "AI-generated icon artwork; original bytes preserved. Runtime captures are separate."
+}

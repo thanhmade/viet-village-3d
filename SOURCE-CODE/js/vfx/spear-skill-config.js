@@ -27,14 +27,14 @@
       "name": "Xuyên Kích",
       "type": "thrust",
       "slot": 1,
-      "duration": 1.05,
-      "activeAt": 0.14,
-      "activeEnd": 0.75,
+      "duration": 2.6,
+      "activeAt": 1.04,
+      "activeEnd": 1.58,
       "cooldown": 1.3,
       "radius": 0.5,
       "range": 6.0,
       "forwardOffset": 0.8,
-      "description": "Đâm thẳng tạo luồng sáng vàng trắng hẹp, tia ngắn và vòng lóe tại điểm kết thúc."
+      "description": "Hạ tấn tụ khí, đâm thương phóng luồng khí vàng trắng hẹp; vòng va chạm chỉ hiện khi trúng mục tiêu hoặc vật cản."
     },
     {
       "id": "spear.thuong-phong",
@@ -42,9 +42,9 @@
       "name": "Thương Phong",
       "type": "sweep",
       "slot": 2,
-      "duration": 1.35,
-      "activeAt": 0.15,
-      "activeEnd": 0.95,
+      "duration": 3.2,
+      "activeAt": 1.05,
+      "activeEnd": 1.78,
       "cooldown": 2.0,
       "radius": 3.8,
       "range": 3.8,
@@ -57,14 +57,14 @@
       "name": "Phá Trận",
       "type": "vortex",
       "slot": 3,
-      "duration": 2.2,
-      "activeAt": 0.25,
-      "activeEnd": 1.85,
+      "duration": 4.2,
+      "activeAt": 1.15,
+      "activeEnd": 2.75,
       "cooldown": 4.0,
       "radius": 4.3,
       "range": 4.3,
       "forwardOffset": 0.0,
-      "description": "Xoay thương tích lực tạo nhiều vòng xoắn vàng trắng theo chiều cao và đá văng."
+      "description": "Tụ lực, xoay thân cùng thương hai vòng giữa các dải khí vàng, kết thúc bằng dư chấn sát nền; mỗi mục tiêu được xác nhận tối đa một lần."
     }
   ]
 };

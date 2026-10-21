@@ -1,0 +1,1130 @@
+{
+  "browser": "Chromium133 / ANGLE SwiftShader",
+  "encodedFPS": 24,
+  "frames": 292,
+  "checks": [
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "xuyen-kich",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 57,
+        "triangles": 31487
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "xuyen-kich",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [
+        "wall"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 30595
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "xuyen-kich",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 50,
+        "triangles": 31267
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "thuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 56,
+        "triangles": 31027
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "thuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 53,
+        "triangles": 30939
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "thuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 30807
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "pha-tran",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 51,
+        "triangles": 31683
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "pha-tran",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 52,
+        "triangles": 31695
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "pha-tran",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 48,
+        "triangles": 31563
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "xuyen-kich",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 57,
+        "triangles": 32915
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "xuyen-kich",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [
+        "wall"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 31123
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "xuyen-kich",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 50,
+        "triangles": 32695
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "thuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 58,
+        "triangles": 32377
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "thuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 55,
+        "triangles": 32289
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "thuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 51,
+        "triangles": 32157
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "pha-tran",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 52,
+        "triangles": 34275
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "pha-tran",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 53,
+        "triangles": 34287
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "pha-tran",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 34155
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "xuyen-kich",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 57,
+        "triangles": 32915
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "xuyen-kich",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [
+        "wall"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 31123
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "xuyen-kich",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 50,
+        "triangles": 32695
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "thuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 58,
+        "triangles": 32377
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "thuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 55,
+        "triangles": 32289
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "thuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 51,
+        "triangles": 32157
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "pha-tran",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 52,
+        "triangles": 34275
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "pha-tran",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 53,
+        "triangles": 34287
+      }
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "pha-tran",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 34155
+      }
+    },
+    {
+      "gender": "male",
+      "skill": "xuyen-kich",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "male",
+      "skill": "thuong-phong",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "male",
+      "skill": "pha-tran",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "xuyen-kich",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 57,
+        "triangles": 30390
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "xuyen-kich",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [
+        "wall"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 29498
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "xuyen-kich",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 50,
+        "triangles": 30170
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "thuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 56,
+        "triangles": 29930
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "thuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 53,
+        "triangles": 29842
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "thuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 29710
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "pha-tran",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 51,
+        "triangles": 30586
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "pha-tran",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 52,
+        "triangles": 30598
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "pha-tran",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 48,
+        "triangles": 30466
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "xuyen-kich",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 57,
+        "triangles": 31818
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "xuyen-kich",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [
+        "wall"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 30026
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "xuyen-kich",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 50,
+        "triangles": 31598
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "thuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 58,
+        "triangles": 31280
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "thuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 55,
+        "triangles": 31192
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "thuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 51,
+        "triangles": 31060
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "pha-tran",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 52,
+        "triangles": 33178
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "pha-tran",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 53,
+        "triangles": 33190
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "pha-tran",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 33058
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "xuyen-kich",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 57,
+        "triangles": 31818
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "xuyen-kich",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [
+        "wall"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 30026
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "xuyen-kich",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.xuyen-kich"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 50,
+        "triangles": 31598
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "thuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 58,
+        "triangles": 31280
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "thuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 55,
+        "triangles": 31192
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "thuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.thuong-phong"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 51,
+        "triangles": 31060
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "pha-tran",
+      "scenario": "hit",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 1,
+      "impacts": [
+        "target"
+      ],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 52,
+        "triangles": 33178
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "pha-tran",
+      "scenario": "wall",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 53,
+        "triangles": 33190
+      }
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "pha-tran",
+      "scenario": "miss",
+      "cast": {
+        "ok": true,
+        "handle": 1,
+        "skillId": "spear.pha-tran"
+      },
+      "hits": 0,
+      "impacts": [],
+      "active": 0,
+      "busy": false,
+      "peak": {
+        "calls": 49,
+        "triangles": 33058
+      }
+    },
+    {
+      "gender": "female",
+      "skill": "xuyen-kich",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "female",
+      "skill": "thuong-phong",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "female",
+      "skill": "pha-tran",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    }
+  ],
+  "errors": []
+}

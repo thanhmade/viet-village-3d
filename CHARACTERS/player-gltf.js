@@ -92,11 +92,11 @@
    sweepLegs[side]={upper:findBone('mixamorig:'+prefix+'UpLeg'),lower:findBone('mixamorig:'+prefix+'Leg'),foot:findBone('mixamorig:'+prefix+'Foot')};
   }
   facing.name='player-facing-pose';
-  let staffSweep=null,staffSlam=null,bowDraw=null,swordStrike=null;
+  let staffSweep=null,staffSlam=null,bowDraw=null,swordStrike=null,spearTechnique=null;
   function restoreSweep(){
    for(const [bone,q] of sweepRestore)bone.quaternion.copy(q);sweepRestore.clear();
    for(const [bone,p] of sweepPositions)bone.position.copy(p);sweepPositions.clear();
-   facing.rotation.y=forwardYaw;delete sockets.right.userData.staffSweepGripX;delete sockets.right.userData.staffSlamTime;delete sockets.right.userData.bowDrawTime;delete sockets.right.userData.bowDrawSkillId;delete sockets.right.userData.swordStrikeTime;delete sockets.right.userData.swordStrikeSkillId;
+   facing.rotation.y=forwardYaw;delete sockets.right.userData.staffSweepGripX;delete sockets.right.userData.staffSlamTime;delete sockets.right.userData.bowDrawTime;delete sockets.right.userData.bowDrawSkillId;delete sockets.right.userData.swordStrikeTime;delete sockets.right.userData.swordStrikeSkillId;delete sockets.right.userData.spearTechniqueTime;delete sockets.right.userData.spearTechniqueSkillId;
   }
 
   function aimBone(bone,child,target){
@@ -267,6 +267,69 @@
    }
    sync();updateSockets();
   }
+  function poseSpearTechnique(){
+   if(!spearTechnique||!global.SpearTechniques?.spec(spearTechnique.skillId))return;
+   sockets.right.userData.spearTechniqueTime=spearTechnique.time;sockets.right.userData.spearTechniqueSkillId=spearTechnique.skillId;
+   const state=global.SpearTechniques.sample(spearTechnique.skillId,spearTechnique.time),weight=state.weight;if(weight<=0)return;
+   const up=new T.Vector3(0,1,0),heading=new T.Quaternion().setFromAxisAngle(up,forwardYaw),weaponRotation=heading.clone().multiply(global.SpearTechniques.rotation(T,spearTechnique.skillId,spearTechnique.time));
+   const feet={};for(const [side,leg] of Object.entries(sweepLegs))if(leg.foot)feet[side]={position:root.worldToLocal(leg.foot.getWorldPosition(new T.Vector3())),rotation:leg.foot.getWorldQuaternion(new T.Quaternion())};
+   for(const bone of [spine,...Object.values(sweepBones).flatMap(a=>[a.upper,a.lower,a.hand]),...Object.values(sweepLegs).flatMap(a=>[a.upper,a.lower,a.foot])])if(bone)sweepRestore.set(bone,bone.quaternion.clone());
+   sweepPositions.set(hips,hips.position.clone());
+   facing.rotation.y=forwardYaw+state.bodyYaw;
+   sync();
+   // Drive the pelvis over the planted front leg. Convert the visual displacement
+   // through the actual rig parent; the gameplay actor/collider never teleports.
+   const drive=new T.Vector3(0,-state.crouch,state.drive).applyQuaternion(heading).applyQuaternion(root.getWorldQuaternion(new T.Quaternion())).applyQuaternion(hips.parent.getWorldQuaternion(new T.Quaternion()).invert()).divide(hips.parent.getWorldScale(new T.Vector3()));
+   hips.position.add(drive);
+   sync();
+   if(spine){
+    // GLB bone-local X is not actor-right. Apply the lean in the heading frame
+    // so both source rigs bend toward the cut instead of arching backward.
+    const basis=root.getWorldQuaternion(new T.Quaternion()).multiply(heading).multiply(new T.Quaternion().setFromAxisAngle(up,state.bodyYaw)),world=spine.getWorldQuaternion(new T.Quaternion());
+    const yawQ=new T.Quaternion().setFromAxisAngle(up.clone().applyQuaternion(basis),state.torsoYaw*weight),leanQ=new T.Quaternion().setFromAxisAngle(new T.Vector3(1,0,0).applyQuaternion(basis),state.lean*weight);
+    spine.quaternion.copy(spine.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(leanQ.multiply(yawQ).multiply(world)));
+   }sync();
+   // Enter the stance on lifted arcs. During Phá Trận each support foot stays
+   // planted until its alternating quarter-turn step; the gameplay root stays still.
+   const ease=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+   for(const [side,leg] of Object.entries(sweepLegs))if(leg.upper&&leg.lower&&leg.foot){
+    const entry=side==='left'?ease(weight*2):ease(weight*2-1),travel=ease((entry-.1)/.7),base=feet[side];
+    const spin=(state.spinProgress||0)*Math.PI*4;
+    let yaw=0,lift=.075*Math.sin(Math.PI*entry);
+    if(spin>0){
+     // Alternate quarter turns, holding on the ground outside the short lift.
+     const q=spin/(Math.PI/2),offset=side==='left'?0:.5,cycle=side==='right'&&q>7.5?7+(q-7.5)*2:Math.max(0,q-offset),i=Math.floor(cycle),u=cycle-i;
+     const motion=ease((u-.12)/.76);yaw=(i+motion)*Math.PI/2;
+     if(q>=8-1e-8)yaw=Math.PI*4;
+     lift+=.105*Math.sin(Math.PI*Math.max(0,Math.min(1,(u-.12)/.76)))*weight;
+    }
+    const target=base.position.clone().add(new T.Vector3((side==='left'?state.stanceWidth:-state.stanceWidth)*travel,0,(side==='left'?state.frontStep:state.backStep)*travel).applyQuaternion(heading)).applyAxisAngle(up,yaw);target.y+=lift;
+    const pole=new T.Vector3(side==='right'?-.35:.35,.65,.8).applyAxisAngle(up,forwardYaw+state.bodyYaw);
+    // A broad single sweep pivots the soles in place; it does not inherit the
+    // continuous orbiting footwork of the two-turn vortex.
+    const footYaw=spearTechnique.skillId==='spear.thuong-phong'?state.bodyYaw*(side==='left'?.55:.40):yaw;
+    const worldYaw=root.getWorldQuaternion(new T.Quaternion()).multiply(new T.Quaternion().setFromAxisAngle(up,footYaw)).multiply(root.getWorldQuaternion(new T.Quaternion()).invert());
+    solveSweepLimb(leg.upper,leg.lower,leg.foot,root.localToWorld(target),root.localToWorld(pole),worldYaw.multiply(base.rotation),Math.min(1,weight*6));
+   }
+   // Blended entry/recovery can dip the sole below ground even with foot IK.
+   // Correct the visual before arm IK so the held blade keeps its world anchors.
+   let soleY=Infinity;for(const sole of soles){sole.mesh.getVertexPosition(sole.index,point).applyMatrix4(sole.mesh.matrixWorld);soleY=Math.min(soleY,point.y);}
+   root.getWorldPosition(groundPoint);root.getWorldScale(rootScale);
+   if(soleY<groundPoint.y){facing.position.y+=(groundPoint.y-soleY)/rootScale.y;sync();}
+   for(const side of ['right','left']){
+    const {upper,lower,hand}=sweepBones[side];if(!upper||!lower)continue;
+    // Both real palms grip the same shaft. The front hand follows the shaft
+    // direction, never an independent guard pose or the decorative VFX ribbon.
+    const palm=new T.Vector3(state.handX,state.handY,state.handZ).applyQuaternion(heading);
+    if(side==='left')palm.add(new T.Vector3(0,state.frontGripDistance,0).applyQuaternion(weaponRotation));
+    const rotation=weaponRotation;
+    const desired=root.getWorldQuaternion(new T.Quaternion()).multiply(rotation).multiply(handCalibration[side].restInverse.clone().invert());
+    const offset=handCalibration[side].palm.clone().multiply(hand.getWorldScale(new T.Vector3())).applyQuaternion(desired),target=root.localToWorld(palm).sub(offset);
+    const pole=root.localToWorld(new T.Vector3(side==='right'?-.85:.75,side==='right'?1.15:1.18,-.10).applyAxisAngle(up,state.bodyYaw).applyQuaternion(heading));
+    solveSweepLimb(upper,lower,hand,target,pole,desired,weight);
+   }
+   sync();updateSockets();
+  }
   let controllerJump=false;
   function pose(){
    hips.position.x=hipAnchor.x;hips.position.z=hipAnchor.z;facing.position.y=baseGroundY;sync();
@@ -275,7 +338,7 @@
    // During gameplay the collider supplies jump height, never add the GLB's
    // authored elevation a second time. Preview still retains authored motion.
    if(lowest<groundPoint.y||(controllerJump&&Number.isFinite(lowest))){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-lowest)/rootScale.y;sync();}
-   updateSockets();poseStaffSweep();poseStaffSlam();poseBowDraw();poseSwordStrike();
+   updateSockets();poseStaffSweep();poseStaffSlam();poseBowDraw();poseSwordStrike();poseSpearTechnique();
    if(staffSweep){
     let minimum=Infinity;for(const sole of soles){sole.mesh.getVertexPosition(sole.index,point).applyMatrix4(sole.mesh.matrixWorld);minimum=Math.min(minimum,point.y);}
     if(minimum<groundPoint.y){root.getWorldScale(rootScale);facing.position.y+=(groundPoint.y-minimum)/rootScale.y;sync();updateSockets();}
@@ -306,57 +369,62 @@
   }
   function finished(event){if(event.action===current)pendingFinished=event.action;}
   mixer.addEventListener('finished',finished);
-  function returnToIdle(){if(disposed)return false;staffSweep=null;staffSlam=null;bowDraw=null;swordStrike=null;restoreSweep();speed=0;const returning=mode==='once';transition('idle','locomotion');if(returning)returningUntil=mixer.time+fadeDuration;pose();return true;}
+  function returnToIdle(){if(disposed)return false;staffSweep=null;staffSlam=null;bowDraw=null;swordStrike=null;spearTechnique=null;restoreSweep();speed=0;const returning=mode==='once';transition('idle','locomotion');if(returning)returningUntil=mixer.time+fadeDuration;pose();return true;}
   pose();
   return {
    root,mixer,clips:Object.freeze(animations.map(clip=>Object.freeze({name:clip.name,duration:clip.duration}))),hands,sockets,
    stats:Object.freeze({modelId,height,sourceHeight,scale:height/sourceHeight,vertices,triangles,texturedMeshes,bones:new Set([...skeletons].flatMap(s=>s.bones)).size,footProbes:soles.length,forward:'+Z',forwardYaw,rootMotion:'Hips X/Z locked to idle; authored Y retained',handNames:{right:hands.right.name,left:hands.left.name},socketCalibration:'source-skeleton-idle'}),
-   setLocomotion(value){if(disposed)return false;speed=staffSlam||bowDraw||swordStrike?0:Number.isFinite(value)?Math.max(0,value):0;if(mode==='locomotion'){
+   setLocomotion(value){if(disposed)return false;speed=staffSlam||bowDraw||swordStrike||spearTechnique?0:Number.isFinite(value)?Math.max(0,value):0;if(mode==='locomotion'){
     transition(locomotion(),'locomotion');const name=current.getClip().name;
     current.setEffectiveTimeScale(name==='idle'?1:Math.max(.45,Math.min(1.35,speed/(name==='run'?6.5:4.5))));
    }return true;},
-   startSwordStrike(skillId='sword.nhat-kiem'){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||!swordPoseSpec(skillId)||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;swordStrike={time:0,skillId};pose();return true;},
+   startSpearTechnique(skillId='spear.xuyen-kich'){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||spearTechnique||!global.SpearTechniques?.spec(skillId)||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;spearTechnique={time:0,skillId};pose();return true;},
+   cancelSpearTechnique(){if(disposed||!spearTechnique)return;spearTechnique=null;restoreSweep();pose();},
+   startSwordStrike(skillId='sword.nhat-kiem'){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||spearTechnique||!swordPoseSpec(skillId)||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;swordStrike={time:0,skillId};pose();return true;},
    cancelSwordStrike(){if(disposed||!swordStrike)return;swordStrike=null;restoreSweep();pose();},
-   startBowDraw(skillId='bow.xuyen-tien'){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||!bowPoseSpec(skillId)||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;bowDraw={time:0,skillId};pose();return true;},
+   startBowDraw(skillId='bow.xuyen-tien'){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||spearTechnique||!bowPoseSpec(skillId)||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;bowDraw={time:0,skillId};pose();return true;},
    cancelBowDraw(){if(disposed||!bowDraw)return;bowDraw=null;restoreSweep();pose();},
-   startStaffSlam(){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||!global.StaffSlam||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;staffSlam={time:0};pose();return true;},
+   startStaffSlam(){if(disposed||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||spearTechnique||!global.StaffSlam||controllerJump)return false;restoreSweep();transition('idle','locomotion');speed=0;staffSlam={time:0};pose();return true;},
    cancelStaffSlam(){if(disposed||!staffSlam)return;staffSlam=null;restoreSweep();pose();},
-   startStaffSweep(){if(disposed||mode!=='locomotion'||staffSweep||staffSlam||bowDraw||swordStrike||!global.StaffSweep||controllerJump)return false;staffSweep={time:0};pose();return true;},
-   cancelStaffSweep(){if(disposed||!staffSweep)return;staffSweep=null;staffSlam=null;bowDraw=null;swordStrike=null;restoreSweep();pose();},
-   startJump(duration){if(disposed||mode!=='locomotion'||staffSweep||staffSlam||bowDraw||swordStrike||mixer.time<returningUntil)return false;
+   startStaffSweep(){if(disposed||mode!=='locomotion'||staffSweep||staffSlam||bowDraw||swordStrike||spearTechnique||!global.StaffSweep||controllerJump)return false;staffSweep={time:0};pose();return true;},
+   cancelStaffSweep(){if(disposed||!staffSweep)return;staffSweep=null;staffSlam=null;bowDraw=null;swordStrike=null;spearTechnique=null;restoreSweep();pose();},
+   startJump(duration){if(disposed||mode!=='locomotion'||staffSweep||staffSlam||bowDraw||swordStrike||spearTechnique||mixer.time<returningUntil)return false;
     controllerJump=true;transition('jump','once');current.setEffectiveTimeScale(current.getClip().duration/Math.max(.2,duration));return true;},
    endJump(){if(disposed)return;controllerJump=false;if(mode==='once'&&current.getClip().name==='jump'){transition(locomotion(),'locomotion');returningUntil=mixer.time+fadeDuration;}},
-   playOnce(name){if(disposed||staffSweep||staffSlam||bowDraw||swordStrike||mode!=='locomotion'||mixer.time<returningUntil||!clipMap.has(name))return false;return transition(name,'once');},
+   playOnce(name){if(disposed||staffSweep||staffSlam||bowDraw||swordStrike||spearTechnique||mode!=='locomotion'||mixer.time<returningUntil||!clipMap.has(name))return false;return transition(name,'once');},
    // One part of a clip (Hộ Thân / legacy preview): starts at `from`, returns to locomotion at `to`.
    // `force` may cut another one-shot (skill after skill), never defeat, a preview,
    // the two-hand Côn Quét pose or a controller jump.
    playSegment(name,{from=0,to=Infinity,force=false}={}){
-    if(disposed||!clipMap.has(name)||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||controllerJump)return false;
+    if(disposed||!clipMap.has(name)||mode==='defeat'||mode==='preview'||staffSweep||staffSlam||bowDraw||swordStrike||spearTechnique||controllerJump)return false;
     if(!force&&(mode!=='locomotion'||mixer.time<returningUntil))return false;
     const duration=clipMap.get(name).duration,start=Math.max(0,Math.min(Number.isFinite(from)?from:0,duration)),end=Math.min(duration,Number.isFinite(to)?to:duration);
     if(!(end>start))return false;
     transition(name,'once');current.time=start;segmentEnd=end<duration?end:Infinity;return true;
    },
-   preview(name){if(disposed||!clipMap.has(name))return false;staffSweep=null;staffSlam=null;bowDraw=null;swordStrike=null;restoreSweep();return transition(name,'preview');},
+   preview(name){if(disposed||!clipMap.has(name))return false;staffSweep=null;staffSlam=null;bowDraw=null;swordStrike=null;spearTechnique=null;restoreSweep();return transition(name,'preview');},
    pausePreview(){if(disposed||mode!=='preview')return false;pausedPreview=true;return true;},
    resumePreview(){if(disposed||mode!=='preview'||current.paused)return false;pausedPreview=false;return true;},
    returnToIdle,
    setDefeatClip(name){if(disposed||!['defeat_02','defeat_03'].includes(name)||reviewedDefeats.size!==2)return false;defeatClip=name;return true;},
-   playDefeat(){if(disposed||!defeatClip)return false;staffSweep=null;staffSlam=null;bowDraw=null;swordStrike=null;restoreSweep();if(mode==='defeat')return true;return transition(defeatClip,'defeat');},
-   get state(){return {clip:current.getClip().name,time:current.time,busy:!!staffSweep||!!staffSlam||!!bowDraw||!!swordStrike||mode!=='locomotion'||mixer.time<returningUntil,preview:mode==='preview',paused:pausedPreview||current.paused,defeatClip,reviewedDefeats:[...reviewedDefeats],mode,activeActions:[...actions.values()].filter(action=>action.isScheduled()).length};},
+   playDefeat(){if(disposed||!defeatClip)return false;staffSweep=null;staffSlam=null;bowDraw=null;swordStrike=null;spearTechnique=null;restoreSweep();if(mode==='defeat')return true;return transition(defeatClip,'defeat');},
+   get state(){return {clip:current.getClip().name,time:current.time,busy:!!staffSweep||!!staffSlam||!!bowDraw||!!swordStrike||!!spearTechnique||mode!=='locomotion'||mixer.time<returningUntil,preview:mode==='preview',paused:pausedPreview||current.paused,defeatClip,reviewedDefeats:[...reviewedDefeats],mode,activeActions:[...actions.values()].filter(action=>action.isScheduled()).length};},
    update(dt){
     if(disposed||!Number.isFinite(dt)||dt<0)return;
     restoreSweep();if(staffSweep){staffSweep.time+=dt;if(staffSweep.time+1e-7>=global.StaffSweep.duration)staffSweep=null;}
+    let spearFinished=null;
+    if(spearTechnique){spearTechnique.time+=dt;const duration=global.SpearTechniques.spec(spearTechnique.skillId).poseDuration;if(spearTechnique.time+1e-7>=duration){spearFinished={skillId:spearTechnique.skillId,duration};spearTechnique=null;}}
     let swordFinished=null;
     if(swordStrike){swordStrike.time+=dt;if(swordStrike.time+1e-7>=swordPoseSpec(swordStrike.skillId).poseDuration){swordFinished={skillId:swordStrike.skillId,duration:swordPoseSpec(swordStrike.skillId).poseDuration};swordStrike=null;}}
     let bowFinished=null;
     if(bowDraw){bowDraw.time+=dt;if(bowDraw.time+1e-7>=bowPoseSpec(bowDraw.skillId).poseDuration){bowFinished={skillId:bowDraw.skillId,duration:bowPoseSpec(bowDraw.skillId).poseDuration};bowDraw=null;}}
     let slamFinished=false;
     if(staffSlam){staffSlam.time+=dt;if(staffSlam.time+1e-7>=global.StaffSlam.duration){staffSlam=null;slamFinished=true;}}
-    // Hold the idle clip under a sword strike once any walk→idle blend has settled. Its
+    // Hold idle under a planted sword or spear pose after the walk→idle blend. Its
     // 15 s loop shuffles both feet (up to ~30 cm); the foot IK base followed it and skated
     // the planted feet, then slid them again when the pose handed back to the clip.
-    if(swordStrike&&!outgoing&&current===actions.get('idle')){swordStrike.idleTime??=current.time;current.time=swordStrike.idleTime;}
+    const plantedPose=swordStrike||spearTechnique;
+    if(plantedPose&&!outgoing&&current===actions.get('idle')){plantedPose.idleTime??=current.time;current.time=plantedPose.idleTime;}
     if(!pausedPreview)mixer.update(Math.min(dt,.1));
     if(mode==='once'&&current.time>=segmentEnd)pendingFinished=current;
     if(outgoing&&mixer.time>=fadeEnd){outgoing.stop();outgoing=null;current.stopFading().setEffectiveWeight(1);}
@@ -367,6 +435,7 @@
     }
     pose();
     // Publish the final sample for this frame; cancellation leaves the marker absent.
+    if(spearFinished){sockets.right.userData.spearTechniqueTime=spearFinished.duration;sockets.right.userData.spearTechniqueSkillId=spearFinished.skillId;}
     if(swordFinished){sockets.right.userData.swordStrikeTime=swordFinished.duration;sockets.right.userData.swordStrikeSkillId=swordFinished.skillId;}
     if(slamFinished)sockets.right.userData.staffSlamTime=global.StaffSlam.duration;
     if(bowFinished){sockets.right.userData.bowDrawTime=bowFinished.duration;sockets.right.userData.bowDrawSkillId=bowFinished.skillId;}

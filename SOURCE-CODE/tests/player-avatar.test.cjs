@@ -326,7 +326,14 @@ test('Male saved profile shares movement, weapons, jump, NPC and map logic while
  h.avatar.onInteraction({type:'npc-close'});
  const weapons=h.context.VietVillageWeapons;assert.equal(weapons.equip('spear'),true);
  const grip=h.run("player.getObjectByName('village-local-weapon')");assert.equal(grip.parent,v.sockets.right);
- assert.equal(weapons.cast(1).ok,true);assert(v.once.includes('slash'));
+ // Dedicated two-hand poses cannot begin during the controller jump.
+ assert.equal(weapons.cast(1).reason,'avatar-busy');for(let i=0;i<30;i++)h.step();
+ const spearPoses=[],spearCancels=[];
+ v.startSpearTechnique=id=>{spearPoses.push(id);v.sockets.right.userData.spearTechniqueTime=0;v.sockets.right.userData.spearTechniqueSkillId=id;return true;};
+ v.cancelSpearTechnique=()=>{spearCancels.push(true);delete v.sockets.right.userData.spearTechniqueTime;delete v.sockets.right.userData.spearTechniqueSkillId;};
+ assert.equal(weapons.cast(1).ok,true);assert.deepEqual(spearPoses,['spear.xuyen-kich']);assert(!v.once.includes('slash'));weapons.equip('spear');
+ for(const skillId of ['spear.xuyen-kich','spear.thuong-phong','spear.pha-tran']){assert.equal(h.avatar.onSkillUsed({weaponId:'spear',skillId}),true);h.avatar.cancelSkillPose();}
+ assert.deepEqual(spearPoses,['spear.xuyen-kich','spear.xuyen-kich','spear.thuong-phong','spear.pha-tran']);assert(spearCancels.length>=4);
  h.context.VietVillageJourney.takeDamage(11);h.step();assert(v.once.includes('hit_to_body_01'));
  const hp=h.context.VietVillageJourney.getState().hp;
  assert.equal(h.context.VietVillageRegions.travelTo('lang-tan-thu','village-entry').ok,true);

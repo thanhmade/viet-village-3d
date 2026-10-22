@@ -1,0 +1,80 @@
+{
+  "file": "Riu-3-Chieu.mp4",
+  "browser": "Chromium133 / ANGLE SwiftShader",
+  "encodedFPS": 24,
+  "frameCount": 311,
+  "quality": "high",
+  "scenario": "hit",
+  "gender": "male",
+  "sequences": [
+    {
+      "skill": "khai-son",
+      "duration": 3.4,
+      "startFrame": 0,
+      "endFrame": 96,
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "contacts": [
+        {
+          "kind": "target",
+          "target": "axe-preview-target-0"
+        }
+      ],
+      "clock": 3.7083333333333286
+    },
+    {
+      "skill": "pha-giap",
+      "duration": 2.8,
+      "startFrame": 97,
+      "endFrame": 179,
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "contacts": [
+        {
+          "kind": "target",
+          "target": "axe-preview-target-0"
+        }
+      ],
+      "clock": 3.1249999999999973
+    },
+    {
+      "skill": "cuong-phong",
+      "duration": 4.8,
+      "startFrame": 180,
+      "endFrame": 310,
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "contacts": [
+        {
+          "kind": "target",
+          "target": "axe-preview-target-0"
+        }
+      ],
+      "clock": 5.125000000000002
+    }
+  ],
+  "probe": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "24/1",
+        "nb_frames": "311"
+      }
+    ],
+    "format": {
+      "duration": "12.958333",
+      "size": "2367265"
+    }
+  },
+  "errors": [],
+  "performanceFPSClaim": false,
+  "sha256": "6192b1b5742a6aa3b0c277f94d331e6246886cbe30aa28e9d00bc159fe05e493",
+  "status": "final_capture_after_pose_clearance"
+}

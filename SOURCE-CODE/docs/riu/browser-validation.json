@@ -1,0 +1,3034 @@
+{
+  "browser": "Chromium133 / ANGLE SwiftShader",
+  "screenshotViewport": [
+    1440,
+    900
+  ],
+  "matrixDrawingBuffer": [
+    480,
+    300
+  ],
+  "matrixLogicStepSeconds": 0.03333333333333333,
+  "matrixRenderStride": 10,
+  "checks": [
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "khai-son",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 46
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "khai-son",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 34
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "khai-son",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 41
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "pha-giap",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 44
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "pha-giap",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 31
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "pha-giap",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 40
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "cuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 42
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "cuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 43
+    },
+    {
+      "gender": "male",
+      "quality": "low",
+      "skill": "cuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 39
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "khai-son",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 53
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "khai-son",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 34
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "khai-son",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 48
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "pha-giap",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 51
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "pha-giap",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 31
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "pha-giap",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 47
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "cuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 48
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "cuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 49
+    },
+    {
+      "gender": "male",
+      "quality": "medium",
+      "skill": "cuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 45
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "khai-son",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 53
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "khai-son",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 34
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "khai-son",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 48
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "pha-giap",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 51
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "pha-giap",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 31
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "pha-giap",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 47
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "cuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 48
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "cuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 49
+    },
+    {
+      "gender": "male",
+      "quality": "high",
+      "skill": "cuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 45
+    },
+    {
+      "gender": "male",
+      "skill": "khai-son",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "male",
+      "skill": "pha-giap",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "male",
+      "skill": "cuong-phong",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "khai-son",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 46
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "khai-son",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 34
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "khai-son",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 41
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "pha-giap",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 44
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "pha-giap",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 31
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "pha-giap",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 40
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "cuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 42
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "cuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 43
+    },
+    {
+      "gender": "female",
+      "quality": "low",
+      "skill": "cuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 39
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "khai-son",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 53
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "khai-son",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 34
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "khai-son",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 48
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "pha-giap",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 51
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "pha-giap",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 31
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "pha-giap",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 47
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "cuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 48
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "cuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 49
+    },
+    {
+      "gender": "female",
+      "quality": "medium",
+      "skill": "cuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 45
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "khai-son",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 53
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "khai-son",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 34
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "khai-son",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 48
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "pha-giap",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 51
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "pha-giap",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 31
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "pha-giap",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 47
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "cuong-phong",
+      "scenario": "hit",
+      "cast": {
+        "ok": true
+      },
+      "hits": 1,
+      "active": 0,
+      "busy": false,
+      "peak": 48
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "cuong-phong",
+      "scenario": "wall",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 49
+    },
+    {
+      "gender": "female",
+      "quality": "high",
+      "skill": "cuong-phong",
+      "scenario": "miss",
+      "cast": {
+        "ok": true
+      },
+      "hits": 0,
+      "active": 0,
+      "busy": false,
+      "peak": 45
+    },
+    {
+      "gender": "female",
+      "skill": "khai-son",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "female",
+      "skill": "pha-giap",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    },
+    {
+      "gender": "female",
+      "skill": "cuong-phong",
+      "scenario": "cancel",
+      "active": 0,
+      "busy": false,
+      "hits": 0
+    }
+  ],
+  "renders": [
+    {
+      "gender": "male",
+      "skill": "khai-son",
+      "time": 1.53,
+      "events": [
+        {
+          "type": "cast",
+          "time": 0
+        },
+        {
+          "type": "release",
+          "time": 0.9500000000000013
+        },
+        {
+          "type": "target-query",
+          "time": 1.35,
+          "hitIndex": 0
+        },
+        {
+          "type": "hit-window",
+          "time": 1.35,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0"
+        },
+        {
+          "type": "impact",
+          "time": 1.35,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0",
+          "contactKind": "target"
+        },
+        {
+          "type": "ground-pulse",
+          "time": 1.35
+        }
+      ],
+      "calls": 53,
+      "triangles": 30569
+    },
+    {
+      "gender": "male",
+      "skill": "pha-giap",
+      "time": 1.24,
+      "events": [
+        {
+          "type": "cast",
+          "time": 0
+        },
+        {
+          "type": "release",
+          "time": 0.7833333333333341
+        },
+        {
+          "type": "target-query",
+          "time": 1.0833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "hit-window",
+          "time": 1.0833333333333344,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0"
+        },
+        {
+          "type": "impact",
+          "time": 1.0833333333333344,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0",
+          "contactKind": "target"
+        },
+        {
+          "type": "ground-pulse",
+          "time": 1.0833333333333344
+        }
+      ],
+      "calls": 54,
+      "triangles": 30665
+    },
+    {
+      "gender": "male",
+      "skill": "cuong-phong",
+      "time": 2.35,
+      "events": [
+        {
+          "type": "cast",
+          "time": 0
+        },
+        {
+          "type": "release",
+          "time": 0.6500000000000004
+        },
+        {
+          "type": "target-query",
+          "time": 0.6500000000000004,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.6666666666666671,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.6666666666666671,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.6833333333333338,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.6833333333333338,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7000000000000005,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7000000000000005,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7166666666666672,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7166666666666672,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.733333333333334,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.733333333333334,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7500000000000007,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7500000000000007,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7666666666666674,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7666666666666674,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7833333333333341,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7833333333333341,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8000000000000008,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8000000000000008,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8166666666666675,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8166666666666675,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8333333333333343,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8333333333333343,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.850000000000001,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.850000000000001,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8666666666666677,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8666666666666677,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9000000000000011,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9000000000000011,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9166666666666679,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9166666666666679,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9333333333333346,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9333333333333346,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9500000000000013,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9500000000000013,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.966666666666668,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.966666666666668,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9833333333333347,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9833333333333347,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0000000000000013,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0000000000000013,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.016666666666668,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.016666666666668,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0333333333333345,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0333333333333345,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0500000000000012,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0500000000000012,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0666666666666678,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0666666666666678,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.100000000000001,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.100000000000001,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1166666666666676,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1166666666666676,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1333333333333342,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1333333333333342,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1500000000000008,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1500000000000008,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1666666666666674,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1666666666666674,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.183333333333334,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.183333333333334,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2000000000000006,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2000000000000006,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2166666666666672,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2166666666666672,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2333333333333338,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2333333333333338,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2500000000000004,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2500000000000004,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.266666666666667,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.266666666666667,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2833333333333337,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2833333333333337,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3000000000000003,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3000000000000003,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3166666666666669,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3166666666666669,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3333333333333335,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3333333333333335,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.35,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.35,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3666666666666667,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3666666666666667,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3833333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3833333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4166666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4166666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4333333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4333333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4499999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4499999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "hit-window",
+          "time": 1.4499999999999997,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0"
+        },
+        {
+          "type": "impact",
+          "time": 1.4499999999999997,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0",
+          "contactKind": "target"
+        },
+        {
+          "type": "target-query",
+          "time": 1.4666666666666663,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4666666666666663,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.483333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.483333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4999999999999996,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4999999999999996,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5166666666666662,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5166666666666662,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5333333333333328,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5333333333333328,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5499999999999994,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5499999999999994,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.566666666666666,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.566666666666666,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5833333333333326,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5833333333333326,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5999999999999992,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5999999999999992,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6166666666666658,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6166666666666658,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6333333333333324,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6333333333333324,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.649999999999999,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.649999999999999,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6666666666666656,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6666666666666656,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6833333333333322,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6833333333333322,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6999999999999988,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6999999999999988,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7166666666666655,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7166666666666655,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.733333333333332,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.733333333333332,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7499999999999987,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7499999999999987,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7666666666666653,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7666666666666653,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7833333333333319,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7833333333333319,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7999999999999985,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7999999999999985,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.816666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.816666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8333333333333317,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8333333333333317,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8499999999999983,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8499999999999983,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.866666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.866666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8833333333333315,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8833333333333315,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8999999999999981,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8999999999999981,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9166666666666647,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9166666666666647,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9333333333333313,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9333333333333313,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.949999999999998,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.949999999999998,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9666666666666646,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9666666666666646,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9833333333333312,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9833333333333312,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9999999999999978,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9999999999999978,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0166666666666644,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0166666666666644,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.033333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.033333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0499999999999976,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0499999999999976,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.066666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.066666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.083333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.083333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0999999999999974,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0999999999999974,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.116666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.116666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1333333333333306,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1333333333333306,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1499999999999972,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1499999999999972,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.166666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.166666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1833333333333305,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1833333333333305,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.199999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.199999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2166666666666637,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2166666666666637,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2333333333333303,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2333333333333303,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.249999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.249999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2666666666666635,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2666666666666635,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.28333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.28333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2999999999999967,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2999999999999967,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.3166666666666633,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.3166666666666633,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.33333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.33333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.3499999999999965,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.3499999999999965,
+          "hitIndex": 0
+        }
+      ],
+      "calls": 45,
+      "triangles": 36503
+    },
+    {
+      "gender": "female",
+      "skill": "khai-son",
+      "time": 1.53,
+      "events": [
+        {
+          "type": "cast",
+          "time": 0
+        },
+        {
+          "type": "release",
+          "time": 0.9500000000000013
+        },
+        {
+          "type": "target-query",
+          "time": 1.35,
+          "hitIndex": 0
+        },
+        {
+          "type": "hit-window",
+          "time": 1.35,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0"
+        },
+        {
+          "type": "impact",
+          "time": 1.35,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0",
+          "contactKind": "target"
+        },
+        {
+          "type": "ground-pulse",
+          "time": 1.35
+        }
+      ],
+      "calls": 53,
+      "triangles": 29472
+    },
+    {
+      "gender": "female",
+      "skill": "pha-giap",
+      "time": 1.24,
+      "events": [
+        {
+          "type": "cast",
+          "time": 0
+        },
+        {
+          "type": "release",
+          "time": 0.7833333333333341
+        },
+        {
+          "type": "target-query",
+          "time": 1.0833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "hit-window",
+          "time": 1.0833333333333344,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0"
+        },
+        {
+          "type": "impact",
+          "time": 1.0833333333333344,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0",
+          "contactKind": "target"
+        },
+        {
+          "type": "ground-pulse",
+          "time": 1.0833333333333344
+        }
+      ],
+      "calls": 54,
+      "triangles": 29568
+    },
+    {
+      "gender": "female",
+      "skill": "cuong-phong",
+      "time": 2.35,
+      "events": [
+        {
+          "type": "cast",
+          "time": 0
+        },
+        {
+          "type": "release",
+          "time": 0.6500000000000004
+        },
+        {
+          "type": "target-query",
+          "time": 0.6500000000000004,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.6666666666666671,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.6666666666666671,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.6833333333333338,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.6833333333333338,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7000000000000005,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7000000000000005,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7166666666666672,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7166666666666672,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.733333333333334,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.733333333333334,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7500000000000007,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7500000000000007,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7666666666666674,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7666666666666674,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7833333333333341,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.7833333333333341,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8000000000000008,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8000000000000008,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8166666666666675,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8166666666666675,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8333333333333343,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8333333333333343,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.850000000000001,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.850000000000001,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8666666666666677,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8666666666666677,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.8833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9000000000000011,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9000000000000011,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9166666666666679,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9166666666666679,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9333333333333346,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9333333333333346,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9500000000000013,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9500000000000013,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.966666666666668,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.966666666666668,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9833333333333347,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 0.9833333333333347,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0000000000000013,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0000000000000013,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.016666666666668,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.016666666666668,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0333333333333345,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0333333333333345,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0500000000000012,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0500000000000012,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0666666666666678,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0666666666666678,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.0833333333333344,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.100000000000001,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.100000000000001,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1166666666666676,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1166666666666676,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1333333333333342,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1333333333333342,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1500000000000008,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1500000000000008,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1666666666666674,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.1666666666666674,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.183333333333334,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.183333333333334,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2000000000000006,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2000000000000006,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2166666666666672,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2166666666666672,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2333333333333338,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2333333333333338,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2500000000000004,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2500000000000004,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.266666666666667,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.266666666666667,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2833333333333337,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.2833333333333337,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3000000000000003,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3000000000000003,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3166666666666669,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3166666666666669,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3333333333333335,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3333333333333335,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.35,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.35,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3666666666666667,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3666666666666667,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3833333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.3833333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4166666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4166666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4333333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4333333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4499999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4499999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "hit-window",
+          "time": 1.4499999999999997,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0"
+        },
+        {
+          "type": "impact",
+          "time": 1.4499999999999997,
+          "hitIndex": 0,
+          "targetId": "axe-preview-target-0",
+          "contactKind": "target"
+        },
+        {
+          "type": "target-query",
+          "time": 1.4666666666666663,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4666666666666663,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.483333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.483333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4999999999999996,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.4999999999999996,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5166666666666662,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5166666666666662,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5333333333333328,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5333333333333328,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5499999999999994,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5499999999999994,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.566666666666666,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.566666666666666,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5833333333333326,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5833333333333326,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5999999999999992,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.5999999999999992,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6166666666666658,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6166666666666658,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6333333333333324,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6333333333333324,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.649999999999999,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.649999999999999,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6666666666666656,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6666666666666656,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6833333333333322,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6833333333333322,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6999999999999988,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.6999999999999988,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7166666666666655,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7166666666666655,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.733333333333332,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.733333333333332,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7499999999999987,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7499999999999987,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7666666666666653,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7666666666666653,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7833333333333319,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7833333333333319,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7999999999999985,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.7999999999999985,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.816666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.816666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8333333333333317,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8333333333333317,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8499999999999983,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8499999999999983,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.866666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.866666666666665,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8833333333333315,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8833333333333315,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8999999999999981,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.8999999999999981,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9166666666666647,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9166666666666647,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9333333333333313,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9333333333333313,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.949999999999998,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.949999999999998,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9666666666666646,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9666666666666646,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9833333333333312,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9833333333333312,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9999999999999978,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 1.9999999999999978,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0166666666666644,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0166666666666644,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.033333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.033333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0499999999999976,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0499999999999976,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.066666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.066666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.083333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.083333333333331,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0999999999999974,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.0999999999999974,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.116666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.116666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1333333333333306,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1333333333333306,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1499999999999972,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1499999999999972,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.166666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.166666666666664,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1833333333333305,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.1833333333333305,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.199999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.199999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2166666666666637,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2166666666666637,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2333333333333303,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2333333333333303,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.249999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.249999999999997,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2666666666666635,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2666666666666635,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.28333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.28333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2999999999999967,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.2999999999999967,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.3166666666666633,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.3166666666666633,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.33333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.33333333333333,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.3499999999999965,
+          "hitIndex": 0
+        },
+        {
+          "type": "target-query",
+          "time": 2.3499999999999965,
+          "hitIndex": 0
+        }
+      ],
+      "calls": 45,
+      "triangles": 35406
+    }
+  ],
+  "errors": []
+}

@@ -96,7 +96,8 @@
   }
   function onSkillUsed({weaponId,skillId}={}){
    if(!hasGLTF()||!getState().authenticated||!(getState().hp>0)||open)return false;
-   // Côn Quét: two-hand sweep pose driven by staff-sweep's timeline.
+   // Dedicated weapon poses use the same clock as their registered VFX.
+   if(['axe.khai-son','axe.pha-giap','axe.cuong-phong'].includes(skillId))return visual.startAxeTechnique?.(skillId)||false;
    if(['spear.xuyen-kich','spear.thuong-phong','spear.pha-tran'].includes(skillId))return visual.startSpearTechnique?.(skillId)||false;
    if(['sword.nhat-kiem','sword.kiem-hoa','sword.kiem-khi'].includes(skillId))return visual.startSwordStrike?.(skillId)||false;
    if(skillId==='staff.con-quet')return visual.startStaffSweep?.()||false;
@@ -109,7 +110,7 @@
    return false;
   }
   function cancelSkillPose(){
-   visual?.cancelStaffSweep?.();visual?.cancelStaffSlam?.();visual?.cancelBowDraw?.();visual?.cancelSwordStrike?.();visual?.cancelSpearTechnique?.();
+   visual?.cancelStaffSweep?.();visual?.cancelStaffSlam?.();visual?.cancelBowDraw?.();visual?.cancelSwordStrike?.();visual?.cancelSpearTechnique?.();visual?.cancelAxeTechnique?.();
    if(skillPose?.visual===visual&&visual?.state.mode==='once'&&visual.state.clip===skillPose.clip)visual.returnToIdle();
    skillPose=null;
   }

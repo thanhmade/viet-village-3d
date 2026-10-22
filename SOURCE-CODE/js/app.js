@@ -195,7 +195,7 @@ villageWeapons=window.createVillageWeapons({THREE,scene,body,rightArm,leftArm,le
  getCasterHeight:()=>playerAvatar?.height||2.35,
  getProjectileBounds:projectileBounds,
  onVfxEvent:event=>{if((event.type==='impact'||event.type==='ground-pulse')&&event.shake>0)addCameraShake(event.shake);},
- onSkillUsed:skill=>{playerJourney?.recordSkillUse();if(!['staff.con-quet','staff.chan-dia','bow.xuyen-tien','bow.lien-tien','bow.mua-ten','sword.nhat-kiem','sword.kiem-hoa','sword.kiem-khi','spear.xuyen-kich','spear.thuong-phong','spear.pha-tran'].includes(skill.skillId))window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
+ onSkillUsed:skill=>{playerJourney?.recordSkillUse();if(!['staff.con-quet','staff.chan-dia','bow.xuyen-tien','bow.lien-tien','bow.mua-ten','sword.nhat-kiem','sword.kiem-hoa','sword.kiem-khi','spear.xuyen-kich','spear.thuong-phong','spear.pha-tran','axe.khai-son','axe.pha-giap','axe.cuong-phong'].includes(skill.skillId))window.VietVillageNPCs?.onSkillUsed();playerAvatar?.onSkillUsed(skill);},
  onSkillHit:event=>window.VietVillageNPCs?.onSkillUsed(event),onSkillCancel:()=>playerAvatar?.cancelSkillPose?.(),
  getGroundY:point=>bridgeHeight(point.x,point.z),
  getState:()=>({authenticated:!!window.VietVillageAuth?.isAuthenticated(),uid:window.VietVillageAuth?.getProfile?.()?.uid||null,maxHp:playerJourney?.getState().maxHp,airborne:!!playerMotion?.airborne,poseBusy:!!playerAvatar?.state?.animation?.busy||!!playerMotion?.airborne,

@@ -138,8 +138,9 @@ test('successful Nhất Kiếm invokes its dedicated pose once and actual HP los
   assert.equal(h.context.VietVillageJourney.takeDamage(10), true); h.step(); h.step();
   assert.deepEqual(visual.once, ['hit_to_body_01']); assert.equal(h.context.VietVillageJourney.getState().hp, 90);
   h.context.VietVillageJourney.healToFull(); h.step(); assert.equal(visual.once.length, 1);
-  weapons.equip('axe');assert.equal(weapons.cast(1).ok,true);assert.deepEqual(visual.once,['hit_to_body_01','slash']);
-  weapons.equip('bow'); assert.equal(weapons.cast(1).ok, true); assert.equal(visual.once.filter(name=>name==='slash').length, 1, 'bow does not play sword slash');
+  const axes=[];visual.startAxeTechnique=id=>{axes.push(id);return true;};
+  weapons.equip('axe');assert.equal(weapons.cast(1).ok,true);assert.deepEqual(axes,['axe.khai-son']);assert.deepEqual(visual.once,['hit_to_body_01']);
+  weapons.equip('bow'); assert.equal(weapons.cast(1).ok, true); assert.equal(visual.once.filter(name=>name==='slash').length, 0, 'dedicated axe and bow poses do not play generic slash');
 });
 
 test('test panel blocks locomotion, casting and portal activation, and closes cleanly', async () => {
@@ -341,7 +342,7 @@ test('Male saved profile shares movement, weapons, jump, NPC and map logic while
  assert.equal(h.avatar.state.modelId,'male-base');assert.equal(h.run('player'),actor);assert.equal(weapons.state.weaponId,'spear');assert.equal(h.context.VietVillageJourney.getState().hp,hp);
 });
 
-test('Hộ Thân keeps its clip; Chấn Địa starts the leap pose; Côn Quét keeps the sweep and other weapons keep slash', async () => {
+test('Hộ Thân keeps its clip; Chấn Địa, Côn Quét and Rìu start dedicated poses', async () => {
   const h = game(); await h.avatar.select('female'); const visual = h.calls.visuals[0], weapons = h.context.VietVillageWeapons;
   const segments = [], sweeps = [], slams=[]; visual.playSegment = (clip, options) => { segments.push({clip, ...options}); return true; };
   visual.startStaffSweep = () => { sweeps.push(true); return true; };
@@ -353,7 +354,8 @@ test('Hộ Thân keeps its clip; Chấn Địa starts the leap pose; Côn Quét 
   const animation = h.context.StaffVFXConfig.animation;
   assert.deepEqual(plain(segments), ['staff.ho-than'].map(id => ({...plain(animation[id]), force: true})));
   assert.equal(slams.length,1);assert.deepEqual(visual.once, [], 'the whole slash clip is not used for the staff');
-  weapons.equip('axe'); assert.equal(weapons.cast(1).ok, true); assert.deepEqual(visual.once, ['slash']);
+  const axes=[];visual.startAxeTechnique=id=>{axes.push(id);return true;};
+  weapons.equip('axe'); assert.equal(weapons.cast(1).ok, true); assert.deepEqual(axes,['axe.khai-son']);assert.deepEqual(visual.once, []);
 });
 
 

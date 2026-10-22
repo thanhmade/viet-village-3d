@@ -127,9 +127,9 @@ Mở **http://localhost:5005/** (tự chuyển đến `SOURCE-CODE/index.html`).
 - **Đổi vũ khí** mở lại bảng trang bị; **Cất vũ khí** kết thúc chế độ diễn họa. Hiệu ứng sử dụng scene, nhân vật, độ cao địa hình và vòng lặp hiện có. Chuyển vào nhà, đổi chế độ xem, mở hộp thoại hoặc mất phiên đăng nhập sẽ dừng hiệu ứng phù hợp.
 - Nút **Diễn họa vũ khí** mở sân luyện riêng tại `SOURCE-CODE/weapons-vfx-demo.html` trên cùng hostname/cổng đang chơi. Sân luyện có chạy lần lượt 15 chiêu, so sánh ảnh, mức chất lượng và điều khiển camera bằng chuột hoặc hai ngón. Đây là trang diễn họa cục bộ, không đọc/ghi hồ sơ Firebase.
 - Mã v2 nằm tại `SOURCE-CODE/js/vfx`, ảnh gốc tại `ASSETS/reference`. Dùng chung Three.js r160 đã có, không tải thêm CDN cho phần VFX. Xem [hướng dẫn mã VFX](SOURCE-CODE/docs/weapons-vfx/README.md).
-- VFX hiện chỉ diễn họa cục bộ: chưa có sát thương, HP, kiểm tra trúng địch hoặc đồng bộ trang bị/chiêu qua phòng multiplayer. Bản sao nhân vật từ xa không mang nhầm trang bị cục bộ.
+- Ở mốc VFX v2 ban đầu, chiêu chỉ diễn họa cục bộ; các bản cập nhật chiêu phía dưới đã bổ sung xác nhận trúng bia. Sát thương quái và đồng bộ chiêu qua phòng multiplayer chưa được hoàn thiện trong phần cập nhật này. Bản sao nhân vật từ xa không mang nhầm trang bị cục bộ.
 - Gói ZIP và hai thư mục giải nén gốc được giữ trên máy, không dùng làm đường dẫn chạy. Các thư mục VFX v1 đã bị xóa trước đợt tích hợp v2; không tự khôi phục hoặc xóa thêm dữ liệu cũ.
-- Cập nhật v2 chưa commit/push, chưa nhập vào `main`, chưa triển khai website hoặc thay đổi Firebase.
+- Ghi chú bàn giao v2 ban đầu: khi đó chưa commit/push, chưa nhập vào `main` hoặc triển khai website. Trạng thái các bản chiêu mới được ghi tại từng mục cập nhật phía dưới.
 
 ## Điều khiển và chức năng
 
@@ -232,3 +232,18 @@ Mã giữ nguyên ID, tầm và hồi chiêu hiện có; dùng hai tay giữ cá
 Chạy `npm run test:spear`. Dùng launcher `START-GAME.bat --port 8002`, rồi mở `/SOURCE-CODE/thuong-giao-preview.html` trên URL cục bộ launcher cung cấp. Trang thử dùng GLB và mã hiệu ứng thật; có nam/nữ, ba mức chất lượng, bia/tường/hủy chiêu.
 
 [Thiết kế và ảnh tham chiếu](SOURCE-CODE/docs/thuong-giao/README.md) · [Hướng dẫn Claude](SOURCE-CODE/docs/thuong-giao/CLAUDE-INTEGRATION.md) · [Kết quả kiểm tra](SOURCE-CODE/docs/thuong-giao/QA.md).
+
+
+## Ba chiêu Rìu — 22/10/2026
+
+| Chiêu | Thời lượng | Đặc trưng |
+| --- | --- | --- |
+| Khai Sơn | 3,4 giây | Nâng rìu, bổ đứng, khe khí vàng và đá văng |
+| Phá Giáp | 2,8 giây | Chém chéo dồn lực, mảnh giáp ở tiếp xúc được xác nhận |
+| Cuồng Phong | 4,8 giây | Thân và rìu xoay bốn vòng trong lốc khí vàng cam |
+
+<img src="ASSETS/ui/skills/axe/khai-son-gold.png" width="110" alt="Icon Khai Sơn"> <img src="ASSETS/ui/skills/axe/pha-giap-ember.png" width="110" alt="Icon Phá Giáp"> <img src="ASSETS/ui/skills/axe/cuong-phong-gold.png" width="110" alt="Icon Cuồng Phong">
+
+Chạy `npm run test:axe`; dùng `START-GAME.bat --port 8002` rồi mở `/SOURCE-CODE/riu-preview.html` trên URL localhost launcher trả về. Cảnh thử dùng GLB, Rìu và VFX thật; có nam/nữ, bia/tường/hụt, chất lượng và tạm dừng. Host hiện ghi nhận luyện chiêu vào bia; hiệu ứng Phá Giáp chưa phải cơ chế giảm phòng thủ của quái.
+
+Nguồn bàn giao trên máy: `H:\CHAT GPT\3D-GAME\SKILL-THAM-CHIEU` (`Riu-3-Chieu.zip` và MP4). [Thiết kế](SOURCE-CODE/docs/riu/README.md) · [Claude](SOURCE-CODE/docs/riu/CLAUDE-INTEGRATION.md) · [Kết quả kiểm tra](SOURCE-CODE/docs/riu/QA.md).

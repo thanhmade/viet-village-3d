@@ -1,0 +1,39 @@
+{
+  "tool": "image_gen.imagegen built-in",
+  "mode": "generate",
+  "createdDate": "2026-10-22",
+  "referencesReviewed": [
+    "upload/image(20261022-152237).png",
+    "upload/image(20261022-152302).png",
+    "upload/image(20261022-152321).png"
+  ],
+  "files": [
+    {
+      "path": "khai-son-gold.png",
+      "prompt": "Use case: stylized-concept. Asset type: final square RPG skill HUD icon, 1024 x 1024. Create one original Vietnamese wuxia fantasy game skill icon for Khai Son, an earth-splitting overhead axe strike. Main silhouette: a large weighty ancient double-edged bronze and dark steel battle axe descending steeply from upper left into a glowing jagged fissure in black rock in the lower center. One brilliant narrow white-gold vertical crescent trail communicates the downward strike; angular obsidian fragments burst outward at the impact point. The axe blade must read as an AXE, with a broad crescent blade on a long dark haft, not a sword. Palette molten gold and amber, warm white edge light against near-black smoky background. Premium hand-painted 3D game icon finish, cinematic directional lighting, high contrast, strong clean centered silhouette readable at 48px. Restrained thin weathered bronze circular rim inset inside the square, same visual weight as classic premium fantasy RPG hotbar icons. Keep outer corners nearly black. No character, no letters, no numbers, no text, no watermark, no collage, no UI mockup. Single finished icon filling the square, no excess tiny details, no full scene, no excessive bloom.",
+      "bytes": 607403,
+      "sha256": "2089d7be685950cde8666f701697e56a89170a5c9cd8361cce8f9a46a99b176e",
+      "assetPath": "ASSETS/ui/skills/axe/khai-son-gold.png"
+    },
+    {
+      "path": "pha-giap-ember.png",
+      "prompt": "Use case: stylized-concept. Asset type: final square RPG skill HUD icon, 1024 x 1024. Create one original Vietnamese wuxia fantasy game skill icon for Pha Giap, armor breaking axe strike. Main silhouette: a heavy ancient bronze and dark steel axe biting diagonally through a broad front-facing dark steel chestplate or shield at the center. The armor is visibly split into three large angular pieces with a bright jagged white-orange fracture and a compact hot impact burst. Axe head in upper right, haft extending upper left or lower left; its broad crescent blade must clearly read as an AXE, not a sword. Focus on unmistakable shattered armor, not a ground fissure. Palette ember orange and deep copper red, warm white sparks against near-black smoky background. Premium hand-painted 3D game icon finish, cinematic lighting, high contrast, simple strong silhouette readable at 48px. Restrained thin weathered bronze circular rim inset inside the square, same visual weight as classic premium fantasy RPG hotbar icons. Keep outer corners nearly black. No character, no letters, no numbers, no text, no watermark, no collage, no UI mockup. Single finished icon filling the square, avoid dense debris and excessive bloom.",
+      "bytes": 593196,
+      "sha256": "a7b6c603f9c69d3938107aaf0b799bad019645124cc7ab6531f76a2efe9c44b9",
+      "assetPath": "ASSETS/ui/skills/axe/pha-giap-ember.png"
+    },
+    {
+      "path": "cuong-phong-gold.png",
+      "prompt": "Use case: stylized-concept. Asset type: final square RPG skill HUD icon, 1024 x 1024. Create one original Vietnamese wuxia fantasy game skill icon for Cuong Phong, spinning axe cyclone. Main silhouette: a strong luminous clockwise spiral of two sweeping gold and amber ribbons forming a clean cyclone vortex with a dark eye at center. A heavy ancient bronze and dark steel battle axe with one clearly visible broad crescent axe head sweeps around the upper right outer curve; its haft follows the arc. A few large dark rock chips and pale smoke wisps follow the spiral to communicate centrifugal force. Prioritize the unmistakable spiral silhouette, avoid looking like vertical strike or shattered shield. Palette molten golden orange, pale golden edge highlights against near-black smoky background. Premium hand-painted 3D game icon finish, cinematic lighting, high contrast, strong centered silhouette readable at 48px. Restrained thin weathered bronze circular rim inset inside the square, same visual weight as classic premium fantasy RPG hotbar icons. Keep outer corners nearly black. No character, no letters, no numbers, no text, no watermark, no collage, no UI mockup. Single finished icon filling the square, no excess tiny details, no excessive bloom.",
+      "bytes": 650377,
+      "sha256": "21c10c5829042eba9d4555b1dcfe0e9889952a8d8caa0411c04e45e93d074adb",
+      "assetPath": "ASSETS/ui/skills/axe/cuong-phong-gold.png"
+    }
+  ],
+  "outputDimensions": [
+    512,
+    512
+  ],
+  "optimization": "Original 1254×1254 built-in imagegen PNGs resized with FFmpeg Lanczos to 512×512 for runtime. No compositional edits. Original generated files retained.",
+  "visualReview": "Viewed generated outputs and HUD contact sheet at 48px and 96px. Khai Son: vertical strike/fissure; Pha Giap: branching armor fracture; Cuong Phong: spiral dark eye. All three remain distinguishable."
+}

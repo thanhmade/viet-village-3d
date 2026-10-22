@@ -1,0 +1,29 @@
+{
+  "axe": {
+    "tests": 41,
+    "pass": 41,
+    "fail": 0,
+    "skipped": 0
+  },
+  "relatedRegression": {
+    "tests": 80,
+    "pass": 80,
+    "fail": 0,
+    "skipped": 0
+  },
+  "browserScenarios": {
+    "tests": 60,
+    "pass": 60,
+    "errors": 0
+  },
+  "date": "2026-10-22",
+  "fullGameHostingBuildRun": false,
+  "alphaDeployed": false,
+  "finalFallbackHostRegression": {
+    "tests": 21,
+    "pass": 21,
+    "axeIntegration": 7,
+    "weaponsVillage": 14,
+    "note": "Overlaps axe and relatedRegression counts; do not add again."
+  }
+}

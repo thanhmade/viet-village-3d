@@ -1,0 +1,37 @@
+{
+  "branch": "vps-deploy",
+  "purpose": "staging preparation only; no deployment",
+  "base_branch": "cap-nhat",
+  "base_commit": "05ba24a22fcf9cd374ac954b73bfbe4dbb47eafd",
+  "base_tree": "a3fdc5584dc25855068aeab6036b5f852a5c48ab",
+  "main_observed_before": "2ea7047dcaab5f898a3f7ce39f94a4825b0b384b",
+  "source_archive": "VIET-VILLAGE-VPS-STARTER-v0.2.zip",
+  "source_archive_sha256": "aa2453bea79e217f4230573c23046542d76746a5f456ca56432d28158fdd0641",
+  "import_date": "2026-10-24",
+  "unchanged_starter_files": [
+    "DEPLOY/compose.yaml",
+    "SERVER/Dockerfile",
+    "SERVER/package.json",
+    "SERVER/sql/001_init.sql",
+    "SERVER/sql/002_security_storage.sql",
+    "SERVER/src/admin.html",
+    "SERVER/src/index.mjs"
+  ],
+  "starter_original_sha256": {
+    ".gitignore": "a8e3e1bf895a0709c34e957030df4733e6f06150e3566131f891618c8f5fff6d",
+    "DEPLOY/.env.example": "6a21d60a4de155e730e53c1227b3c5ad53b248a4cc552012ac96e6136c82952c",
+    "DEPLOY/backup.sh": "41846bcdedfbf115f80d12245ff80f5fb182b3f281dfe03b045a32c5f59741c0",
+    "DEPLOY/compose.yaml": "46f88a1c1420e076a79b850d7d1c0e67987cb586ffdbb6679f8c1b09a2a2491b",
+    "DEPLOY/migrate.sh": "aa8e9f68ce5c21989da4fc76e19db2576a643e7d8ef831d402971bb40f236a9a",
+    "README.md": "8f4e217752b8d266ab2d70509e8eeceff45d1cb1979ff3631a6d2244c4a61bc5",
+    "SERVER/Dockerfile": "0a1478d213773da3b217c42e774c79a14b63c4f6a8ea0083eba7b71accaed617",
+    "SERVER/package.json": "34d8c5673ee8b758de581259c4dbdc045911e360bc38e3a9c6c3507c1470aa5f",
+    "SERVER/sql/001_init.sql": "231ed1d53bfefa87c13fce90f00ae27f552742c1c65920758e2f0d8e045f4316",
+    "SERVER/sql/002_security_storage.sql": "a2b820b972ac65e0a3a3194d32c2b49f3e5b421f9f01f66132797a29e1887652",
+    "SERVER/src/admin.html": "1d9f910742d228947254bf4dc3dbb910192597632a3d3e0e9d612c56a929282b",
+    "SERVER/src/index.mjs": "e321e1ddd298d9c7f1c4fe26c5e874ff925e49acaf3a2357921a0dd72b5c6c66"
+  },
+  "deployment_executed": false,
+  "database_migration_executed": false,
+  "secrets_included": false
+}
